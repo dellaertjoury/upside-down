@@ -29,6 +29,8 @@ Plain HTML + JavaScript. No build step, no dependencies.
 | Flip to the other side | Space | Flip button or tap |
 | Pause | P / Esc | |
 
+In the Upside Down you hang under the floor, so ↑ and ↓ swap: ↓ jumps (away
+from the floor) and ↑ rolls. Swipes swap the same way; the touch buttons don't.
 W/A/S/D work as alternates for the arrows. In the air, Roll and Flip do a
 fast-fall first, then trigger on landing.
 
@@ -56,10 +58,11 @@ gives +20% score, 2–5 fills Dread 15% faster, and a natural 1 fills it 30% fas
 
 ## Rules
 
-- You run automatically and get faster over time.
+- You run automatically, starting slow and speeding up gradually (tune
+  `SPEED_START`, `SPEED_GAIN`, `SPEED_MAX` at the top of `js/game.js`).
 - **Obstacles:** low ones you jump, hanging ones you roll under, enemies you
   hit or parry, spore pods shoot along the ground (block to reflect), and
-  **walls** block a whole side, so you have to flip.
+  **rifts** block the whole Upside Down, so you have to flip back up.
 - **The Upside Down** scores at ×2 (more with upgrades) and its lights count
   double. But the **Dread** meter fills while you're down there. When
   it's full you get thrown back up and can't flip again for a moment.

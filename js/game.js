@@ -6,6 +6,8 @@
   const FB = 121;          // y of the bottom surface (Upside Down "floor")
   const SCALE = 3;         // canvas = 3 device pixels per game pixel (crisp art)
   const PX = 64;           // player's fixed screen x
+  // Run speed: starts gentle and builds up slowly (game px per second)
+  const SPEED_START = 95, SPEED_GAIN = 1.8, SPEED_MAX = 360;
   const GRAV = 980, FLIP_T = 0.26, STAND_H = 15, ROLL_H = 9;
   const CLUB_X = 10;       // Hellfire Club building: left edge at run start
 
@@ -27,7 +29,6 @@
     fence:     { side: 0, w: 18, h0: 0,  h1: 19, after: 400 },
     billboard: { side: 0, w: 22, h0: 12, h1: 108, after: 500 },
     crow:      { side: 0, w: 12, h0: 15, h1: 22, enemy: true, vx: -45, after: 250 },
-    barricade: { side: 0, w: 14, h0: 0,  h1: 108, wall: true },
     // upside down
     stump:     { side: 1, w: 12, h0: 0,  h1: 12 },
     tendril:   { side: 1, w: 14, h0: 12, h1: 107, after: 500 },
@@ -95,8 +96,14 @@
       G.mode === "play" ? G.pause() : G.resume(); e.preventDefault(); return;
     }
     const a = KEYS[e.code];
-    if (a && G.mode === "play") { e.preventDefault(); if (!e.repeat) G.press(a); }
+    if (a && G.mode === "play") { e.preventDefault(); if (!e.repeat) G.press(flipVertical(a)); }
   });
+  // Upside down, "away from the floor" is down on screen: swap up/down so the
+  // arrow you press matches the direction you move.
+  function flipVertical(a) {
+    if (P.side !== 1) return a;
+    return a === "jump" ? "roll" : a === "roll" ? "jump" : a;
+  }
   // swipes on the canvas: up=jump, down=roll, left=block, right=attack, tap=flip
   let sw = null;
   cv.addEventListener("pointerdown", e => { sw = { x: e.clientX, y: e.clientY }; });
@@ -104,7 +111,7 @@
     if (!sw || G.mode !== "play") return;
     const dx = e.clientX - sw.x, dy = e.clientY - sw.y; sw = null;
     if (Math.hypot(dx, dy) < 24) return G.press("flip");
-    if (Math.abs(dy) > Math.abs(dx)) G.press(dy < 0 ? "jump" : "roll");
+    if (Math.abs(dy) > Math.abs(dx)) G.press(flipVertical(dy < 0 ? "jump" : "roll"));
     else G.press(dx < 0 ? "block" : "attack");
   });
 
@@ -138,8 +145,8 @@
     const X = W + 16, r = Math.random();
     const gap = G.speed * rand(0.95, 1.6) * (1 - d * 0.2) + 50;
     if (G.dist > 900 && r < 0.12 + d * 0.12) {   // wall: flip to get past
-      const s = Math.random() < (P.side === 0 ? 0.65 : 0.45) ? 0 : 1;
-      addOb(s ? "rift" : "barricade", X + 90);
+      const s = 1; // walls only appear in the Upside Down
+      addOb("rift", X + 90);
       if (Math.random() < 0.5) addLights(1 - s, X + 60, 5);
       return gap + 140;
     }
@@ -167,7 +174,7 @@
     G.stats = SAVE.runStats();
     const roll = 1 + Math.floor(Math.random() * 20);
     const f = FATE.find(x => roll >= x.min);
-    Object.assign(G, { mode: "play", t: 0, speed: 150, dist: 0, score: 0, shards: 0, kills: 0, parries: 0, nextAt: 420,
+    Object.assign(G, { mode: "play", t: 0, speed: SPEED_START, dist: 0, score: 0, shards: 0, kills: 0, parries: 0, nextAt: 420,
       obs: [], picks: [], parts: [], shots: [], pops: [], shake: 0, flash: 0,
       hearts: G.stats.hearts + f.hearts, reviveLeft: G.stats.revive, dread: 0, overT: 0,
       fate: { roll, f, t: 0 } });
@@ -298,7 +305,7 @@
       G.speed = Math.max(0, G.speed - 400 * dt); G.overT -= dt;
       if (G.overT <= 0) { G.mode = "over"; G.onOver && G.onOver(G.result); }
     } else if (playing) {
-      G.speed = Math.min(390, 150 + G.t * 3.2);
+      G.speed = Math.min(SPEED_MAX, SPEED_START + G.t * SPEED_GAIN);
       if (G.fate) G.fate.t += dt;
     } else if (G.mode === "attract") G.speed = 0;
     if (G.mode === "over") G.speed = 0;
@@ -538,11 +545,6 @@
         R("#1a1124", x + 5, -108, 2, 70); R("#1a1124", x + 15, -108, 2, 70);
         R("#1a1124", x - 1, -40, 24, 28); R("#c8413b", x, -39, 22, 26); R("#ffd866", x + 2, -36, 18, 3);
         R("#f3e9dc", x + 3, -30, 16, 2); R("#f3e9dc", x + 3, -26, 12, 2); R("#f3e9dc", x + 3, -22, 14, 2); R("#8e2a2d", x, -14, 22, 1);
-        break;
-      case "barricade":
-        for (let y = -108; y < 0; y += 8) { R("#1a1124", x - 1, y, 16, 8); R(((y / 8) & 1) ? "#f3e9dc" : "#c8413b", x, y + 1, 14, 6); }
-        R("#1a1124", x + 2, -108, 2, 108); R("#1a1124", x + 10, -108, 2, 108);
-        if (Math.floor(t * 6) % 2) R("#ffd866", x + 5, -104, 4, 4);
         break;
       case "crow": draw(ctx, Math.floor(t * 8) % 2 ? "crow1" : "crow2", x, -o.h0); break;
       case "stump":
