@@ -87,12 +87,12 @@ h2{margin:0;font-size:clamp(14px,3vw,24px);color:var(--gold);text-shadow:0 3px 0
 .sheet{width:min(100%,860px);display:flex;flex-direction:column;gap:12px;align-items:center}
 .sheet-grid{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:16px;width:100%;text-align:left}
 .sheet-left{display:flex;flex-direction:column;gap:10px;align-items:stretch}
-#preview{width:clamp(48px,9vw,84px);height:auto;aspect-ratio:12/16;align-self:center;image-rendering:pixelated;background:radial-gradient(#3a2550,#160d22);padding:6px;box-shadow:0 0 0 3px #2b1a3d}
-.field{display:flex;flex-direction:column;gap:6px;font-size:8px;color:var(--muted)}
+#preview{width:auto;height:clamp(72px,14vw,130px);align-self:center;image-rendering:pixelated;background:radial-gradient(#3a2550,#160d22);padding:6px;box-shadow:0 0 0 3px #2b1a3d}
+.field[hidden]{display:none}.field{display:flex;flex-direction:column;gap:6px;font-size:8px;color:var(--muted)}
 .field input{font:inherit;font-size:16px;padding:8px;background:#0b0612;color:var(--gold);border:0;box-shadow:0 0 0 3px #3a2550;text-transform:uppercase}
 .field input:focus{outline:none;box-shadow:0 0 0 3px var(--teal)}
 .classes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
-.cls{display:flex;flex-direction:column;gap:3px;align-items:flex-start;text-align:left}
+.cls{display:flex;flex-direction:row;gap:8px;align-items:center;text-align:left}.cls span{display:flex;flex-direction:column;gap:3px}.cls-ic{width:32px;height:32px;image-rendering:pixelated;flex:none}
 .cls small{font-size:6px;color:var(--muted)}
 .cls.on{box-shadow:inset -3px -3px 0 #160c22,inset 3px 3px 0 #4a3266,0 0 0 3px var(--gold);color:var(--gold)}
 .swatches{display:flex;gap:6px;flex-wrap:wrap}
@@ -118,3 +118,16 @@ h2{margin:0;font-size:clamp(14px,3vw,24px);color:var(--gold);text-shadow:0 3px 0
   .abil{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 @media (pointer:coarse){.frame{width:min(100%, calc((100vh - 110px) * 16 / 9), 1280px)}}
+
+/* ---- optional UI art (assets/ui_*.png), 9-slice frames, 3x art: 12px (24px panel) corners ---- */
+.logo-img{display:block;width:min(100%,520px);height:auto;image-rendering:pixelated}
+body.has-ui-button .btn{background:none;box-shadow:none;border:12px solid transparent;border-image:var(--ui-button) 12 fill / 12px stretch;padding:2px 6px;image-rendering:pixelated}
+body.has-ui-button-primary .btn.primary{background:none;box-shadow:none;border:12px solid transparent;border-image:var(--ui-button-primary) 12 fill / 12px stretch;padding:2px 6px}
+body.has-ui-button .btn:hover,body.has-ui-button .btn:focus-visible{filter:brightness(1.25)}
+body.has-ui-button .cls.on{filter:brightness(1.35) drop-shadow(0 0 3px var(--gold))}
+body.has-ui-panel .hub-card,body.has-ui-panel .sheet,body.has-ui-panel #p-over .stats{border:24px solid transparent;border-image:var(--ui-panel) 24 fill / 24px stretch;padding:6px;image-rendering:pixelated}
+body.has-ui-panel .panel.hub{background:linear-gradient(90deg,transparent 0%,transparent 45%,#0e081677 70%)}
+body.has-ui-box .ab,body.has-ui-box .row{background:none;box-shadow:none;border:12px solid transparent;border-image:var(--ui-box) 12 fill / 12px stretch;padding:2px}
+body.has-ui-dice .ab .dice i.die{background:var(--ui-dice) 0 0/600% 100% no-repeat;width:16px;height:16px;image-rendering:pixelated;font-size:0}
+body.has-ui-dice .ab .dice i.die.drop{opacity:.35;filter:grayscale(1)}
+.touch button img{width:40px;height:40px;image-rendering:pixelated;pointer-events:none}

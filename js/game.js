@@ -2,13 +2,15 @@
 // Top half = the normal town. Bottom half = the Upside Down.
 (function () {
   const W = 400, H = 225;
-  const FT = 108;          // y of the top surface (normal world floor)
-  const FB = 118;          // y of the bottom surface (Upside Down "floor")
+  const FT = 105;          // y of the top surface (normal world floor)
+  const FB = 121;          // y of the bottom surface (Upside Down "floor")
+  const SCALE = 3;         // canvas = 3 device pixels per game pixel (crisp art)
   const PX = 64;           // player's fixed screen x
   const GRAV = 980, FLIP_T = 0.26, STAND_H = 15, ROLL_H = 9;
   const CLUB_X = 10;       // Hellfire Club building: left edge at run start
 
   const cv = document.getElementById("game");
+  cv.width = W * SCALE; cv.height = H * SCALE;
   const ctx = cv.getContext("2d");
   ctx.imageSmoothingEnabled = false;
   const { S, BG, draw } = window.SPR;
@@ -388,6 +390,7 @@
       tile(BG.topHouses, s * 0.42, FT - BG.topHouses.height);
       tile(BG.topLamps, s * 0.7, FT - BG.topLamps.height);
     }
+    if (A.bg_top) { ctx.fillStyle = "rgba(14,8,22,.22)"; ctx.fillRect(0, 0, W, FT); } // push painted bg back
     ctx.fillStyle = "rgba(255,240,200,.6)";
     for (const d of DUST) ctx.fillRect(Math.round(d.x), Math.round(d.y), 1, 1);
     if (A.bg_bottom) {
@@ -401,6 +404,7 @@
       let x = G.bolt.x, y = H, sd = G.bolt.seed; ctx.fillStyle = `rgba(255,120,150,${a})`;
       while (y > FB + 6) { sd = (sd * 9301 + 49297) % 233280; x += (sd / 233280 - 0.5) * 8; y -= 3; ctx.fillRect(Math.round(x), y, 2, 3); }
     }
+    if (A.bg_bottom) { ctx.fillStyle = "rgba(14,4,12,.28)"; ctx.fillRect(0, FB, W, H - FB); }
     if (!A.bg_bottom) {
       tile(BG.botFar, s * 0.08, FB);
       tile(BG.botTrees, s * 0.22, FB);
@@ -420,7 +424,10 @@
     const A = SPR.ART[dark ? "club_dark" : "club"];
     const x = Math.round(CLUB_X - G.dist);
     if (x < -170) return;
-    if (A) { ctx.drawImage(A, x, -96, 160, 96); return; }
+    if (A) { // PNG: positioned by its door
+      const sz = SPR.SIZE[dark ? "club_dark" : "club"] || [160, 96, -80, 0];
+      ctx.drawImage(A, x + 62 + sz[2], -sz[1] + 1, sz[0], sz[1]); return;
+    }
     const c = dark
       ? { line: "#0b0610", brick: "#3a1a2c", mortar: "#22101c", roof: "#1a0c16", win: "#9b2335", door: "#120812", glow: "rgba(176,48,90,.25)", sign: "#1a0c16", txt: "#b0305a", trim: "#4a1f36" }
       : { line: "#1a1124", brick: "#8a4434", mortar: "#5e2c24", roof: "#3a2a36", win: "#ffd866", door: "#2a1810", glow: "rgba(255,216,102,.35)", sign: "#1a1124", txt: "#ff3d57", trim: "#c9a46a" };
@@ -518,13 +525,17 @@
     }
   }
 
+  const ART = k => SPR.ART[k];
   function drawPick(k) {
     const x = Math.round(k.x), y = -Math.round(k.h) - 4, b = Math.floor(G.t * 6 + k.x) % 4 === 0;
+    const img = ART(k.kind === "spark" ? "pickup_spark" : "pickup_spore");
+    if (img) { ctx.drawImage(img, x - 2, y - 5 + (b ? -1 : 0), 8, 10); return; }
     if (k.kind === "spark") { R("#1a1124", x - 1, y - 4, 5, 9); R("#ffd866", x, y - 3, 3, 7); R("#fff3b0", x + 1, y - 2, 1, b ? 5 : 2); }
     else { R("rgba(255,61,87,.35)", x - 2, y - 2, 7, 7); R("#ff6b8f", x, y, 3, 3); R("#ffd0dc", x + 1, y, 1, 1); }
   }
   function drawShot(s) {
-    const x = Math.round(s.x), y = -s.h - 4;
+    const x = Math.round(s.x), y = -s.h - 4, img = ART("shot_spore");
+    if (img && !s.ref) { ctx.drawImage(img, x - 1, y - 1, 6, 6); return; }
     R(s.ref ? "rgba(95,208,200,.4)" : "rgba(255,61,87,.4)", x - 1, y - 1, 6, 6);
     R(s.ref ? "#5fd0c8" : "#ff6b8f", x, y, 4, 4); R("#ffffff", x + 1, y + 1, 1, 1);
   }
@@ -544,7 +555,10 @@
     const idle = G.mode === "attract";
     if (P.roll > 0 && P.flip <= 0) {
       ctx.save(); ctx.translate(PX + 6, -h - 6); ctx.rotate(Math.floor(G.t * 16) * Math.PI / 2);
-      ctx.drawImage(SPR.ART.roll || S.roll, -6, -6, 12, 12); ctx.restore();
+      const rs = SPR.ART.roll && SPR.SIZE.roll;
+      if (rs) { ctx.translate(0, -1); ctx.drawImage(SPR.ART.roll, -rs[0] / 2, -rs[1] / 2, rs[0], rs[1]); }
+      else ctx.drawImage(S.roll, -6, -6, 12, 12);
+      ctx.restore();
     } else if (P.blk > 0 && P.flip <= 0) {
       draw(ctx, "block", PX, -h);
       if (!SPR.ART.block) { // trash-can lid shield
@@ -553,8 +567,8 @@
         R("#7d7f8c", PX + 13, -h - 12, 1, 7); R("#1a1124", PX + 15, -h - 10, 1, 3);
       }
     } else {
-      const key = P.atk > 0 ? "attack" : idle ? "run2" : !P.grounded && P.flip <= 0 ? "jump" : Math.floor(P.runT * 10) % 2 ? "run1" : "run2";
-      draw(ctx, key, PX, -h - (idle && Math.floor(G.t * 2) % 2 ? 1 : 0));
+      const key = P.atk > 0 ? "attack" : idle ? (SPR.ART.idle ? "idle" : "run2") : !P.grounded && P.flip <= 0 ? "jump" : Math.floor(P.runT * 10) % 2 ? "run1" : "run2";
+      draw(ctx, key, PX, -h - (idle && !SPR.ART.idle && Math.floor(G.t * 2) % 2 ? 1 : 0));
       if (P.atk > 0) {
         const reach = (G.stats || SAVE.runStats()).reach, pr = 1 - P.atk / 0.2, ang = -1.3 + pr * 2.2;
         for (let i = 0; i < reach; i++) R(i < 5 ? "#5a3220" : "#a8743a", PX + 9 + Math.cos(ang) * i, -h - 9 + Math.sin(ang) * i, 2, 2);
@@ -567,12 +581,15 @@
 
   function drawFloor() {
     const F = SPR.ART.floor;
-    tile(F || BG.floor, G.scroll, FT, F ? F.width * 10 / F.height : 0, F ? 10 : 0);
+    const fh = FB - FT;
+    tile(F || BG.floor, G.scroll, FT, (F || BG.floor).width * fh / (F || BG.floor).height, fh);
     const p = 0.35 + Math.sin(G.t * 3) * 0.15;
     ctx.fillStyle = `rgba(255,61,87,${p})`; ctx.fillRect(0, FB - 1, W, 1);
   }
 
   function heart(x, y, full) {
+    const img = ART(full ? "hud_heart_full" : "hud_heart_empty");
+    if (img) { ctx.drawImage(img, x, y, 9, 8); return; }
     const c = full ? "#ff3d57" : "#3a2550";
     R("#1a1124", x, y + 1, 9, 5); R("#1a1124", x + 1, y, 3, 8); R("#1a1124", x + 5, y, 3, 8); R("#1a1124", x + 3, y + 6, 3, 2);
     R(c, x + 1, y + 1, 3, 4); R(c, x + 5, y + 1, 3, 4); R(c, x + 2, y + 4, 5, 2); R(c, x + 3, y + 6, 3, 1);
@@ -587,9 +604,12 @@
     ctx.globalAlpha = a;
     // pixel d20 badge
     const col = rolling ? "#f3e9dc" : f.f.col;
-    R("#1a1124", cx - 13, y - 1, 26, 24);
-    R("#2b1a3d", cx - 12, y, 24, 22);
-    R(col, cx - 12, y, 24, 1); R(col, cx - 12, y + 21, 24, 1); R(col, cx - 12, y, 1, 22); R(col, cx + 11, y, 1, 22);
+    if (ART("hud_d20")) ctx.drawImage(ART("hud_d20"), cx - 13, y - 1, 26, 24);
+    else {
+      R("#1a1124", cx - 13, y - 1, 26, 24);
+      R("#2b1a3d", cx - 12, y, 24, 22);
+      R(col, cx - 12, y, 24, 1); R(col, cx - 12, y + 21, 24, 1); R(col, cx - 12, y, 1, 22); R(col, cx + 11, y, 1, 22);
+    }
     text(String(n), cx, y + 7, col, "center");
     text("D20 FATE", cx, y - 11, "#a998b8", "center");
     if (!rolling) text(f.f.label, cx, y + 27, f.f.col, "center");
@@ -603,17 +623,23 @@
     if (G.reviveLeft) text("+1", 8 + st.hearts * 11, 7, "#5fd0c8");
     text(String(Math.floor(G.score)).padStart(6, "0"), W - 6, 6, "#ffd866", "right");
     text("HI " + String(Math.max(SAVE.state.best, Math.floor(G.score))).padStart(6, "0"), W - 64, 6, "#f3e9dc", "right");
-    R("#1a1124", W - 46, 18, 5, 7); R("#ffd866", W - 45, 19, 3, 5);
+    if (ART("hud_shard")) ctx.drawImage(ART("hud_shard"), W - 47, 17, 7, 9);
+    else { R("#1a1124", W - 46, 18, 5, 7); R("#ffd866", W - 45, 19, 3, 5); }
     text(String(G.shards), W - 6, 18, "#f3e9dc", "right");
     const bw = 70, f = G.dread / st.battery;
     text(P.side ? "x" + (st.udMult * G.fate.f.score).toFixed(1) : "DREAD", 6, H - 22, P.side ? "#ff6b8f" : "#a998b8");
-    R("#1a1124", 5, H - 11, bw + 2, 6); R("#3a2550", 6, H - 10, bw, 4);
-    R(f > 0.7 ? (Math.floor(G.t * 8) % 2 ? "#ff3d57" : "#ffd0dc") : "#b0305a", 6, H - 10, Math.round(bw * f), 4);
+    const fr = ART("hud_dread_frame"), fl = ART("hud_dread_fill");
+    if (fr) ctx.drawImage(fr, 3, H - 13, bw + 6, 10);
+    else { R("#1a1124", 5, H - 11, bw + 2, 6); R("#3a2550", 6, H - 10, bw, 4); }
+    if (fl && f > 0) ctx.drawImage(fl, 0, 0, Math.max(1, Math.round(fl.width * f)), fl.height, 6, H - 10, Math.round(bw * f), 4);
+    else R(f > 0.7 ? (Math.floor(G.t * 8) % 2 ? "#ff3d57" : "#ffd0dc") : "#b0305a", 6, H - 10, Math.round(bw * f), 4);
+    if (fl && f > 0.7 && Math.floor(G.t * 8) % 2) R("rgba(255,255,255,.35)", 6, H - 10, Math.round(bw * f), 4);
     if (P.flipLock > 0) text("LOCKED", 82, H - 12, "#ff3d57");
     drawFate();
   }
 
   function render() {
+    ctx.setTransform(SCALE, 0, 0, SCALE, 0, 0);
     ctx.save();
     if (G.shake > 0) ctx.translate(Math.round(rand(-G.shake, G.shake) / 2), Math.round(rand(-G.shake, G.shake) / 2));
     drawWorld();
@@ -629,6 +655,7 @@
     drawFloor();
     for (const o of G.obs) if (o.wall && o.x > W - 4 && Math.floor(G.t * 8) % 2) {
       const y = o.side ? FB + 40 : FT - 50;
+      if (ART("hud_warning")) { ctx.drawImage(ART("hud_warning"), W - 13, y - 1, 11, 13); continue; }
       R("#1a1124", W - 12, y - 1, 9, 12); R(o.side ? "#ff3d57" : "#ffd866", W - 11, y, 7, 10); R("#1a1124", W - 8, y + 2, 1, 4); R("#1a1124", W - 8, y + 7, 1, 1);
     }
     for (const p of G.parts) R(p.col, p.x, p.y, p.s, p.s);
@@ -656,7 +683,7 @@
     requestAnimationFrame(loop);
   }
   document.addEventListener("visibilitychange", () => { if (document.hidden) G.pause(); });
-  SPR.loadOverrides();
+  SPR.ready = SPR.loadOverrides();
   requestAnimationFrame(loop);
   window.GAME = G;
   G._P = P; G._TYPES = TYPES;

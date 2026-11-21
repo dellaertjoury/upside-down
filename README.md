@@ -99,9 +99,19 @@ Players set their name on the main menu. Only that name and the score are stored
 
 ## Art
 
-Every sprite is a built-in placeholder drawn from text maps in `js/sprites.js`.
-To use real art, follow **[ART_PROMPTS.md](ART_PROMPTS.md)**: generate a PNG,
-drop it in `assets/`, and add its key to `assets/manifest.json`.
+The game uses the painted pixel art in `assets/`. Anything without art falls
+back to a built-in placeholder drawn in `js/sprites.js`.
+
+New art goes through **[ART_PROMPTS.md](ART_PROMPTS.md)**: generate an image,
+name the file after its key, then run
+
+```
+python3 tools/process_art.py <folder with raw PNGs> assets/
+```
+
+The script crops, scales and outlines each image and rewrites
+`assets/manifest.json`. The canvas renders at 3× (1200 × 675), so art keeps its
+detail while gameplay runs on a 400 × 225 grid.
 
 ## Project layout
 
@@ -115,7 +125,8 @@ js/save.js          progress, character sheet, dice, upgrades
 js/leaderboard.js   claude / supabase / local leaderboard
 js/game.js          the game: physics, spawning, collisions, rendering
 js/ui.js            hub, character sheet and other menus
-assets/             your PNG art + manifest.json
+assets/             game art + manifest.json
+tools/process_art.py  turns raw ChatGPT images into game sprites
 ```
 
 ## Adding classes later

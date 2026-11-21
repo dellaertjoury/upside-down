@@ -72,8 +72,9 @@
     // classes
     $("#classes").innerHTML = SAVE.CLASSES.map(c => {
       const bonus = Object.entries(c.bonus).map(([k, v]) => `${k} +${v}`).join(", ");
+      const icon = SPR.ART["ui_class_" + c.id];
       return `<button class="btn tiny cls${s.cls === c.id ? " on" : ""}" data-cls="${c.id}" ${c.locked ? "disabled" : ""} title="${c.desc}">
-        ${c.name}<small>${c.locked ? "soon" : bonus}</small></button>`;
+        ${icon ? `<img class="cls-ic" src="${icon.src}" alt="">` : ""}<span>${c.name}<small>${c.locked ? "soon" : bonus}</small></span></button>`;
     }).join("");
     // looks
     ["hair", "jacket"].forEach(k => {
@@ -92,7 +93,9 @@
       const dice = fake ? fake[a].dice : (s.dice && s.dice[a]) || [];
       const low = Math.min(...dice);
       let dropped = false;
-      const faces = dice.map(d => { const drop = !dropped && d === low; if (drop) dropped = true; return `<i class="${drop ? "drop" : ""}">${d}</i>`; }).join("");
+      const faces = dice.map(d => { const drop = !dropped && d === low; if (drop) dropped = true; return SPR.ART.ui_dice
+        ? `<i class="die${drop ? " drop" : ""}" style="background-position:${(d - 1) * 20}% 0" aria-label="${d}"></i>`
+        : `<i class="${drop ? "drop" : ""}">${d}</i>`; }).join("");
       return `<div class="ab${fake ? " spin" : ""}"><span class="an">${a}</span><span class="av">${total}</span>
         <span class="am">${sign(m)}</span><span class="dice">${faces}</span>
         <span class="ai">${SAVE.ABIL_INFO[a]}${cls ? ` <em>+${cls} class</em>` : ""}</span></div>`;
@@ -110,8 +113,14 @@
     $("#derived").innerHTML = rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("");
   }
   function drawPreview() {
-    const x = $("#preview").getContext("2d");
-    x.clearRect(0, 0, 12, 16); x.drawImage(SPR.ART.run2 || SPR.S.run2, 0, 0, 12, 16);
+    const c = $("#preview"), art = SPR.ART.idle || SPR.ART.run2;
+    const src = art || SPR.S.run2;
+    c.width = src.width; c.height = src.height;
+    c.style.aspectRatio = src.width + "/" + src.height;
+    const x = c.getContext("2d"); x.imageSmoothingEnabled = false;
+    x.drawImage(src, 0, 0);
+    // colour pickers only recolour the built-in placeholder sprite
+    document.querySelectorAll("#hair, #jacket").forEach(el => el.parentElement.hidden = !!art);
   }
 
   $("#cname").addEventListener("input", e => { sheet().name = LB.clean(e.target.value) === "PLAYER" ? "" : LB.clean(e.target.value); SAVE.save(); });
@@ -205,6 +214,24 @@
     b.addEventListener("pointerdown", e => { e.preventDefault(); b.classList.add("on"); GAME.press(b.dataset.k); });
     ["pointerup", "pointerleave", "pointercancel"].forEach(ev => b.addEventListener(ev, () => b.classList.remove("on")));
   });
+
+  // ---- menu art from assets/ (see ART_PROMPTS.md, section 9) ----
+  const CSS_ART = ["ui_button", "ui_button_primary", "ui_panel", "ui_box", "ui_dice"];
+  function applyUiArt() {
+    const A = SPR.ART, root = document.documentElement;
+    CSS_ART.forEach(k => { if (A[k]) { root.style.setProperty("--" + k.replace(/_/g, "-"), `url("${A[k].src}")`); document.body.classList.add("has-" + k.replace(/_/g, "-")); } });
+    if (A.ui_logo) {
+      const img = document.createElement("img"); img.src = A.ui_logo.src; img.alt = "The Upside Down"; img.className = "logo-img";
+      const h = $(".logo"); h.replaceChildren(img);
+    }
+    document.querySelectorAll(".touch button").forEach(b => {
+      const a = A["ui_touch_" + b.dataset.k];
+      if (a) { b.setAttribute("aria-label", b.textContent); const i = document.createElement("img"); i.src = a.src; i.alt = ""; b.replaceChildren(i); }
+    });
+    if (!$("#p-sheet").classList.contains("hidden")) renderSheet();
+    if (!$("#p-menu").classList.contains("hidden")) refreshMenu();
+  }
+  (SPR.ready || Promise.resolve()).then(applyUiArt);
 
   if (document.fonts && document.fonts.load) document.fonts.load("8px 'Press Start 2P'");
   show("menu");

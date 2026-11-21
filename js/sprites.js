@@ -178,10 +178,15 @@
   // A PNG can be drawn bigger via its manifest size; it stays bottom-anchored
   // and centred on the original box, so hitboxes don't change.
   function draw(ctx, key, x, y, w, h) {
-    const base = S[key];
+    const img = ART[key] || S[key];
+    if (!img) return;
+    const base = S[key] || img;
     let bw = w || base.width, bh = h || base.height;
-    const img = ART[key] || base;
-    if (ART[key] && SIZE[key]) { x -= (SIZE[key][0] - bw) / 2; bw = SIZE[key][0]; bh = SIZE[key][1]; }
+    const sz = ART[key] && SIZE[key];
+    if (sz && sz.length >= 4) { // [w, h, ox, oy]: offset from the hitbox box
+      ctx.drawImage(img, Math.round(x) + sz[2], Math.round(y) - sz[1] + sz[3], sz[0], sz[1]); return;
+    }
+    if (sz) { x -= (sz[0] - bw) / 2; bw = sz[0]; bh = sz[1]; }
     ctx.drawImage(img, Math.round(x), Math.round(y - bh), bw, bh);
   }
 
@@ -295,7 +300,7 @@
     return c;
   }
 
-  const TOP_H = 108, BOT_H = 107;
+  const TOP_H = 105, BOT_H = 104;
   const BG = {
     topFar: hills(512, 60, "#3f6f73", 7, 3, 26),
     topTrees: trees(480, 60, "#2d5c5e", 11, false),
