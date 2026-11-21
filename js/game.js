@@ -57,6 +57,7 @@
 
   // ---------------- State ----------------
   const G = {
+    debug: { hitboxes: false, god: false, noDread: false, noSpawn: false, slow: 1 },
     mode: "attract", t: 0, speed: 0, scroll: 0, scroll0: 0, dist: 0, score: 0,
     shards: 0, kills: 0, parries: 0, nextAt: 420, obs: [], picks: [], parts: [], shots: [], pops: [],
     shake: 0, flash: 0, flashCol: "#fff", bolt: null, boltT: 3, overT: 0,
@@ -191,6 +192,7 @@
   }
 
   function hurt() {
+    if (G.debug.god) { G.flash = 0.1; G.flashCol = "#5fd0c8"; return; }
     if (P.inv > 0 || P.flip > 0 || P.dead) return;
     G.hearts -= 1; G.shake = 7; G.flash = 0.25; G.flashCol = "#ff3d57"; SFX.hurt();
     burst(PX + 6, sy(P.side, P.h + 8), "#ff3d57", 14);
@@ -283,7 +285,7 @@
 
     if (G.mode === "play") {
       if (P.side === 1) {
-        G.dread += dt * G.fate.f.dread;
+        if (!G.debug.noDread) G.dread += dt * G.fate.f.dread;
         if (G.dread >= st.battery) { G.dread = st.battery; startFlip(true); }
       } else G.dread = Math.max(0, G.dread - dt * 1.6);
     }
@@ -309,7 +311,7 @@
     if (playing) {
       G.dist += dx;
       G.score += dx / 8 * (P.side === 1 ? G.stats.udMult : 1) * G.fate.f.score;
-      if (G.dist >= G.nextAt) G.nextAt = G.dist + spawnChunk();
+      if (G.dist >= G.nextAt) G.nextAt = G.dist + (G.debug.noSpawn ? 200 : spawnChunk());
     } else if (G.mode === "dying") G.dist += dx;
 
     const ph0 = P.h, ph1 = P.h + (P.roll > 0 ? ROLL_H : STAND_H), px0 = PX + 3, px1 = PX + 10;
@@ -747,13 +749,33 @@
     }
     if (G.flash > 0) { ctx.globalAlpha = Math.min(0.6, G.flash * 2.5); ctx.fillStyle = G.flashCol; ctx.fillRect(0, 0, W, H); ctx.globalAlpha = 1; }
     drawHud();
+    if (G.debug.hitboxes) drawHitboxes();
     ctx.restore();
   }
+
+  // ---------------- Debug: hitboxes ----------------
+  function drawHitboxes() {
+    const box = (side, x, h0, w, h1, col) => {
+      const y0 = side ? FB + h0 : FT - h1, hh = h1 - h0;
+      ctx.strokeStyle = col; ctx.lineWidth = 1 / SCALE; ctx.strokeRect(x, y0, w, hh);
+    };
+    if (!P.dead) {
+      box(P.side, PX + 3, P.h, 7, P.h + (P.roll > 0 ? ROLL_H : STAND_H), P.inv > 0 || P.flip > 0 ? "#888" : "#5fd0c8");
+      if (P.atk > 0) box(P.side, PX + 6, P.h - 2, 3 + G.stats.reach, P.h + 24, "#ffd866");
+      if (P.blk > 0) box(P.side, PX + 10, P.h, 6, P.h + 16, "#4da3ff");
+    }
+    for (const o of G.obs) if (!o.dead) box(o.side, o.x, o.h0, o.w, Math.min(o.h1, 104), o.crate ? "#a8743a" : o.enemy ? "#ff3d57" : "#ff9a3d");
+    for (const sh of G.shots) box(sh.side, sh.x, sh.h, 4, sh.h + 4, "#ff6bd0");
+    for (const k of G.picks) box(k.side, k.x - 1, k.h - 4, 6, k.h + 6, "#5fd068");
+  }
+  G.spawn = (type, dx = 0) => addOb(type, W + 10 + dx);
+  G.spawnLights = side => addLights(side, W + 10, 5);
 
   // ---------------- Loop ----------------
   let last = performance.now();
   function loop(now) {
-    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    const dt = Math.min(0.05, (now - last) / 1000) * G.debug.slow; last = now;
+    G.fps = G.fps ? G.fps * 0.95 + (1 / Math.max(0.001, (now - (G._lt || now - 16)) / 1000)) * 0.05 : 60; G._lt = now;
     if (G.mode !== "pause") update(dt);
     render();
     requestAnimationFrame(loop);

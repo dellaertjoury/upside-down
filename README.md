@@ -151,3 +151,21 @@ its own ability bonus; new class-specific moves go in `js/game.js`.
 ---
 A fan project inspired by a TV series. The characters, monsters, emblem and
 all art in this repo are original; no logos from the show are used.
+
+## Testing and debugging
+
+Press **F9** in the game (or open the link with `#debug` at the end) for the
+debug panel:
+
+- **Live state:** build version, FPS, speed, distance, side, Dread, what's on
+  screen, and the upcoming scenery frames.
+- **Cheats:** show hitboxes, god mode, Dread never fills, no obstacles, slow
+  motion (0.25×–2×).
+- **Tools:** spawn any obstacle or enemy, spawn lights, jump +1000 m, add 500
+  lights, unlock the locked classes, reset your save.
+- **Errors:** any JavaScript error is caught and listed.
+- **Copy report:** puts all of the above on your clipboard. Paste it into a
+  message or a GitHub issue when something goes wrong.
+
+The `build` line shows which commit is live, so you can check that a deploy
+landed (`local` when running from your own computer).
