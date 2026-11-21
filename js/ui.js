@@ -74,7 +74,7 @@
       const bonus = Object.entries(c.bonus).map(([k, v]) => `${k} +${v}`).join(", ");
       const icon = SPR.ART["ui_class_" + c.id];
       return `<button class="btn tiny cls${s.cls === c.id ? " on" : ""}" data-cls="${c.id}" ${c.locked ? "disabled" : ""} title="${c.desc}">
-        ${icon ? `<img class="cls-ic" src="${icon.src}" alt="">` : ""}<span>${c.name}<small>${c.locked ? "soon" : bonus}</small></span></button>`;
+        ${icon ? `<img class="cls-ic" src="${icon.src}" alt="">` : ""}${c.locked && SPR.ART.ui_lock ? `<img class="lock-ic" src="${SPR.ART.ui_lock.src}" alt="locked">` : ""}<span>${c.name}<small>${c.locked ? "soon" : bonus}</small></span></button>`;
     }).join("");
     // looks
     ["hair", "jacket"].forEach(k => {
@@ -96,24 +96,25 @@
       const faces = dice.map(d => { const drop = !dropped && d === low; if (drop) dropped = true; return SPR.ART.ui_dice
         ? `<i class="die${drop ? " drop" : ""}" style="background-position:${(d - 1) * 20}% 0" aria-label="${d}"></i>`
         : `<i class="${drop ? "drop" : ""}">${d}</i>`; }).join("");
-      return `<div class="ab${fake ? " spin" : ""}"><span class="an">${a}</span><span class="av">${total}</span>
+      const sic = SPR.ART["ui_stat_" + a.toLowerCase()];
+      return `<div class="ab${fake ? " spin" : ""}"><span class="an">${sic ? `<img class="sic" src="${sic.src}" alt="">` : ""}${a}</span><span class="av">${total}</span>
         <span class="am">${sign(m)}</span><span class="dice">${faces}</span>
         <span class="ai">${SAVE.ABIL_INFO[a]}${cls ? ` <em>+${cls} class</em>` : ""}</span></div>`;
     }).join("");
     const used = s.rerolls || 0, free = SAVE.FREE_REROLLS - used;
-    $("#roll").textContent = free > 0 ? `Reroll (${free} free)` : `Reroll · ${SAVE.REROLL_COST} ◆`;
+    $("#roll").innerHTML = free > 0 ? `Reroll (${free} free)` : `Reroll · ${SAVE.REROLL_COST} <i class="bulb"></i>`;
     $("#roll").disabled = rolling || (free <= 0 && st.shards < SAVE.REROLL_COST);
     $("#roll-note").textContent = "4d6, drop the lowest";
     const r = SAVE.runStats(s);
     const rows = [
       ["Hearts", r.hearts], ["Bat reach", r.reach + " px"], ["Jump", Math.round(r.jumpV / 3.2) + "%"],
       ["Block", r.block.toFixed(2) + " s"], ["Dread time", r.battery.toFixed(1) + " s"],
-      ["Magnet", r.magnet + " px"], ["Shard bonus", "1 per " + r.bonusDiv + " pts"],
+      ["Magnet", r.magnet + " px"], ["Light bonus", "1 per " + r.bonusDiv + " pts"],
     ];
     $("#derived").innerHTML = rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("");
   }
   function drawPreview() {
-    const c = $("#preview"), art = SPR.ART.idle || SPR.ART.run2;
+    const c = $("#preview"), art = SPR.ART[GAME.pk("idle")] || SPR.ART[GAME.pk("run2")];
     const src = art || SPR.S.run2;
     c.width = src.width; c.height = src.height;
     c.style.aspectRatio = src.width + "/" + src.height;
@@ -155,8 +156,9 @@
     $("#up-list").innerHTML = SAVE.UPGRADES.map(u => {
       const l = SAVE.lvl(u.id), max = u.costs.length, done = l >= max, cost = u.costs[l];
       const pips = u.costs.map((_, i) => `<i class="${i < l ? "on" : ""}"></i>`).join("");
-      return `<div class="row"><div><h3>${u.name}<span class="pips">${pips}</span></h3><p>${u.desc}</p></div>
-        <button class="btn tiny${done ? "" : " primary"}" data-buy="${u.id}" ${done || st.shards < cost ? "disabled" : ""}>${done ? "Maxed" : cost + " ◆"}</button></div>`;
+      const uic = SPR.ART["ui_up_" + u.id];
+      return `<div class="row${uic ? " has-ic" : ""}">${uic ? `<img class="uic" src="${uic.src}" alt="">` : ""}<div><h3>${u.name}<span class="pips">${pips}</span></h3><p>${u.desc}</p></div>
+        <button class="btn tiny${done ? "" : " primary"}" data-buy="${u.id}" ${done || st.shards < cost ? "disabled" : ""}>${done ? "Maxed" : cost + ' <i class="bulb"></i>'}</button></div>`;
     }).join("");
   }
   $("#up-list").addEventListener("click", e => {
@@ -177,6 +179,8 @@
         const li = document.createElement("li");
         if (r.me) li.className = "me";
         const a = document.createElement("span"); a.textContent = i + 1;
+        const md = i < 3 && SPR.ART["ui_medal_" + (i + 1)];
+        if (md) { const im = document.createElement("img"); im.src = md.src; im.alt = String(i + 1); im.className = "medal"; a.replaceChildren(im); }
         const b = document.createElement("span"); b.textContent = r.name;
         const c = document.createElement("span"); c.className = "sc"; c.textContent = r.score;
         li.append(a, b, c); list.appendChild(li);
@@ -194,9 +198,9 @@
       <span>Distance</span><b>${r.dist} m</b>
       <span>Kills / parries</span><b>${r.kills} / ${r.parries}</b>
       <span>D20 fate</span><b>${r.fate}</b>
-      <span>Shards found</span><b>${r.shards}</b>
+      <span>Lights found</span><b>${r.shards}</b>
       <span>Score bonus</span><b>+${r.bonus}</b>
-      <span>Banked</span><b>◆ ${r.earned} (total ${st.shards})</b>`;
+      <span>Banked</span><b><i class="bulb"></i> ${r.earned} (total ${st.shards})</b>`;
     show("over");
     const msg = $("#over-lb");
     if (r.score <= 0) { msg.textContent = ""; return; }
@@ -216,7 +220,7 @@
   });
 
   // ---- menu art from assets/ (see ART_PROMPTS.md, section 9) ----
-  const CSS_ART = ["ui_button", "ui_button_primary", "ui_panel", "ui_box", "ui_dice"];
+  const CSS_ART = ["ui_button", "ui_button_primary", "ui_panel", "ui_box", "ui_dice", "ui_sheet", "ui_light", "ui_row"];
   function applyUiArt() {
     const A = SPR.ART, root = document.documentElement;
     CSS_ART.forEach(k => { if (A[k]) { root.style.setProperty("--" + k.replace(/_/g, "-"), `url("${A[k].src}")`); document.body.classList.add("has-" + k.replace(/_/g, "-")); } });

@@ -35,7 +35,12 @@
     wisp:      { side: 1, w: 10, h0: 14, h1: 21, enemy: true, vx: -25, bob: true, after: 700 },
     pod:       { side: 1, w: 12, h0: 0,  h1: 12, enemy: true, shooter: true, after: 600 },
     rift:      { side: 1, w: 14, h0: 0,  h1: 107, wall: true },
+    // light crates: smash with a hit to spill Christmas lights
+    crate:      { side: 0, w: 14, h0: 0, h1: 14, crate: true },
+    crate_dark: { side: 1, w: 14, h0: 0, h1: 14, crate: true },
   };
+  // Christmas-light colours (the run currency). Gold is rare and worth 5.
+  const BULBS = [["red", "#ff3d57"], ["green", "#5fd068"], ["blue", "#4da3ff"], ["yellow", "#ffd866"], ["orange", "#ff9a3d"], ["pink", "#ff6bd0"]];
   const POOL = [
     ["cone", "trash", "fence", "billboard", "crow"],
     ["stump", "tendril", "crawler", "wisp", "pod"],
@@ -52,7 +57,7 @@
 
   // ---------------- State ----------------
   const G = {
-    mode: "attract", t: 0, speed: 0, scroll: 0, dist: 0, score: 0,
+    mode: "attract", t: 0, speed: 0, scroll: 0, scroll0: 0, dist: 0, score: 0,
     shards: 0, kills: 0, parries: 0, nextAt: 420, obs: [], picks: [], parts: [], shots: [], pops: [],
     shake: 0, flash: 0, flashCol: "#fff", bolt: null, boltT: 3, overT: 0,
     stats: null, hearts: 1, reviveLeft: false, dread: 0, fate: null, onOver: null, onPause: null,
@@ -107,10 +112,18 @@
     const T = TYPES[type];
     G.obs.push(Object.assign({ type, x, t: Math.random() * 6, cd: 0.4, dead: false }, T));
   }
-  function addArc(side, x, n, lift) {
+  let groupId = 0;
+  function bulb(side, x, h, group, idx) {
+    const gold = Math.random() < 0.04;
+    const [name, col] = gold ? ["gold", "#fff3b0"] : BULBS[Math.floor(Math.random() * BULBS.length)];
+    return { side, x, h, kind: "bulb", name, col, gold, group, idx, taken: false, fly: false, vx: 0, vh: 0, ph: Math.random() * 6 };
+  }
+  // a short string of lights hanging in a gentle curve
+  function addLights(side, x, n) {
+    const g = ++groupId;
     for (let i = 0; i < n; i++) {
       const k = n > 1 ? i / (n - 1) : 0.5;
-      G.picks.push({ side, x: x + i * 13, h: 6 + (lift || 0) + Math.sin(k * Math.PI) * 26, kind: side ? "spore" : "spark", taken: false });
+      G.picks.push(bulb(side, x + i * 12, 10 + Math.sin(k * Math.PI) * 14 + (i % 2) * 2, g, i));
     }
   }
   function typeFor(side, d) {
@@ -126,13 +139,13 @@
     if (G.dist > 900 && r < 0.12 + d * 0.12) {   // wall: flip to get past
       const s = Math.random() < (P.side === 0 ? 0.65 : 0.45) ? 0 : 1;
       addOb(s ? "rift" : "barricade", X + 90);
-      addArc(1 - s, X + 60, 6, 0);
+      if (Math.random() < 0.5) addLights(1 - s, X + 60, 5);
       return gap + 140;
     }
     if (r < 0.5) {
       const s = Math.random() < 0.5 ? 0 : 1;
       addOb(typeFor(s, d), X);
-      if (Math.random() < 0.6) addArc(Math.random() < 0.5 ? s : 1 - s, X - 6, 4, 0);
+      if (Math.random() < 0.22) addLights(Math.random() < 0.5 ? s : 1 - s, X - 6, 3 + Math.floor(Math.random() * 3));
       return gap;
     }
     if (r < 0.78) {
@@ -141,8 +154,9 @@
       return gap + 60;
     }
     const s = Math.random() < 0.5 ? 0 : 1;
-    addArc(s, X, 7, 0);
-    if (G.dist > 400) addOb(typeFor(1 - s, d), X + 40);
+    if (Math.random() < 0.45) addOb(s ? "crate_dark" : "crate", X);      // crate full of lights
+    else addLights(s, X, 4 + Math.floor(Math.random() * 3));
+    if (G.dist > 400) addOb(typeFor(1 - s, d), X + 50);
     return gap;
   }
 
@@ -157,12 +171,13 @@
       hearts: G.stats.hearts + f.hearts, reviveLeft: G.stats.revive, dread: 0, overT: 0,
       fate: { roll, f, t: 0 } });
     G.stats.hearts += f.hearts;
+    G.scroll0 = G.scroll; SCN.reset(); G.crateHint = false;
     resetPlayer();
     SFX.dice();
   };
   G.pause = () => { if (G.mode === "play") { G.mode = "pause"; G.onPause && G.onPause(); } };
   G.resume = () => { if (G.mode === "pause") { G.mode = "play"; last = performance.now(); } };
-  G.toHub = () => { G.mode = "attract"; G.obs = []; G.picks = []; G.shots = []; G.pops = []; G.dist = 0; G.speed = 0; G.fate = null; resetPlayer(); };
+  G.toHub = () => { G.scroll0 = G.scroll; SCN.reset(); G.mode = "attract"; G.obs = []; G.picks = []; G.shots = []; G.pops = []; G.dist = 0; G.speed = 0; G.fate = null; resetPlayer(); };
 
   function gameOver() {
     P.dead = true; G.mode = "dying"; G.overT = 0.9; SFX.over();
@@ -205,6 +220,18 @@
     if (G.mode === "play") (P.side === 0 ? SFX.flip : SFX.flipUp)();
     burst(PX + 6, FT + 5, P.side === 0 ? "#b0305a" : "#ffd866", 16, 80);
     if (forced) { P.flipLock = 1.4; SFX.dread(); pop("THE DREAD!", "#ff3d57", PX + 6, FB + 30); }
+  }
+  function breakCrate(o, smashed) {
+    o.dead = true; G.shake = smashed ? 3 : 1;
+    burst(o.x + 7, sy(o.side, 7), "#a8743a", 14, 70);
+    if (!smashed) { SFX.thud(); return; }
+    SFX.crate(); G.crates = (G.crates || 0) + 1;
+    const n = 6 + Math.floor(Math.random() * 4), g = ++groupId;
+    for (let i = 0; i < n; i++) {
+      const b = bulb(o.side, o.x + 7, 8, null, i);
+      b.fly = true; b.vx = rand(50, 150); b.vh = rand(120, 200);
+      G.picks.push(b);
+    }
   }
   function parry(o, viaShot) {
     o.dead = true; G.parries++;
@@ -276,6 +303,7 @@
 
     const dx = G.speed * dt;
     G.scroll += dx;
+    SCN.update((G.scroll - G.scroll0) * SCN.PARALLAX);
     if (G.mode !== "over") updatePlayer(dt);
 
     if (playing) {
@@ -300,6 +328,12 @@
         }
       }
       if (o.side !== P.side || P.flip > 0) continue;
+      if (o.crate) { // smash with a hit for lights; running into it just kicks it over
+        if (P.atk > 0 && o.x < PX + 9 + st.reach && o.x + o.w > PX + 6 && P.h < 18) { breakCrate(o, true); continue; }
+        if (o.x < px1 && o.x + o.w > px0 && o.h1 > ph0) breakCrate(o, false);
+        else if (!G.crateHint && o.x < PX + 70) { G.crateHint = true; pop("HIT THE CRATE!", "#ffd866", PX + 70, sy(o.side, 30)); }
+        continue;
+      }
       // bat hit
       if (P.atk > 0 && o.enemy && o.x < PX + 9 + st.reach && o.x + o.w > PX + 6 && o.h0 < P.h + 24 && o.h1 > P.h - 2) {
         o.dead = true; G.kills++; G.score += 30 * (P.side ? st.udMult : 1) * G.fate.f.score; SFX.kill(); G.shake = 3;
@@ -330,9 +364,13 @@
     }
     G.shots = G.shots.filter(s => !s.dead && s.x > -10 && s.x < W + 20);
 
-    // pickups (with magnet)
+    // Christmas lights (with magnet)
     for (const k of G.picks) {
       k.x -= dx;
+      if (k.fly) { // spilling out of a crate
+        k.x += k.vx * dt; k.h += k.vh * dt; k.vh -= 520 * dt;
+        if (k.h < 5) { k.h = 5; k.vh = Math.abs(k.vh) * 0.35; k.vx *= 0.5; if (k.vh < 25) k.fly = false; }
+      }
       if (k.taken || !playing) continue;
       const cx = PX + 6, ch = P.h + 8;
       const ddx = k.x - cx, ddh = k.h - ch, dist = Math.hypot(ddx, ddh);
@@ -341,10 +379,11 @@
       }
       if (k.side === P.side && P.flip <= 0 && Math.abs(k.x - cx) < 9 && Math.abs(k.h - ch) < 12) {
         k.taken = true;
-        const val = k.kind === "spore" ? 3 + st.sporeBonus : 1;
+        const val = (k.gold ? 5 : 1) * (k.side ? 2 : 1) + (k.side ? st.sporeBonus : 0);
         G.shards += val; G.score += 10 * val * G.fate.f.score;
-        (k.kind === "spore" ? SFX.spore : SFX.shard)();
-        burst(k.x, sy(k.side, k.h), k.kind === "spore" ? "#ff6b8f" : "#ffd866", 6, 40);
+        (k.gold ? SFX.gold : SFX.light)();
+        burst(k.x, sy(k.side, k.h), k.col, 6, 40);
+        if (val > 1) pop("+" + val, k.col, k.x, sy(k.side, k.h + 10));
       }
     }
     G.picks = G.picks.filter(k => !k.taken && k.x > -20);
@@ -381,36 +420,36 @@
 
   function drawWorld() {
     const s = G.scroll, A = SPR.ART;
-    if (A.bg_top) tile(A.bg_top, s * 0.4, 0, A.bg_top.width * FT / A.bg_top.height, FT);
+    if (A.backdrop_top) tile(A.backdrop_top, s * 0.08, 0, A.backdrop_top.width * FT / A.backdrop_top.height, FT);
     else {
       ctx.drawImage(BG.skyTop, 0, 0, W, FT);
       R("#fff0c8", 300, 62, 14, 14); R("#ffe2a0", 298, 64, 18, 10);
       tile(BG.topFar, s * 0.08, FT - BG.topFar.height);
       tile(BG.topTrees, s * 0.22, FT - BG.topTrees.height);
-      tile(BG.topHouses, s * 0.42, FT - BG.topHouses.height);
-      tile(BG.topLamps, s * 0.7, FT - BG.topLamps.height);
     }
-    if (A.bg_top) { ctx.fillStyle = "rgba(14,8,22,.22)"; ctx.fillRect(0, 0, W, FT); } // push painted bg back
     ctx.fillStyle = "rgba(255,240,200,.6)";
     for (const d of DUST) ctx.fillRect(Math.round(d.x), Math.round(d.y), 1, 1);
-    if (A.bg_bottom) {
+    if (A.backdrop_bottom) { // drawn upright by the artist, flipped here
       ctx.save(); ctx.translate(0, H + FB); ctx.scale(1, -1);
-      tile(A.bg_bottom, s * 0.4, FB, A.bg_bottom.width * (H - FB) / A.bg_bottom.height, H - FB);
+      tile(A.backdrop_bottom, s * 0.08, FB, A.backdrop_bottom.width * (H - FB) / A.backdrop_bottom.height, H - FB);
       ctx.restore();
-    } else ctx.drawImage(BG.skyBot, 0, FB, W, H - FB);
+    } else {
+      ctx.drawImage(BG.skyBot, 0, FB, W, H - FB);
+      tile(BG.botFar, s * 0.08, FB);
+      tile(BG.botTrees, s * 0.22, FB);
+    }
     if (G.bolt) {
       const a = G.bolt.life / 0.25;
       ctx.fillStyle = `rgba(255,40,80,${0.18 * a})`; ctx.fillRect(0, FB, W, H - FB);
       let x = G.bolt.x, y = H, sd = G.bolt.seed; ctx.fillStyle = `rgba(255,120,150,${a})`;
       while (y > FB + 6) { sd = (sd * 9301 + 49297) % 233280; x += (sd / 233280 - 0.5) * 8; y -= 3; ctx.fillRect(Math.round(x), y, 2, 3); }
     }
-    if (A.bg_bottom) { ctx.fillStyle = "rgba(14,4,12,.28)"; ctx.fillRect(0, FB, W, H - FB); }
-    if (!A.bg_bottom) {
-      tile(BG.botFar, s * 0.08, FB);
-      tile(BG.botTrees, s * 0.22, FB);
-      tile(BG.botHouses, s * 0.42, FB);
-    }
     for (const a of AMB) R(a.s > 1 ? "#ff9fb4" : "rgba(230,200,220,.7)", a.x, a.y, a.s, a.s);
+    // set pieces (houses, school, ...) then a haze so they sit behind the action
+    const layerX = (G.scroll - G.scroll0) * SCN.PARALLAX;
+    for (const side of [0, 1]) { local(side); SCN.draw(ctx, side, layerX); ctx.restore(); }
+    ctx.fillStyle = "rgba(24,16,40,.22)"; ctx.fillRect(0, 0, W, FT);
+    ctx.fillStyle = "rgba(14,4,12,.3)"; ctx.fillRect(0, FB, W, H - FB);
   }
 
   // The Hellfire Club building, drawn in local coords (y up = negative).
@@ -477,7 +516,8 @@
     const x = Math.round(o.x), t = o.t, img = SPR.ART[o.type];
     if (img && !o.enemy) {
       const sz = SPR.SIZE[o.type];
-      if (sz) ctx.drawImage(img, Math.round(x - (sz[0] - o.w) / 2), Math.round(-o.h0 - sz[1]), sz[0], sz[1]);
+      if (sz && sz.length >= 4) ctx.drawImage(img, x + sz[2], Math.round(-o.h0 - sz[1] + sz[3]), sz[0], sz[1]);
+      else if (sz) ctx.drawImage(img, Math.round(x - (sz[0] - o.w) / 2), Math.round(-o.h0 - sz[1]), sz[0], sz[1]);
       else ctx.drawImage(img, x, -o.h1, o.w, o.h1 - o.h0);
       return;
     }
@@ -516,6 +556,14 @@
       case "crawler": draw(ctx, Math.floor(t * 10) % 2 ? "crawl1" : "crawl2", x, -o.h0); break;
       case "wisp": draw(ctx, Math.floor(t * 8) % 2 ? "wisp1" : "wisp2", x, -o.h0); break;
       case "pod": draw(ctx, o.t < 0.25 ? "pod2" : "pod1", x, 0); break;
+      case "crate": case "crate_dark": {
+        const dk = o.type === "crate_dark";
+        R("#1a1124", x - 1, -15, 16, 15); R(dk ? "#4a2a3a" : "#a8743a", x, -14, 14, 14);
+        R(dk ? "#2f1a26" : "#7a5228", x, -10, 14, 1); R(dk ? "#2f1a26" : "#7a5228", x, -5, 14, 1);
+        R(dk ? "#2f1a26" : "#7a5228", x + 3, -14, 1, 14); R(dk ? "#2f1a26" : "#7a5228", x + 10, -14, 1, 14);
+        const c = BULBS[Math.floor(t * 2) % BULBS.length][1];
+        R(c, x + 5, -9, 2, 2); R(BULBS[(Math.floor(t * 2) + 3) % BULBS.length][1], x + 7, -4, 2, 2);
+        break; }
       case "rift": {
         const p = 0.6 + Math.sin(t * 10) * 0.4;
         R("#0b0610", x - 1, -107, 16, 107); R("#4a0f22", x, -107, 14, 107);
@@ -526,12 +574,32 @@
   }
 
   const ART = k => SPR.ART[k];
+  function drawWires(side) { // the cord between bulbs of one string
+    ctx.fillStyle = side ? "#2a0f1e" : "#1f2a22";
+    const groups = {};
+    for (const k of G.picks) if (k.side === side && k.group && !k.fly) (groups[k.group] = groups[k.group] || []).push(k);
+    for (const g in groups) {
+      const l = groups[g].sort((a, b) => a.idx - b.idx);
+      for (let i = 0; i < l.length - 1; i++) {
+        const a = l[i], b = l[i + 1]; if (b.idx !== a.idx + 1) continue;
+        for (let t = 0; t <= 1; t += 0.1) {
+          const x = a.x + (b.x - a.x) * t + 2, h = a.h + (b.h - a.h) * t + 6 - Math.sin(t * Math.PI) * 3;
+          ctx.fillRect(Math.round(x), Math.round(-h), 1, 1);
+        }
+      }
+    }
+  }
   function drawPick(k) {
-    const x = Math.round(k.x), y = -Math.round(k.h) - 4, b = Math.floor(G.t * 6 + k.x) % 4 === 0;
-    const img = ART(k.kind === "spark" ? "pickup_spark" : "pickup_spore");
-    if (img) { ctx.drawImage(img, x - 2, y - 5 + (b ? -1 : 0), 8, 10); return; }
-    if (k.kind === "spark") { R("#1a1124", x - 1, y - 4, 5, 9); R("#ffd866", x, y - 3, 3, 7); R("#fff3b0", x + 1, y - 2, 1, b ? 5 : 2); }
-    else { R("rgba(255,61,87,.35)", x - 2, y - 2, 7, 7); R("#ff6b8f", x, y, 3, 3); R("#ffd0dc", x + 1, y, 1, 1); }
+    const x = Math.round(k.x), y = -Math.round(k.h) - 4;
+    const tw = 0.75 + Math.sin(G.t * 5 + k.ph) * 0.25;
+    const img = ART("bulb_" + k.name);
+    // glow
+    ctx.globalAlpha = 0.28 * tw; R(k.col, x - 2, y - 2, 9, 11); ctx.globalAlpha = 1;
+    if (img) { ctx.drawImage(img, x - 1, y - 2, 6, 9); return; }
+    R("#3b3446", x + 1, y - 2, 3, 2);                  // socket
+    R("#1a1124", x, y, 5, 6); R(k.col, x + 1, y, 3, 5); R(k.col, x + 2, y + 5, 1, 1);
+    R("#ffffff", x + 1, y + 1, 1, 1);
+    if (k.gold && Math.floor(G.t * 8 + k.ph) % 3 === 0) { R("#ffffff", x - 2, y + 2, 1, 1); R("#ffffff", x + 6, y, 1, 1); }
   }
   function drawShot(s) {
     const x = Math.round(s.x), y = -s.h - 4, img = ART("shot_spore");
@@ -540,6 +608,12 @@
     R(s.ref ? "#5fd0c8" : "#ff6b8f", x, y, 4, 4); R("#ffffff", x + 1, y + 1, 1, 1);
   }
 
+  // player art per class: "ranger_run1" etc., falling back to "run1"
+  function pk(frame) {
+    const sh = SAVE.state.sheet, k = sh && sh.cls + "_" + frame;
+    return k && SPR.ART[k] ? k : frame;
+  }
+  G.pk = pk;
   function drawPlayer() {
     if (P.dead && Math.floor(G.t * 16) % 2) return;
     if (P.inv > 0 && Math.floor(G.t * 20) % 2) return;
@@ -555,20 +629,21 @@
     const idle = G.mode === "attract";
     if (P.roll > 0 && P.flip <= 0) {
       ctx.save(); ctx.translate(PX + 6, -h - 6); ctx.rotate(Math.floor(G.t * 16) * Math.PI / 2);
-      const rs = SPR.ART.roll && SPR.SIZE.roll;
-      if (rs) { ctx.translate(0, -1); ctx.drawImage(SPR.ART.roll, -rs[0] / 2, -rs[1] / 2, rs[0], rs[1]); }
+      const rk = pk("roll"), rs = SPR.ART[rk] && SPR.SIZE[rk];
+      if (rs) { ctx.translate(0, -1); ctx.drawImage(SPR.ART[rk], -rs[0] / 2, -rs[1] / 2, rs[0], rs[1]); }
       else ctx.drawImage(S.roll, -6, -6, 12, 12);
       ctx.restore();
     } else if (P.blk > 0 && P.flip <= 0) {
-      draw(ctx, "block", PX, -h);
-      if (!SPR.ART.block) { // trash-can lid shield
+      draw(ctx, pk("block"), PX, -h);
+      if (!SPR.ART[pk("block")]) { // trash-can lid shield
         const fresh = P.blkAge < 0.12;
         R("#1a1124", PX + 11, -h - 15, 5, 13); R(fresh ? "#ffffff" : "#9a9caa", PX + 12, -h - 14, 3, 11);
         R("#7d7f8c", PX + 13, -h - 12, 1, 7); R("#1a1124", PX + 15, -h - 10, 1, 3);
       }
     } else {
-      const key = P.atk > 0 ? "attack" : idle ? (SPR.ART.idle ? "idle" : "run2") : !P.grounded && P.flip <= 0 ? "jump" : Math.floor(P.runT * 10) % 2 ? "run1" : "run2";
-      draw(ctx, key, PX, -h - (idle && !SPR.ART.idle && Math.floor(G.t * 2) % 2 ? 1 : 0));
+      const fr = P.atk > 0 ? "attack" : idle ? (SPR.ART[pk("idle")] ? "idle" : "run2") : !P.grounded && P.flip <= 0 ? "jump" : Math.floor(P.runT * 10) % 2 ? "run1" : "run2";
+      const key = pk(fr);
+      draw(ctx, key, PX, -h - (idle && fr !== "idle" && Math.floor(G.t * 2) % 2 ? 1 : 0));
       if (P.atk > 0) {
         const reach = (G.stats || SAVE.runStats()).reach, pr = 1 - P.atk / 0.2, ang = -1.3 + pr * 2.2;
         for (let i = 0; i < reach; i++) R(i < 5 ? "#5a3220" : "#a8743a", PX + 9 + Math.cos(ang) * i, -h - 9 + Math.sin(ang) * i, 2, 2);
@@ -620,11 +695,11 @@
     if (G.mode === "attract") return;
     const st = G.stats;
     for (let i = 0; i < st.hearts; i++) heart(6 + i * 11, 6, i < G.hearts);
-    if (G.reviveLeft) text("+1", 8 + st.hearts * 11, 7, "#5fd0c8");
+    if (G.reviveLeft) { if (ART("hud_revive")) ctx.drawImage(ART("hud_revive"), 8 + st.hearts * 11, 6, 9, 9); else text("+1", 8 + st.hearts * 11, 7, "#5fd0c8"); }
     text(String(Math.floor(G.score)).padStart(6, "0"), W - 6, 6, "#ffd866", "right");
     text("HI " + String(Math.max(SAVE.state.best, Math.floor(G.score))).padStart(6, "0"), W - 64, 6, "#f3e9dc", "right");
-    if (ART("hud_shard")) ctx.drawImage(ART("hud_shard"), W - 47, 17, 7, 9);
-    else { R("#1a1124", W - 46, 18, 5, 7); R("#ffd866", W - 45, 19, 3, 5); }
+    if (ART("hud_light")) ctx.drawImage(ART("hud_light"), W - 47, 16, 7, 10);
+    else { R("#3b3446", W - 45, 16, 3, 2); R("#1a1124", W - 46, 18, 5, 7); R(BULBS[Math.floor(G.t * 2) % 6][1], W - 45, 18, 3, 6); }
     text(String(G.shards), W - 6, 18, "#f3e9dc", "right");
     const bw = 70, f = G.dread / st.battery;
     text(P.side ? "x" + (st.udMult * G.fate.f.score).toFixed(1) : "DREAD", 6, H - 22, P.side ? "#ff6b8f" : "#a998b8");
@@ -646,6 +721,7 @@
     for (const side of [0, 1]) {
       local(side);
       drawClub(side === 1);
+      drawWires(side);
       for (const k of G.picks) if (k.side === side) drawPick(k);
       for (const o of G.obs) if (o.side === side && !o.dead) drawOb(o);
       for (const s of G.shots) if (s.side === side) drawShot(s);

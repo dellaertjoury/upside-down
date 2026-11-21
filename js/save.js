@@ -6,9 +6,9 @@
     STR: "Bat reach",
     DEX: "Jump height & block window",
     CON: "Extra hearts",
-    INT: "Bigger shard bonus after a run",
+    INT: "Bigger light bonus after a run",
     WIS: "Longer in the Upside Down",
-    CHA: "Shard magnet range",
+    CHA: "Light magnet range",
   };
 
   const CLASSES = [
@@ -35,8 +35,8 @@
     { id: "heart",   name: "Extra heart",        desc: "Take one more hit per run.",                         costs: [40, 120, 300] },
     { id: "reach",   name: "Longer bat",         desc: "Your melee hit reaches further.",                    costs: [30, 80, 180] },
     { id: "battery", name: "Flashlight battery", desc: "Stay in the Upside Down 2s longer.",                 costs: [25, 60, 140, 300] },
-    { id: "magnet",  name: "Shard magnet",       desc: "Pull shards in from further away.",                  costs: [35, 90, 200] },
-    { id: "greed",   name: "Dark greed",         desc: "+0.5x score while upside down, +1 shard per spore.", costs: [60, 150, 350] },
+    { id: "magnet",  name: "Light magnet",       desc: "Pull Christmas lights in from further away.",                  costs: [35, 90, 200] },
+    { id: "greed",   name: "Dark greed",         desc: "+0.5x score while upside down, +1 per Upside Down light.", costs: [60, 150, 350] },
     { id: "lid",     name: "Sturdier lid",       desc: "Hold your block longer.",                            costs: [40, 110] },
     { id: "djump",   name: "Double jump",        desc: "Jump again in mid-air.",                             costs: [150] },
     { id: "revive",  name: "Second wind",        desc: "Once per run, survive a fatal hit.",                 costs: [400] },

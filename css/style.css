@@ -131,3 +131,15 @@ body.has-ui-box .ab,body.has-ui-box .row{background:none;box-shadow:none;border:
 body.has-ui-dice .ab .dice i.die{background:var(--ui-dice) 0 0/600% 100% no-repeat;width:16px;height:16px;image-rendering:pixelated;font-size:0}
 body.has-ui-dice .ab .dice i.die.drop{opacity:.35;filter:grayscale(1)}
 .touch button img{width:40px;height:40px;image-rendering:pixelated;pointer-events:none}
+
+/* Christmas-light currency icon (CSS bulb; ui_light art replaces it) */
+.bulb{display:inline-block;width:7px;height:10px;vertical-align:-1px;margin:0 2px;
+  background:linear-gradient(#3b3446 0 2px,transparent 2px),radial-gradient(circle at 50% 62%,#ff3d57 0 3px,transparent 3.5px);
+  filter:drop-shadow(0 0 3px #ff3d57aa)}
+body.has-ui-light .bulb{background:var(--ui-light) center/contain no-repeat;width:10px;height:14px;filter:none;image-rendering:pixelated}
+.sic{width:16px;height:16px;vertical-align:-4px;margin-right:4px;image-rendering:pixelated}
+.row.has-ic{grid-template-columns:40px minmax(0,1fr) auto}.uic{width:40px;height:40px;image-rendering:pixelated}
+.lock-ic{width:16px;height:16px;image-rendering:pixelated;margin-left:auto}
+.medal{width:20px;height:20px;image-rendering:pixelated;vertical-align:middle}
+body.has-ui-sheet .sheet{border:24px solid transparent;border-image:var(--ui-sheet) 24 fill / 24px stretch;padding:6px;background:none}
+body.has-ui-row .board li{border:12px solid transparent;border-image:var(--ui-row) 12 fill / 12px stretch;background:none!important;padding:0 4px}
