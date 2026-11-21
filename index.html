@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>The Upside Down</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<main class="shell">
+  <div class="frame" id="frame">
+    <canvas id="game" width="400" height="225"></canvas>
+
+    <!-- HUB: outside the Hellfire Club -->
+    <section class="panel hub" id="p-menu">
+      <div class="hub-card">
+        <h1 class="logo"><span class="up">THE UPSIDE</span> <span class="down">DOWN</span></h1>
+        <p class="tag">Hellfire Club · tonight's campaign starts at the door</p>
+        <div class="who" id="who"></div>
+        <div class="menu-grid">
+          <button class="btn primary" data-go="play">Start run</button>
+          <button class="btn" data-go="sheet">Character sheet</button>
+          <button class="btn" data-go="upgrades">Upgrades</button>
+          <button class="btn" data-go="leaderboard">Leaderboard</button>
+        </div>
+        <div class="menu-foot">
+          <span class="bank">Shards <b id="bank">0</b></span>
+          <span class="bank">Best <b id="best">0</b></span>
+          <button class="btn tiny" id="mute" aria-label="Toggle sound">Sound on</button>
+        </div>
+        <p class="keys">↑ jump · ↓ roll · → hit · ← block · Space flip · P pause</p>
+      </div>
+    </section>
+
+    <!-- CHARACTER SHEET -->
+    <section class="panel hidden sheet-panel" id="p-sheet">
+      <div class="sheet">
+        <header class="ph"><h2>Character sheet</h2><span class="bank">Shards <b class="bank-n">0</b></span></header>
+        <div class="sheet-grid">
+          <div class="sheet-left">
+            <canvas id="preview" width="12" height="16"></canvas>
+            <label class="field">Name <input id="cname" maxlength="12" autocomplete="off" spellcheck="false" placeholder="ADVENTURER"></label>
+            <div class="field">Class <div class="classes" id="classes"></div></div>
+            <div class="field">Hair <div class="swatches" id="hair"></div></div>
+            <div class="field">Jacket <div class="swatches" id="jacket"></div></div>
+          </div>
+          <div class="sheet-right">
+            <div class="abil" id="abil"></div>
+            <div class="rollbar">
+              <button class="btn" id="roll">Roll 4d6 ×6</button>
+              <span class="muted" id="roll-note"></span>
+            </div>
+            <dl class="derived" id="derived"></dl>
+          </div>
+        </div>
+        <div class="menu-grid">
+          <button class="btn primary" data-go="play">Save &amp; start run</button>
+          <button class="btn" data-go="menu">Save &amp; back</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- UPGRADES -->
+    <section class="panel hidden" id="p-upgrades">
+      <header class="ph"><h2>Upgrades</h2><span class="bank">Shards <b class="bank-n">0</b></span></header>
+      <div class="list" id="up-list"></div>
+      <button class="btn back" data-go="menu">Back</button>
+    </section>
+
+    <!-- LEADERBOARD -->
+    <section class="panel hidden" id="p-leaderboard">
+      <header class="ph"><h2>Leaderboard</h2><span class="mode" id="lb-mode"></span></header>
+      <ol class="board" id="lb-list"><li class="muted">Loading…</li></ol>
+      <button class="btn back" data-go="menu">Back</button>
+    </section>
+
+    <!-- PAUSE -->
+    <section class="panel hidden" id="p-pause">
+      <h2>Paused</h2>
+      <div class="menu-grid">
+        <button class="btn primary" data-go="resume">Resume</button>
+        <button class="btn" data-go="quit">Back to the club</button>
+      </div>
+    </section>
+
+    <!-- GAME OVER -->
+    <section class="panel hidden" id="p-over">
+      <h2 class="over-t">Run over</h2>
+      <div class="stats" id="over-stats"></div>
+      <p class="muted" id="over-lb"></p>
+      <div class="menu-grid">
+        <button class="btn primary" data-go="play">Run again</button>
+        <button class="btn" data-go="upgrades">Upgrades</button>
+        <button class="btn" data-go="menu">Back to the club</button>
+      </div>
+    </section>
+  </div>
+
+  <div class="touch" id="touch">
+    <button data-k="block">Block</button>
+    <button data-k="roll">Roll</button>
+    <button data-k="flip">Flip</button>
+    <button data-k="attack">Hit</button>
+    <button data-k="jump">Jump</button>
+  </div>
+</main>
+
+<script src="js/config.js"></script>
+<script src="js/sprites.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/save.js"></script>
+<script src="js/leaderboard.js"></script>
+<script src="js/game.js"></script>
+<script src="js/ui.js"></script>
+</body>
+</html>
