@@ -46,15 +46,20 @@ B goes back and Start starts a run.
 
 ## Settings
 
-Music and sound effects (on/off and volume), language (English, Nederlands;
-add more in `js/i18n.js`), full screen, when to show the touch buttons, and
-the controls above. Everything is saved in the browser.
+Music and sound effects (on/off and volume), language (English, Nederlands,
+Français, Deutsch; add more in `js/i18n.js`), full screen, when to show the
+touch buttons, and the controls above. Everything is saved in the browser.
+
+**Player manual** (Settings → Open manual): tabs for heroes, monsters, items
+and upgrades, each with a picture and what it does. Heroes and monsters play
+their idle bounce, drawn live with the game's own drawing code
+(`GAME.preview`), so new art shows up there by itself.
 
 ## Character sheet (D&D style)
 
 No dice rolls for stats: everyone starts with every ability at 10, plus the
-class bonus. Pick a class: Fighter (bat, STR +2, CON +1) or Ranger (slingshot,
-DEX +2, WIS +1). Rogue and Wizard are still locked. Each upgrade level raises
+class bonus. Only the Fighter (bat, STR +2, CON +1) is playable for now;
+Ranger, Rogue and Wizard are locked until their art is done. Each upgrade level raises
 its ability by 2, so the sheet levels up as you buy upgrades:
 
 | Ability | Grows with |
@@ -134,8 +139,8 @@ the menu.
 | Class | Attack | Perk | Weakness |
 |---|---|---|---|
 | Fighter | Bat: kills in 1 hit, knocks spore shots back | **Trash-can lid** absorbs one hit, recharges in 18 s | Has to get close |
-| Ranger | Marble lobbed in an arc to about half the screen | **Roll + attack** = low skipping shot for ground enemies; light magnet ×1.5 | Arc misses low targets unless you skip-shoot |
-| Wizard *(locked)* | Bolt straight across the whole screen, pierces 1 enemy | Dread fills **25% slower** | Half damage: 2 hits per enemy (stalker 4) |
+| Ranger *(locked)* | Marble lobbed in an arc to about half the screen | **Roll + attack** = low skipping shot for ground enemies; light magnet ×1.5 | Arc misses low targets unless you skip-shoot |
+| Wizard *(locked)* | Firework straight across the whole screen, pierces 1 enemy | Dread fills **25% slower** | Half damage: 2 hits per enemy (stalker 4) |
 | Rogue *(locked)* | Fast jabs, 1 in 4 crits for double damage | Heat climbs **50% faster** | Short reach |
 
 ## Score
@@ -171,7 +176,7 @@ you use it.
 | Item | Cost | What it does |
 |---|---|---|
 | Second wind | 60 | Survive one fatal hit, used up when it saves you |
-| Skateboard | 30 | Press E (RB) in a run: ride through everything, invincible and faster, for 4 s (more with Better board). Smashes enemies, obstacles and crates; Dread pauses. The board breaks at the end and the kid rolls off |
+| Skateboard | 30 | Press E (RB) in a run: ride through everything, invincible and faster, for 4 s (more with Better board). Smashes enemies, obstacles and crates; Dread pauses. Jump while riding for a kickflip. The board breaks at the end (crash frames) and the kid rolls off |
 
 The game pauses by itself when you switch tabs or windows.
 
@@ -237,8 +242,9 @@ The game uses the painted pixel art in `assets/`. Anything without art falls
 back to a built-in placeholder drawn in `js/sprites.js`.
 
 New art goes through **[ART_PROMPTS.md](ART_PROMPTS.md)**: 38 sprite-sheet
-prompts, 180 frames in all. Players come in 4 sheets each (`fighter_sheet1.png`
-… `fighter_sheet4.png`, 2 rows per image for more detail); creatures, vehicles
+prompts. Players come in 4 sheets each (`fighter_sheet_idle_run.png`,
+`_jump_attack`, `_roll_skate` with the skateboard, crash and kickflip, and
+`_die`, 2–3 rows per image for more detail); creatures, vehicles
 and UI sets in one sheet each (`hound_sheet.png`, `plat_car_sheet.png`). Then run
 
 ```

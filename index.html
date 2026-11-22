@@ -119,7 +119,26 @@
               <p class="muted small" id="s-pad"></p>
               <button class="btn tiny" id="s-reset" data-i18n="set.reset"></button>
             </section>
+            <section class="set-card set-manual">
+              <h3 data-i18n="set.manual"></h3>
+              <p class="muted small" data-i18n="set.manualHint"></p>
+              <button class="btn tiny primary" data-go="manual" data-i18n="set.manualOpen"></button>
+            </section>
         </div>
+      </div>
+    </section>
+
+    <!-- PLAYER MANUAL (from Settings) -->
+    <section class="panel hidden sheet-panel" id="p-manual">
+      <div class="sheet manual">
+        <header class="ph"><h2 data-i18n="man.title"></h2><button class="btn back" data-go="settings" data-i18n="back"></button></header>
+        <div class="tabs man-tabs" role="tablist">
+          <button class="btn tiny tab on" role="tab" data-mtab="heroes" data-i18n="man.heroes"></button>
+          <button class="btn tiny tab" role="tab" data-mtab="enemies" data-i18n="man.enemies"></button>
+          <button class="btn tiny tab" role="tab" data-mtab="items" data-i18n="man.items"></button>
+          <button class="btn tiny tab" role="tab" data-mtab="upgrades" data-i18n="man.upgrades"></button>
+        </div>
+        <div class="man-list" id="man-list"></div>
       </div>
     </section>
 

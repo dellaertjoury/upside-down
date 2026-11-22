@@ -30,7 +30,7 @@
     // ranged attacks
     arc: { vx: 200, perReach: 5, vh: 90, g: 380 }, // Ranger marble (reach upgrades add speed = range)
     skip: { vx: 230, range: 120 },                 // Ranger low shot (roll + attack): skims the ground
-    bolt: { vx: 300 },                             // Wizard bolt
+    bolt: { vx: 300 },                             // Wizard firework
   };
 
   // Run speed: starts gentle and builds up slowly (game px per second)
@@ -40,7 +40,7 @@
 
   const cv = document.getElementById("game");
   cv.width = W * SCALE; cv.height = H * SCALE;
-  const ctx = cv.getContext("2d");
+  let ctx = cv.getContext("2d"); // swapped briefly by G.preview (player manual)
   ctx.imageSmoothingEnabled = false;
   const { S, BG, draw } = window.SPR;
 
@@ -94,7 +94,7 @@
   function resetPlayer() {
     Object.assign(P, { side: 0, h: 0, vh: 0, grounded: true, jumps: 0, roll: 0, atk: 0, atkCd: 0,
       blk: 0, blkCd: 0, blkAge: 0, flip: 0, switched: false, flipCd: 0, flipLock: 0, inv: 0, runT: 0,
-      bufJump: 0, bufFlip: 0, bufRoll: 0, bufAtk: 0, bufBlk: 0, bufBoard: 0, dead: false, die: null });
+      bufJump: 0, bufFlip: 0, bufRoll: 0, bufAtk: 0, bufBlk: 0, bufBoard: 0, crash: 0, dead: false, die: null });
   }
   resetPlayer();
 
@@ -323,6 +323,9 @@
     // death tumble: knocked up and backwards, spinning, then falling off the bottom of the screen
     const top = P.side === 0;
     P.die = { x: PX + 6, y: sy(P.side, P.h) + (top ? -9 : 9), vy: top ? -170 : -40, vx: -38, rot: 0, spin: -11, mir: top ? 1 : -1 };
+    if (artFrames("die").length >= 5) { // painted death: knocked forward, hits the ground, slides to a stop
+      P.die = { slide: true, h: P.h, vh: 90, t: 0, side: P.side }; G.overT = 2.0;
+    }
     P.skate = 0; P.roll = 0; P.atk = 0; P.flip = 0;
     G.shake = 8; burst(PX + 6, sy(P.side, P.h + 9), "#ff3d57", 22, 90);
     const bonus = Math.floor(G.score / G.stats.bonusDiv);
@@ -500,6 +503,7 @@
       } else { P.atk = 0.2; SFX.swing(); }
     }
     P.atk = Math.max(0, P.atk - dt);
+    if (P.crash > 0) { P.crash -= dt; if (P.crash <= 0) { P.crash = 0; P.roll = 0.45; SFX.roll(); } } // board broke: fall, then roll
     P.roll = Math.max(0, P.roll - dt);
     P.blk = Math.max(0, P.blk - dt); P.blkAge += dt;
 
@@ -538,7 +542,8 @@
     if (G.mode === "dying") {
       G.speed = Math.max(0, G.speed - 400 * dt); G.overT -= dt;
       const d = P.die;
-      if (d) { d.vy += 560 * dt; d.y += d.vy * dt; d.x += d.vx * dt; d.rot += d.spin * dt; d.spin *= 1 - 0.6 * dt; }
+      if (d && d.slide) { d.t += dt; d.vh -= GRAV * 0.6 * dt; d.h = Math.max(0, d.h + d.vh * dt); if (d.h === 0) d.vh = 0; }
+      else if (d) { d.vy += 560 * dt; d.y += d.vy * dt; d.x += d.vx * dt; d.rot += d.spin * dt; d.spin *= 1 - 0.6 * dt; }
       if (G.overT <= 0) { G.mode = "over"; G.onOver && G.onOver(G.result); }
     } else if (playing) {
       G.speed = Math.min(SPEED_MAX, SPEED_START + G.t * SPEED_GAIN);
@@ -566,7 +571,8 @@
         if (Math.random() < 0.5) G.parts.push({ x: PX - 2, y: sy(P.side, P.h + rand(2, 14)), vx: -rand(40, 90), vy: rand(-10, 10), life: 0.35, col: BULBS[Math.floor(Math.random() * 6)][1], s: 1 });
         if (Math.floor(G.t * 8) !== Math.floor((G.t - dt) * 8)) G.onLight && G.onLight(BULBS[Math.floor(G.t * 8) % 6][1]);
         if (P.skate <= 0) { // the board snaps: bits fly, the kid rolls off
-          P.skate = 0; P.inv = 1; P.roll = 0.5; P.atk = 0; SFX.crate(); G.shake = 3;
+          P.skate = 0; P.inv = 1.2; P.atk = 0; SFX.crate(); G.shake = 3;
+          if (artFrames("crash").length) P.crash = 0.4; else P.roll = 0.5;
           burst(PX + 4, sy(P.side, P.h + 2), "#ff3d57", 10, 90); burst(PX + 8, sy(P.side, P.h + 2), "#ffd866", 6, 70);
           pop(T_("pop.boardBroke"), "#ff9fb4");
         }
@@ -838,6 +844,7 @@
     const x = Math.round(o.x), t = o.t, img = SPR.ART[o.type];
     if (img && o.crate) { // crate art grows with the tier
       const sz = SPR.SIZE[o.type] || [16, 16, -1, 0], k = o.w / 14;
+      if (o.tier >= 10) { ctx.globalAlpha = 0.35 + Math.sin(t * 6) * 0.15; R("#ffd866", x - 3, -o.w - 3, o.w + 6, o.w + 3); ctx.globalAlpha = 1; }
       ctx.drawImage(img, x + sz[2] * k, Math.round(-sz[1] * k + sz[3]), sz[0] * k, sz[1] * k);
       return;
     }
@@ -892,6 +899,13 @@
       case "crate": case "crate_dark": { // 14 px = 3 lights, 16 px = 5, 18 px (gold glow) = 10
         const dk = o.type === "crate_dark", s = o.w, sl = dk ? "#2f1a26" : "#7a5228";
         if (o.tier >= 10) { ctx.globalAlpha = 0.35 + Math.sin(t * 6) * 0.15; R("#ffd866", x - 3, -s - 3, s + 6, s + 3); ctx.globalAlpha = 1; }
+        const cimg = ART(o.type);
+        if (cimg) { // painted crate (14 / 16 / 18 px wide by tier), a heart on heart crates
+          const cw = s + 4, ch = cw * cimg.height / cimg.width;
+          ctx.drawImage(cimg, x - 2, -ch, cw, ch);
+          if (o.heart) heart(x + s / 2 - 4, -ch / 2 - 4, true);
+          break;
+        }
         R("#1a1124", x - 1, -s - 1, s + 2, s + 1); R(dk ? "#4a2a3a" : "#a8743a", x, -s, s, s);
         R(sl, x, -Math.round(s * 0.7), s, 1); R(sl, x, -Math.round(s * 0.35), s, 1);
         R(sl, x + 3, -s, 1, s); R(sl, x + s - 4, -s, 1, s);
@@ -1022,6 +1036,8 @@
     return f.length ? f : PLAYER_FALLBACK[state];
   }
   const cyc = (list, time, fps) => list[Math.floor(time * fps) % list.length];
+  // painted frames for a state (own class, else the Fighter's), or [] when there is no art for it
+  function artFrames(state) { const sh = SAVE.state.sheet, f = sh ? frames(sh.cls, state) : []; return f.length ? f : frames("fighter", state); }
   // idle with a bounce: 3 frames play stand, bounce (knees bent), stand, breathe in
   const idleCyc = (list, time, fps) => list.length === 3 ? list[[0, 1, 0, 2][Math.floor(time * fps) % 4]] : cyc(list, time, fps);
 
@@ -1073,6 +1089,11 @@
       if (P.atk > 0) { // attack frames spread over the swing, legs keep running in the art
         state = "attack"; const af = pframes("attack"), dur = ranged() ? 0.22 : 0.2;
         key = af[Math.min(af.length - 1, Math.floor((1 - P.atk / dur) * af.length))];
+      } else if (P.crash > 0 && artFrames("crash").length) { // the board snaps under him, he pitches forward
+        state = "crash"; const cf = artFrames("crash"); key = cf[Math.min(cf.length - 1, Math.floor((1 - P.crash / 0.4) * cf.length))];
+      } else if (P.skate > 0 && !P.grounded && artFrames("kick").length) { // kickflip: pop, flip, catch, land
+        state = "kick"; const kf = artFrames("kick"), n = kf.length;
+        key = P.vh > 0 ? (P.h < 6 ? kf[0] : kf[Math.min(1, n - 1)]) : P.h > 9 ? kf[Math.min(2, n - 1)] : kf[n - 1];
       } else if (P.skate > 0 && P.grounded) { state = "skate"; key = cyc(pframes("skate"), G.t, 6); }
       else if (idle) { state = "idle"; key = idleCyc(pframes("idle"), G.t, 4); }
       else if (!P.grounded && P.flip <= 0) { // jump: first frame rising, last frame falling
@@ -1083,10 +1104,11 @@
         ctx.filter = `hue-rotate(${Math.floor(G.t * 900) % 360}deg) saturate(1.6)`;
         if (P.skate < 1 && Math.floor(G.t * 12) % 2) ctx.filter = "none"; // flicker as it runs out
       }
-      draw(ctx, key, PX, -h - (onBoard ? 4 : 0));
+      const boardInArt = onBoard && (state === "kick" || (state === "skate" && artFrames("skate").length > 0));
+      draw(ctx, key, PX, -h - (onBoard && !boardInArt ? 4 : 0));
       ctx.filter = "none";
-      if (onBoard) drawBoard(PX - 1, -h - 4);
-      if (lampAt && P.roll <= 0) { // the lamp itself glows on the jacket
+      if (onBoard && !boardInArt) drawBoard(PX - 1, -h - 4);
+      if (lampAt && P.roll <= 0 && !SPR.ART[key]) { // the lamp glows on the jacket (painted art has its own)
         ctx.globalAlpha = 0.55 + Math.sin(G.t * 9) * 0.1; R("#fff3b0", lampAt[0] - 1, lampAt[1] - 1, 2, 2); ctx.globalAlpha = 0.25; R("#fff3b0", lampAt[0] - 2, lampAt[1] - 2, 4, 4); ctx.globalAlpha = 1;
       }
       if (P.atk > 0 && !ranged() && !SPR.ART[key]) {
@@ -1100,7 +1122,14 @@
   }
 
   function drawDeath() {
-    const d = P.die; if (d.y > H + 30) return;
+    const d = P.die;
+    if (d.slide) { // frames play once: hit, falling, landing, sliding, lying still
+      const f = artFrames("die"), times = [0, 0.2, 0.38, 0.56, 0.76, 0.98, 1.22];
+      let i = 0; while (i < f.length - 1 && d.t >= times[i + 1]) i++;
+      local(d.side); draw(ctx, f[i], PX, -Math.round(d.h)); ctx.restore();
+      return;
+    }
+    if (d.y > H + 30) return;
     // die frames: 1 = hit, the middle ones tumble, the last one falls limp (once it drops fast)
     const f = pframes("die"), n = f.length, el = 1.3 - G.overT;
     const key = n < 3 ? cyc(f, G.t, 8) : el < 0.15 ? f[0] : n >= 4 && d.vy > 260 ? f[n - 1] : f[1 + Math.floor(el * 8) % (n >= 4 ? n - 2 : n - 1)];
@@ -1224,7 +1253,7 @@
       for (const m of G.pshots) if (m.side === side) {
         const bolt = m.kind === "bolt", img = ART(bolt ? "wizard_d20" : "ranger_shot"), y = Math.round(-m.h - 3) + (m.kind === "skip" ? Math.round(Math.abs(Math.sin(m.x / 9)) * -2) : 0);
         if (img) ctx.drawImage(img, Math.round(m.x) - (bolt ? 8 : 6), y - 1, bolt ? 10 : 12, bolt ? 8 : 6);
-        else if (bolt) { R("#1a1124", m.x - 1, y - 2, 6, 6); R("#a46bff", m.x, y - 1, 4, 4); R("#ffffff", m.x + 1, y, 1, 1); }
+        else if (bolt) { R("#3a1a08", m.x - 1, y - 2, 6, 6); R("#ff9a2e", m.x, y - 1, 4, 4); R("#fff3a0", m.x + 2, y, 2, 2); for (let k = 1; k <= 3; k++) R(k % 2 ? "#ffd23a" : "#ff5a3a", m.x - 2 - k * 3, y + ((k * 7 + Math.round(m.x)) % 3) - 1, 2, 1); }
         else { R("#1a1124", m.x - 1, y - 1, 5, 5); R("#4da3ff", m.x, y, 3, 3); R("#ffffff", m.x, y, 1, 1); }
       }
       ctx.restore();
@@ -1279,8 +1308,18 @@
     const bob = Math.sin(w.t * 1.3) * 2, sway = Math.sin(w.t * 0.6) * 0.16;
     const lit = flash > 0.05;
     local(1); ctx.globalAlpha = alpha;
-    const B = SPR.ART.watcher_body, Hd = SPR.ART.watcher_head;
-    if (B && Hd) {
+    const P1 = SPR.ART.watcher_1, P2 = SPR.ART.watcher_2, B = SPR.ART.watcher_body, Hd = SPR.ART.watcher_head;
+    if (P1) { // two poses that slowly breathe into each other, swaying from the base
+      const k = P2 ? (Math.sin(w.t * 0.7) + 1) / 2 : 0;
+      if (lit) ctx.filter = `brightness(${1 + flash * 1.5}) drop-shadow(0 0 2px #ff3d57)`;
+      ctx.translate(Math.round(w.x), 0); ctx.rotate(sway * 0.25);
+      for (const [img, a] of [[P1, 1 - k], [P2, k]]) {
+        if (!img || a <= 0.01) continue;
+        const sz = SPR.SIZE[img === P1 ? "watcher_1" : "watcher_2"] || [img.width / 9, img.height / 9];
+        ctx.globalAlpha = alpha * a; ctx.drawImage(img, -sz[0] / 2, Math.round(-sz[1] + bob), sz[0], sz[1]);
+      }
+      ctx.filter = "none";
+    } else if (B && Hd) {
       const bs = SPR.SIZE.watcher_body || [80, 70], hs = SPR.SIZE.watcher_head || [40, 34];
       if (lit) ctx.filter = `brightness(${1 + flash * 1.5}) drop-shadow(0 0 2px #ff3d57)`;
       ctx.drawImage(B, Math.round(w.x - bs[0] / 2), Math.round(-bs[1] + bob), bs[0], bs[1]);
@@ -1332,6 +1371,69 @@
     for (const sh of G.shots) box(sh.side, sh.x, sh.h, 4, sh.h + 4, "#ff6bd0");
     for (const k of G.picks) box(k.side, k.x - 1, k.h - 4, 6, k.h + 6, "#5fd068");
   }
+
+  // ---------------- Player manual previews ----------------
+  // Draws one manual entry (hero, enemy or item) into a small canvas with the
+  // same drawing code as the game: 48 x 40 game px, feet on the floor at y 36.
+  const PV_W = 48, PV_H = 40, PV_FLOOR = 34;
+  const PV_ENEMY = { crow: ["crow", "fly", 12], crawler: ["hound", "run", 0], wisp: ["flyer", "fly", 12], pod: ["pod", "idle", 0], stalker: ["stalker", "walk", 0] };
+  G.preview = function (canvas, id, t) {
+    const c2 = canvas.getContext("2d"), main = ctx, gt = G.t, [kind, what] = id.split(":");
+    const k = canvas.width / PV_W, dark = canvas.dataset.side === "1";
+    c2.setTransform(1, 0, 0, 1, 0, 0); c2.imageSmoothingEnabled = false; c2.clearRect(0, 0, canvas.width, canvas.height);
+    ctx = c2; G.t = t;
+    try {
+      c2.scale(k, k);
+      const g = c2.createLinearGradient(0, 0, 0, PV_H);
+      g.addColorStop(0, dark ? "#1c0812" : "#1d2540"); g.addColorStop(1, dark ? "#4a1630" : "#4a4466");
+      c2.fillStyle = g; c2.fillRect(0, 0, PV_W, PV_H);
+      R(dark ? "#2a0f1e" : "#2b2a33", 0, PV_FLOOR, PV_W, PV_H - PV_FLOOR); R(dark ? "#5b1b3a" : "#4c4e5a", 0, PV_FLOOR, PV_W, 1);
+      c2.translate(0, PV_FLOOR);
+      const cx = PV_W / 2;
+      if (kind === "hero") {
+        let f = frames(what, "idle"), shade = false;
+        if (!f.length) { f = frames("fighter", "idle"); shade = what !== "fighter"; }
+        if (!f.length) f = PLAYER_FALLBACK.idle;
+        if (shade) c2.filter = "brightness(0.12)"; // no art yet: a mystery silhouette
+        draw(c2, idleCyc(f, t, 4), cx - 7, 0);
+        c2.filter = "none";
+      } else if (kind === "en") {
+        if (what === "watcher") {
+          const P1 = ART("watcher_1"), P2 = ART("watcher_2"), m = Math.sin(t * 0.7) * 0.5 + 0.5;
+          c2.filter = `brightness(${1.8 + Math.max(0, Math.sin(t * 2.3) - 0.85) * 12}) drop-shadow(0 0 1px #ff3d57)`; // lit by lightning now and then
+          if (P1) for (const [img, a, key] of [[P1, 1 - m, "watcher_1"], [P2, m, "watcher_2"]]) {
+            if (!img) continue; const sz = SPR.SIZE[key] || [img.width / 9, img.height / 9], s = 46 / Math.max(sz[0], 58);
+            c2.globalAlpha = a; c2.drawImage(img, cx - sz[0] * s / 2, -sz[1] * s + Math.sin(t * 1.3), sz[0] * s, sz[1] * s);
+          } else { c2.save(); c2.translate(cx, 0); c2.scale(0.5, 0.5); watcherPlaceholder(0, Math.sin(t * 1.3) * 2, Math.sin(t * 0.6) * 0.16, false, t); c2.restore(); }
+          c2.globalAlpha = 1; c2.filter = "none";
+        } else {
+          const T = TYPES[what] || {}, e = PV_ENEMY[what];
+          const o = { type: what, x: 0, t, side: -1, w: T.w || 12, h0: e ? e[2] : T.h0 || 0, h1: T.h1 || 12, enemy: !!T.enemy, vh: 0 };
+          if (what === "wisp") o.h0 += Math.round(Math.sin(t * 3) * 2);
+          if (what === "pod") o.t = t % 1.6;
+          o.x = Math.round(cx - o.w / 2);
+          const idle = e && frames(e[0], "idle");
+          if (idle && idle.length) draw(c2, idleCyc(idle, t, 6), o.x, -o.h0);
+          else if (what === "stalker") { c2.save(); c2.translate(cx, 0); c2.scale(0.7, 0.7); c2.translate(-cx, 0); drawOb(o); c2.restore(); } // 44 px tall: shrunk to fit
+          else drawOb(o);
+        }
+      } else if (kind === "it") {
+        if (what === "bulb" || what === "gold") {
+          for (let i = 0; i < (what === "gold" ? 1 : 3); i++) {
+            const b = what === "gold" ? ["gold", "#ffd866"] : BULBS[i * 2];
+            drawPick({ x: what === "gold" ? cx - 2 : cx - 14 + i * 12, h: 10 + (what === "gold" ? 0 : Math.sin(i) * 4), name: b[0], col: b[1], gold: what === "gold", ph: i });
+          }
+        } else if (what === "dice") drawPick({ kind: "dice", x: cx - 5, h: 8 });
+        else if (what === "board") drawPick({ kind: "skate", x: cx - 8, h: 8 });
+        else if (what === "revive") { c2.save(); c2.translate(cx, -16); c2.scale(2, 2); heart(-4.5, -4, true, "#5fd0c8"); c2.restore(); }
+        else { // crates
+          const tier = what === "crate10" ? 10 : 3, w = tier >= 10 ? 18 : 14;
+          drawOb({ type: what === "dark" ? "crate_dark" : "crate", x: Math.round(cx - w / 2), t, w, h0: 0, h1: w, tier, heart: what === "heart", crate: true });
+          if (what === "heart") { c2.save(); c2.translate(cx, -w / 2); c2.globalAlpha = 0.3 + Math.sin(t * 6) * 0.15; R("#ff3d57", -6, -6, 12, 11); c2.globalAlpha = 1; heart(-4.5, -4, true); c2.restore(); }
+        }
+      }
+    } finally { ctx = main; G.t = gt; }
+  };
   G.spawn = (type, dx = 0) => addOb(type, W + 10 + dx);
   G.spawnPlatform = (kind, side = P.side, dx = 0) => addPlatform(side, W + 10 + dx, kind);
   G.PLATS = PLATS;

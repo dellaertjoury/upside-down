@@ -223,6 +223,9 @@ def handle(key, get, path):
         fit_box(key, get(), 12, 12); manifest[key] = True
     elif key in ("pickup_skate", "skate_board"):
         fit_box(key, get(), *((18, 10) if key == "pickup_skate" else (16, 5))); manifest[key] = True
+    elif key in ("watcher_1", "watcher_2"):   # whole creature; 0.11 game px per source px keeps both poses at one scale
+        im = get(); w, h = q(im.width * 0.11), q(im.height * 0.11)
+        write(key, im, w, h); manifest[key] = [w, h]
     elif key in ("watcher_body", "watcher_head"):
         im = get(); w, h = by_h(im, 72 if key == "watcher_body" else 34)
         write(key, im, w, h); manifest[key] = [w, h]
@@ -259,7 +262,7 @@ def _runs(mask, gap, minlen=1):
         else: merged.append(r)
     return [r for r in merged if r[1] - r[0] >= minlen]
 
-def slice_sheet(path, drop_short=0.35):
+def slice_sheet(path, drop_short=0.35, gapfrac=0.01):
     im = load(path, crop=False); A = np.array(im)[:, :, 3] > 40
     H, W = A.shape
     rows = _runs(A.any(axis=1), max(4, int(H * 0.012)), max(3, int(H * 0.01)))
@@ -269,7 +272,7 @@ def slice_sheet(path, drop_short=0.35):
     out = []
     for y0, y1 in rows:
         band = A[y0:y1]
-        cols = _runs(band.any(axis=0), max(4, int(W * 0.01)), 2)
+        cols = _runs(band.any(axis=0), max(3, int(W * gapfrac)), 2)
         if len(cols) > 1:  # fold slivers (motion lines, dust) into their nearest neighbour
             med = sorted(c[1] - c[0] for c in cols)[len(cols) // 2]
             i = 0
@@ -294,7 +297,7 @@ ENEMY_ROWS = {"crow": [("fly", 4), ("attack", 2), ("idle", 3)], "hound": [("run"
               "stalker": [("walk", 4), ("attack", 3), ("idle", 3)], "flyer": [("fly", 4), ("attack", 2), ("idle", 3)], "pod": [("idle", 3), ("attack", 2)]}
 ITEM_SHEETS = {  # sheet name -> keys in reading order (left to right, top to bottom)
     **{"plat_" + k: ["plat_" + k, "plat_" + k + "_dark"] for k in ("dumpster", "car", "cop", "van", "pickup", "bus")},
-    "watcher": ["watcher_body", "watcher_head"],
+    "watcher": ["watcher_1", "watcher_2"],   # two poses of the whole creature (older art: body + head)
     "projectiles": ["shot_spore", "ranger_shot", "wizard_d20"],
     "pickups": ["crate", "crate_dark", "pickup_dice", "pickup_skate", "skate_board"],
     "bulbs": ["bulb_red", "bulb_green", "bulb_blue", "bulb_yellow", "bulb_orange", "bulb_pink", "bulb_gold"],
@@ -306,6 +309,9 @@ ITEM_SHEETS = {  # sheet name -> keys in reading order (left to right, top to bo
     "medals": ["ui_medal_1", "ui_medal_2", "ui_medal_3"],
     "ui_frames": ["ui_button", "ui_button_primary", "ui_row", "ui_panel", "ui_sheet", "ui_box"],
 }
+SHEET_ALIASES = {"ui_sheet_classes": "class_icons_sheet", "ui_sheet_controls": "touch_buttons_sheet", "ui_sheet_hud": "hud_sheet",
+    "ui_sheet_medals": "medals_sheet", "ui_sheet_menu": "ui_frames_sheet", "ui_sheet_stats": "stat_icons_sheet",
+    "ui_sheet_upgrades": "upgrade_icons_sheet", "lightbulbs_sheet": "bulbs_sheet", "pickups_sheet_crates_skateboard": "pickups_sheet"}
 SHEET_RE = re.compile(r"^(.+?)[_-]?(sprite)?sheet$")
 
 def sheet_player(cls, rows):
@@ -333,6 +339,40 @@ PLAYER_PARTS = {
     3: ([("roll", 4), ("skate", 2)], "skate", 20),
     4: ([("die", 4), ("scale", 1)], "scale", 23.3),   # row 2 = one standing frame, only used for the scale
 }
+# Named player sheets, as delivered for the Fighter (one image per group of animations).
+# rows: each row lists (state, frames); a state may continue on the next row.
+# anchor: (state, how, game px) -> the scale for the whole sheet: the median
+# height ("h") or width ("w") of that state's frames becomes that many game px.
+NAMED_SHEETS = {
+    "idle_run":    ([[("idle", 2)], [("run", 3)], [("run", 3)]], ("run", "h", 22)),
+    "jump_attack": ([[("jump", 2)], [("attack", 3)]], ("attack", "h", 22.5)),
+    "roll_skate":  ([[("roll", 4)], [("skate", 2), ("crash", 2)], [("kick", 4)]], ("skate", "h", 24)),
+    "die":         ([[("die", 3)], [("die", 4)]], ("die", "w", 29)),
+}
+NAMED_RE = re.compile(r"^(%s)[_-]sheet[_-](idle_run|jump_attack|roll_skate|die)$" % "|".join(CLASSES))
+def sheet_player_named(cls, kind, rows):
+    layout, (anchor, how, size) = NAMED_SHEETS[kind]
+    frames = []   # (state, image)
+    for want, row in zip(layout, rows):
+        exp = sum(n for _, n in want)
+        if len(row) != exp: print(f"  note: {cls} {kind}: a row has {len(row)} frames, expected {exp}")
+        i = 0
+        for state, n in want:
+            for f in row[i:i + n]: frames.append((state, f))
+            i += n
+    if len(rows) != len(layout): print(f"  note: {cls} {kind}: {len(rows)} rows, expected {len(layout)}")
+    ref = [f for st, f in frames if st == anchor] or [f for _, f in frames]
+    dims = sorted((f.height if how == "h" else f.width) for f in ref)
+    s = size / dims[len(dims) // 2]
+    keys, count = [], {}
+    for state, f in frames:
+        count[state] = count.get(state, 0) + 1
+        key = f"{cls}_{state}{count[state]}"; w, h = q(f.width * s), q(f.height * s)
+        write(key, f, w, h, DARK)
+        manifest[key] = [w, h, 0, 0] if state == "roll" else [w, h, q(6 - body_x(f) * s), 0]
+        keys.append(key)
+    return keys
+
 PART_RE = re.compile(r"^(%s)[_-]?(?:sprite)?sheet[_-]?([1-4])$" % "|".join(CLASSES))
 def sheet_player_part(cls, part, rows):
     layout, anchor, ah = PLAYER_PARTS[part]
@@ -386,7 +426,7 @@ files = sorted((os.path.join(r, f), f) for r, _, fs in os.walk(SRC) for f in fs)
 for full, f in files:
     if not f.lower().endswith(".png"): continue
     key, path = f[:-4].lower(), os.path.join(SRC, f)
-    key = ALIASES.get(key, key); path = full
+    key = ALIASES.get(key, SHEET_ALIASES.get(key, key)); path = full
     if key.endswith("_ref") or key in CLASSES: continue  # reference sheets are only for ChatGPT
     if key == "ui_medals":  # gold, silver, bronze in one image: split on the gaps
         im = load(path); a = np.array(im)[:, :, 3] > 40; cols = a.any(axis=0)
@@ -400,6 +440,11 @@ for full, f in files:
         for i, (x0, x1) in enumerate(runs[:3]):
             part = im.crop((x0, 0, x1, im.height)); part = part.crop(part.getbbox())
             fit_box(f"ui_medal_{i + 1}", part, 32, 32); manifest[f"ui_medal_{i + 1}"] = True; done.append(f"ui_medal_{i + 1}")
+        continue
+    mn = NAMED_RE.match(key)
+    if mn:
+        try: done += sheet_player_named(mn.group(1), mn.group(2), slice_sheet(path, 0.3))
+        except Exception as e: skipped.append(f"{f} ({e})")
         continue
     mp = PART_RE.match(key)
     if mp:
@@ -421,6 +466,8 @@ for full, f in files:
                 rows = slice_sheet(path); done += sheet_enemy(name, rows)
             elif name in ITEM_SHEETS:
                 items = [f for row in slice_sheet(path, 0.12) for f in row]; want = ITEM_SHEETS[name]
+                if len(items) < len(want):   # items drawn close together: split on smaller gaps
+                    items = [f for row in slice_sheet(path, 0.12, 0.002) for f in row]
                 if len(items) != len(want): print(f"  note: {name}: expected {len(want)} items, found {len(items)}")
                 for k, f in zip(want, items):
                     if handle(k, lambda f=f: f, None): done.append(k)
