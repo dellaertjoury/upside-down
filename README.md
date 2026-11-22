@@ -96,10 +96,12 @@ the menu.
   - **Dragged out** when the Dread fills: you keep only half.
   - **Die down there**: the haul is lost.
   The Dread fills in about 8 seconds (before upgrades) and drains on the street.
-- **Rooftops:** every 11–17 seconds a store, police station, diner, arcade,
-  camper or gas station rolls by with the street. Jump onto its roof (only
-  from above; the walls never hurt) for the lights and crates up there. Run
-  off the end and you drop back down. Works in the Upside Down too.
+- **Things to jump on:** every 9–14 seconds a dumpster, car, police car, van,
+  pickup or school bus rolls by at real size, sometimes two in a row to hop
+  between. Land on it from above (running past its front never hurts); its
+  surface follows its shape, so you can step from a car roof down to the
+  trunk. Lights float above them, sometimes a crate sits on top. Works in the
+  Upside Down too.
 
 ## Classes and attacks
 
@@ -144,6 +146,7 @@ All of these numbers live in the `BAL` block at the top of `js/game.js`.
 | Flashlight battery | 4 | +2 s in the Upside Down |
 | Light magnet | 3 | Bigger pickup radius |
 | Dark greed | 3 | +0.5 maximum Heat, +1 per Upside Down light |
+| Skateboard | 3 | Skateboards show up in runs (every 35–60 s): grab one to ride through everything, invincible and faster, for 4 / 6 / 8 s. Smashes enemies, obstacles and crates; Dread pauses |
 | Double jump | 1 | Jump again in mid-air |
 | Second wind | 1 | Survive one fatal hit per run |
 

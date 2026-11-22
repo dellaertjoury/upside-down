@@ -199,9 +199,15 @@ for full, f in files:
         continue
     frame_key = re.sub(r"^(%s)_" % "|".join(CLASSES), "", key)
     try:
-        if re.match(r"^(idle|run|jump|attack|block|roll)\d?$", frame_key) and (frame_key != key or key in ("idle", "run1", "run2", "jump", "attack", "roll")):
+        if re.match(r"^(idle|run|jump|attack|block|roll|skate)\d?$", frame_key) and (frame_key != key or key in ("idle", "run1", "run2", "jump", "attack", "roll")):
             player(key, load(path))
         elif re.match(r"^(crow|hound|flyer|pod|stalker)_(idle|fly|run|walk|jump|attack)\d$", key): enemy2(key, load(path))
+        elif re.match(r"^plat_(dumpster|car|cop|van|pickup|bus)(_dark)?$", key):  # street objects to jump on
+            im = load(path); kind = key.split("_")[1]
+            w, h = by_h(im, {"dumpster": 18, "car": 21, "cop": 24, "van": 27, "pickup": 23, "bus": 33}[kind])
+            write(key, im, w, h, DARK if not key.endswith("_dark") else RIM); manifest[key] = [w, h]
+        elif key in ("pickup_skate", "skate_board"):
+            fit_box(key, load(path), *((18, 10) if key == "pickup_skate" else (16, 5))); manifest[key] = True
         elif key in ("watcher_body", "watcher_head"):
             im = load(path); w, h = by_h(im, 72 if key == "watcher_body" else 34)
             write(key, im, w, h); manifest[key] = [w, h]

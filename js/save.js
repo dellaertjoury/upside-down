@@ -44,6 +44,7 @@
     { id: "battery", name: "Flashlight battery", desc: "Stay in the Upside Down 2s longer.",                 costs: [25, 60, 140, 300] },
     { id: "magnet",  name: "Light magnet",       desc: "Pull Christmas lights in from further away.",                  costs: [35, 90, 200] },
     { id: "greed",   name: "Dark greed",         desc: "+0.5x score while upside down, +1 per Upside Down light.", costs: [60, 150, 350] },
+    { id: "skate",   name: "Skateboard",         desc: "Skateboards show up in runs: ride through everything, invincible.", costs: [80, 180, 350] },
     { id: "djump",   name: "Double jump",        desc: "Jump again in mid-air.",                             costs: [150] },
     { id: "revive",  name: "Second wind",        desc: "Once per run, survive a fatal hit.",                 costs: [400] },
   ];
@@ -100,6 +101,7 @@
       heatMax: 4 + lvl("greed") * 0.5,          // top Heat multiplier in the Upside Down
       sporeBonus: lvl("greed"),
       djump: lvl("djump") > 0,
+      skate: lvl("skate") ? 2 + lvl("skate") * 2 : 0,   // seconds of skateboard: 4 / 6 / 8
       revive: lvl("revive") > 0,
     };
   }

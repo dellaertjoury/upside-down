@@ -45,7 +45,8 @@
   document.body.appendChild(el);
   const $ = s => el.querySelector(s);
 
-  $("#dbg-type").innerHTML = Object.keys(G._TYPES).map(t => `<option>${t}</option>`).join("");
+  $("#dbg-type").innerHTML = Object.keys(G._TYPES).map(t => `<option>${t}</option>`).join("") +
+    Object.keys(G.PLATS).map(k => `<option value="plat:${k}">${k} (jump on)</option>`).join("") + '<option value="skate">skateboard</option>';
 
   function toggle(on) {
     el.hidden = on === undefined ? !el.hidden : !on;
@@ -63,7 +64,12 @@
     const a = e.target.dataset.a; if (!a) return;
     const msg = $("#dbg-msg"); msg.textContent = "";
     if (a === "close") toggle(false);
-    if (a === "spawn") G.spawn($("#dbg-type").value);
+    if (a === "spawn") {
+      const v = $("#dbg-type").value;
+      if (v.startsWith("plat:")) G.spawnPlatform(v.slice(5));
+      else if (v === "skate") G.picks.push({ kind: "skate", side: G._P.side, x: 420, h: 12, taken: false, ph: 0, col: "#ff3d57" });
+      else G.spawn(v);
+    }
     if (a === "lights") G.spawnLights(G._P.side);
     if (a === "jump") { G.dist += 10000; G.t += 60; }
     if (a === "bank") { SAVE.state.shards += 500; SAVE.save(); document.querySelectorAll("#bank,.bank-n").forEach(n => n.textContent = SAVE.state.shards); }

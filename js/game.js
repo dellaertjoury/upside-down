@@ -24,7 +24,8 @@
     killDrop: 0.2,               // chance an enemy drops a light (the stalker always drops 3)
     milestoneEvery: 500, milestoneLights: 10, // every 500 m: +10 lights
     lightHeight: [20, 38],       // single lights float this high: jump for them
-    platformEvery: [11, 17],     // seconds between rooftop platforms
+    platformEvery: [9, 14],      // seconds between cars / dumpsters / buses to jump on
+    skate: { every: [35, 60], speed: 1.7 }, // skateboard power-up (unlocked in the shop)
     roofHeight: [24, 34],        // roof height in game px (a jump reaches ~50)
     // ranged attacks
     arc: { vx: 200, perReach: 5, vh: 90, g: 380 }, // Ranger marble (reach upgrades add speed = range)
@@ -163,54 +164,83 @@
     if (enemies.length && Math.random() < 0.25 + d * 0.25) return pick(enemies);
     return pick(rest);
   }
-  // Rooftop platforms: a building that moves with the street. You run past its
-  // front; jump up and you can land on the roof, where lights (and sometimes a
-  // crate) wait. Run off the end and you drop back down. Walls never hurt.
-  const PLAT_KEYS = ["set_store", "set_police", "set_diner", "set_arcade", "set_camper", "set_gas"];
-  const roofCache = {};
-  function roofFrac(img) { // share of the image above the roof line (signs, poles)
-    if (roofCache[img.src] != null) return roofCache[img.src];
-    let f = 0;
+  // ---------------- Street objects you can jump on ----------------
+  // Dumpsters, cars, a police car, a van, a pickup and a bus roll by with the
+  // street at real size. Their surface follows their shape (hood, roof, trunk),
+  // one-way: you land on them from above and run past their front otherwise.
+  // Art: plat_<type> and plat_<type>_dark; the surface is read from the art.
+  const PLATS = {   // h = tallest point (game px), w = length; prof(t) = surface height at 0..1 along it
+    dumpster: { w: 34, h: 18, weight: 3, prof: t => (t < 0.04 || t > 0.96 ? 14 : 18) },
+    car:      { w: 62, h: 21, weight: 3, prof: t => t < 0.2 ? 12 : t < 0.33 ? 12 + (t - 0.2) / 0.13 * 9 : t < 0.7 ? 21 : t < 0.8 ? 21 - (t - 0.7) / 0.1 * 8 : 13 },
+    cop:      { w: 64, h: 24, weight: 1, prof: t => t < 0.2 ? 12 : t < 0.33 ? 12 + (t - 0.2) / 0.13 * 9 : t < 0.7 ? (t > 0.45 && t < 0.58 ? 24 : 21) : t < 0.8 ? 21 - (t - 0.7) / 0.1 * 8 : 13 },
+    van:      { w: 70, h: 27, weight: 2, prof: t => t < 0.12 ? 15 : t < 0.22 ? 15 + (t - 0.12) / 0.1 * 12 : 27 },
+    pickup:   { w: 68, h: 23, weight: 2, prof: t => t < 0.22 ? 13 : t < 0.32 ? 13 + (t - 0.22) / 0.1 * 10 : t < 0.55 ? 23 : 14 },
+    bus:      { w: 128, h: 33, weight: 1, prof: t => t < 0.04 ? 26 : 33 },
+  };
+  const profCache = {};
+  // surface heights per game pixel, read from the art (top opaque pixel per column, spikes smoothed out)
+  function artProfile(img, w, h) {
+    const id = img.src + "|" + w + "|" + h;
+    if (profCache[id]) return profCache[id];
+    let out = null;
     try {
       const c = document.createElement("canvas"); c.width = img.width; c.height = img.height;
       const x = c.getContext("2d"); x.drawImage(img, 0, 0);
-      const d = x.getImageData(0, 0, c.width, c.height).data;
-      for (let y = 0; y < c.height; y++) {
-        let n = 0; for (let i = 0; i < c.width; i++) if (d[(y * c.width + i) * 4 + 3] > 80) n++;
-        if (n > c.width * 0.6) { f = y / c.height; break; }
+      const d = x.getImageData(0, 0, c.width, c.height).data, raw = [];
+      for (let gx = 0; gx < w; gx++) {
+        const cx = Math.min(c.width - 1, Math.floor((gx + 0.5) / w * c.width));
+        let top = c.height;
+        for (let y = 0; y < c.height; y++) if (d[(y * c.width + cx) * 4 + 3] > 120) { top = y; break; }
+        raw.push((1 - top / c.height) * h);
       }
-    } catch (e) { f = 0; }
-    return (roofCache[img.src] = f);
+      out = raw.map((v, i) => { const win = raw.slice(Math.max(0, i - 2), i + 3).sort((a, b) => a - b); return win[Math.floor(win.length / 2)]; });
+    } catch (e) { out = null; }
+    return (profCache[id] = out);
   }
-  function addPlatform(side, X) {
-    const key = pick(PLAT_KEYS), img = SPR.ART[side ? key + "_dark" : key] || SPR.ART[key];
-    const top = Math.round(rand(BAL.roofHeight[0], BAL.roofHeight[1]));
-    let w = 90, h = top, rf = 0;
-    if (img) { rf = roofFrac(img); h = top / (1 - rf); w = Math.round(h * img.width / img.height); }
-    w = Math.max(60, Math.min(150, w));
-    const o = { type: "platform", platform: true, side, x: X, w, h0: 0, h1: top, top, key, drawH: h, t: 0, dead: false };
+  function platKind() { const list = Object.entries(PLATS), tot = list.reduce((a, [, v]) => a + v.weight, 0); let r = Math.random() * tot; for (const [k, v] of list) { r -= v.weight; if (r <= 0) return k; } return "car"; }
+  function addPlatform(side, X, kind) {
+    const type = kind || platKind(), D = PLATS[type];
+    const img = SPR.ART[(side ? "plat_" + type + "_dark" : "plat_" + type)] || SPR.ART["plat_" + type];
+    const sz = img && SPR.SIZE[(side ? "plat_" + type + "_dark" : "plat_" + type)];
+    const w = sz ? sz[0] : D.w, h = sz ? sz[1] : D.h;
+    const prof = (img && artProfile(img, Math.round(w), h)) || Array.from({ length: Math.round(w) }, (_, i) => D.prof(i / w));
+    const top = Math.max(...prof);
+    const o = { type: "platform", platform: true, kind: type, side, x: X, w, h0: 0, h1: top, top, prof, drawH: h, t: 0, dead: false };
     G.obs.push(o);
-    // lights on the roof (a jump arc from the roof), sometimes a crate
-    addLightArc(side, X + 10, 3, top);
-    if (G.crateT <= 0 || Math.random() < 0.35) {
+    // lights over the highest part, sometimes a crate on top
+    const hi = prof.indexOf(top);
+    addLightArc(side, X + Math.max(0, hi - 6), pick([2, 3]), top);
+    if ((G.crateT <= 0 || Math.random() < 0.3) && w > 50) {
       if (G.crateT <= 0) G.crateT = rand(BAL.crateEvery[0], BAL.crateEvery[1]);
-      addOb(side ? "crate_dark" : "crate", X + w - 30);
+      const cx = X + Math.min(w - 18, hi + 10);
+      addOb(side ? "crate_dark" : "crate", cx);
       const c = G.obs[G.obs.length - 1];
       c.tier = pick([3, 5, 5, 10]); if (c.tier >= 5) { c.w = c.tier >= 10 ? 18 : 16; }
-      c.h0 = top; c.h1 = top + c.w; c.onRoof = true;
+      c.h0 = surface(o, cx - X, cx - X + c.w); c.h1 = c.h0 + c.w; c.onRoof = true;
     }
     return o;
+  }
+  // highest surface of a platform between two x offsets (relative to its left edge)
+  function surface(o, a, b) {
+    let m = -1;
+    for (let i = Math.max(0, Math.floor(a)); i <= Math.min(o.prof.length - 1, Math.floor(b)); i++) m = Math.max(m, o.prof[i]);
+    return m;
   }
 
   function spawnChunk() {
     const d = Math.min(1, G.dist / 9000);
     const X = W + 16, r = Math.random();
     const gap = G.speed * rand(0.95, 1.6) * (1 - d * 0.2) + 50;
-    if (G.platT <= 0 && G.dist > 1500) { // a rooftop to jump on, the street under it kept clear
+    if (G.stats.skate && G.skateT <= 0) { // a skateboard power-up on your side
+      G.skateT = rand(BAL.skate.every[0], BAL.skate.every[1]);
+      G.picks.push({ kind: "skate", side: P.side, x: X + 30, h: 12, taken: false, ph: 0, col: "#ff3d57" });
+    }
+    if (G.platT <= 0 && G.dist > 1200) { // something to jump on, the street around it kept clear
       G.platT = rand(BAL.platformEvery[0], BAL.platformEvery[1]);
-      const p = addPlatform(Math.random() < 0.55 ? P.side : 1 - P.side, X + 40);
-      addLightArc(p.side, X + 40 - G.speed * 0.12, 2);   // a lead-in arc up toward the roof
-      return p.w + 40 + G.speed * 0.9;
+      const side = Math.random() < 0.55 ? P.side : 1 - P.side;
+      const p = addPlatform(side, X + 30);
+      if (Math.random() < 0.4) { const q = addPlatform(side, X + 30 + p.w + rand(30, 60)); return q.x - X + q.w + G.speed * 0.8; } // a second one to hop to
+      return p.w + 30 + G.speed * 0.8;
     }
     if (r < 0.5) {
       const s = Math.random() < 0.5 ? 0 : 1;
@@ -247,7 +277,7 @@
     const f = FATE.find(x => roll >= x.min);
     Object.assign(G, { mode: "play", t: 0, speed: SPEED_START, dist: 0, score: 0, shards: 0, kills: 0, parries: 0, nextAt: 420,
       sc: { dist: 0, combat: 0, lights: 0 }, crateT: rand(8, 12), platT: rand(6, 10), nextMile: BAL.milestoneEvery,
-      haul: { dist: 0, combat: 0, lights: 0, n: 0 }, udT: 0, heat: 1, banked: 0, bestHaul: 0, shieldT: 0,
+      haul: { dist: 0, combat: 0, lights: 0, n: 0 }, udT: 0, heat: 1, banked: 0, bestHaul: 0, shieldT: 0, skateT: rand(20, 35),
       obs: [], picks: [], parts: [], shots: [], pshots: [], pops: [], shake: 0, flash: 0,
       hearts: G.stats.hearts + f.hearts, reviveLeft: G.stats.revive, dread: 0, overT: 0,
       fate: { roll, f, t: 0 } });
@@ -276,6 +306,7 @@
 
   function hurt() {
     if (G.debug.god) { G.flash = 0.1; G.flashCol = "#5fd0c8"; return; }
+    if (P.skate > 0) return; // invincible on the skateboard
     if (P.inv > 0 || P.flip > 0 || P.dead) return;
     const pk_ = perk();
     if (pk_.shield && G.shieldT <= 0) { // Fighter: the trash-can lid takes the hit
@@ -438,18 +469,22 @@
     if (!P.grounded) {
       const prev = P.h;
       P.vh -= GRAV * dt; P.h += P.vh * dt;
-      if (P.vh < 0) for (const o of G.obs) { // falling onto a roof (one-way: only from above)
+      if (P.vh < 0) for (const o of G.obs) { // falling onto a car, dumpster... (one-way: only from above)
         if (!o.platform || o.side !== P.side || o.x > PX + 9 || o.x + o.w < PX + 4) continue;
-        if (prev >= o.top - 0.5 && P.h <= o.top) { P.h = o.top; P.vh = 0; P.grounded = true; P.jumps = 0; P.plat = o; break; }
+        const top = surface(o, PX + 4 - o.x, PX + 9 - o.x);
+        if (top > 0 && prev >= top - 0.5 && P.h <= top) { P.h = top; P.vh = 0; P.grounded = true; P.jumps = 0; P.plat = o; break; }
       }
       if (P.h <= 0) { P.h = 0; P.vh = 0; P.grounded = true; P.jumps = 0; P.plat = null; }
-    } else if (P.plat && (P.plat.x + P.plat.w < PX + 4 || P.plat.side !== P.side)) {
-      P.plat = null; P.grounded = false; P.vh = 0;  // ran off the end of the roof
+    } else if (P.plat) { // follow the shape: step down onto the trunk, or drop off the end
+      const o = P.plat, top = o.side === P.side ? surface(o, PX + 4 - o.x, PX + 9 - o.x) : -1;
+      if (top <= 0) { P.plat = null; P.grounded = false; P.vh = 0; }
+      else if (top < P.h - 0.5) { P.grounded = false; P.vh = 0; }          // edge of the roof: fall to the lower part
+      else if (top > P.h + 0.5 && top - P.h <= 3) P.h = top;                // small step up (windshield slope)
     }
 
     if (G.mode === "play") {
       if (P.side === 1) {
-        if (!G.debug.noDread) G.dread += dt * G.fate.f.dread * BAL.dreadRate * (perk().dread || 1);
+        if (!G.debug.noDread && !(P.skate > 0)) G.dread += dt * G.fate.f.dread * BAL.dreadRate * (perk().dread || 1);
         if (G.dread >= st.battery) { G.dread = st.battery; startFlip(true); }
       } else G.dread = Math.max(0, G.dread - dt * 1.6);
     }
@@ -467,7 +502,7 @@
     } else if (G.mode === "attract") G.speed = 0;
     if (G.mode === "over") G.speed = 0;
 
-    const dx = G.speed * dt;
+    const dx = G.speed * dt * (P.skate > 0 ? BAL.skate.speed : 1);
     G.scroll += dx;
     SCN.update((G.scroll - G.scroll0) * SCN.PARALLAX);
     if (G.mode !== "over") updatePlayer(dt);
@@ -481,7 +516,13 @@
       }
       if (G.shieldT > 0) { G.shieldT -= dt; if (G.shieldT <= 0) pop(T_("pop.shieldUp"), "#c9d1dc"); }
       G.crateT -= dt;
-      G.platT -= dt;
+      G.platT -= dt; G.skateT -= dt;
+      if (P.skate > 0) {
+        P.skate -= dt;
+        if (Math.random() < 0.5) G.parts.push({ x: PX - 2, y: sy(P.side, P.h + rand(2, 14)), vx: -rand(40, 90), vy: rand(-10, 10), life: 0.35, col: BULBS[Math.floor(Math.random() * 6)][1], s: 1 });
+        if (Math.floor(G.t * 8) !== Math.floor((G.t - dt) * 8)) G.onLight && G.onLight(BULBS[Math.floor(G.t * 8) % 6][1]);
+        if (P.skate <= 0) { P.skate = 0; P.inv = 1; }
+      }
       if (G.dist / 10 >= G.nextMile) { // distance milestone(s): a handful of lights
         let m = 0; while (G.dist / 10 >= G.nextMile) { G.nextMile += BAL.milestoneEvery; m++; }
         const n = BAL.milestoneLights * m;
@@ -517,6 +558,12 @@
         }
       }
       if (o.side !== P.side || P.flip > 0) continue;
+      if (P.skate > 0 && o.x < px1 + 4 && o.x + o.w > px0 && o.h0 < ph1 + 4 && o.h1 > ph0) { // skateboard: smash it
+        if (o.crate) breakCrate(o, true);
+        else if (o.enemy) { o.hitCd = 0; damage(o, "melee", 99); }
+        else { o.dead = true; addPts("combat", 5, o.side); SFX.thud(); burst(o.x + o.w / 2, sy(o.side, (o.h0 + Math.min(o.h1, 30)) / 2), "#c9b9a0", 14, 80); }
+        continue;
+      }
       if (o.crate) { // smash with a hit for lights; running into it just kicks it over
         if (P.atk > 0 && !ranged() && o.x < PX + 9 + st.reach && o.x + o.w > PX + 6 && Math.abs(P.h - o.h0) < 18) { breakCrate(o, true); continue; }
         if (o.x < px1 && o.x + o.w > px0 && o.h1 > ph0 && o.h0 < ph1) breakCrate(o, false);
@@ -542,6 +589,7 @@
         }
       } else s.x -= dx + 120 * dt;
       if (!playing || s.ref || s.dead || s.side !== P.side || P.flip > 0) continue;
+      if (P.skate > 0 && s.x < px1 + 4 && s.x + 4 > px0) { s.dead = true; burst(s.x, sy(s.side, s.h), "#ff6bd0", 6, 40); continue; }
       // a bat swing knocks spore shots back
       if (P.atk > 0 && !ranged() && s.x < PX + 9 + st.reach && s.x + 4 > PX + 6 && s.h < P.h + 24) {
         s.ref = true; G.parries++; SFX.block(); pop(T_("pop.reflect"), "#5fd0c8"); continue;
@@ -589,6 +637,10 @@
       const ddx = k.x - cx, ddh = k.h - ch, dist = Math.hypot(ddx, ddh);
       if (k.side === P.side && P.flip <= 0 && dist < st.magnet + 12) {
         k.x -= ddx * Math.min(1, dt * 10); k.h -= ddh * Math.min(1, dt * 10);
+      }
+      if (k.side === P.side && P.flip <= 0 && Math.abs(k.x - cx) < 9 && Math.abs(k.h - ch) < 12 && k.kind === "skate") {
+        k.taken = true; P.skate = st.skate; SFX.power(); pop(T_("pop.skate"), "#ffd866");
+        G.flash = 0.2; G.flashCol = "#ffffff"; continue;
       }
       if (k.side === P.side && P.flip <= 0 && Math.abs(k.x - cx) < 9 && Math.abs(k.h - ch) < 12) {
         k.taken = true;
@@ -831,20 +883,41 @@
     if (!fallback) return null;
     return cyc(fallback, o.t, 8);
   }
-  // a rooftop building (art scaled so its roof line sits at o.top), with a roof edge highlight
+  // a car / dumpster / bus you can stand on; placeholder shapes until the art arrives
   function drawPlatform(o) {
-    const x = Math.round(o.x), img = SPR.ART[o.side ? o.key + "_dark" : o.key] || SPR.ART[o.key];
-    if (img) ctx.drawImage(img, x, Math.round(-o.drawH), o.w, Math.round(o.drawH));
+    const x = Math.round(o.x), key = "plat_" + o.kind, img = SPR.ART[o.side ? key + "_dark" : key] || SPR.ART[key];
+    if (img) { ctx.drawImage(img, x, -o.drawH, o.w, o.drawH); }
     else {
       const dk = o.side === 1;
-      R(dk ? "#120812" : "#3b3446", x - 1, -o.top - 1, o.w + 2, o.top + 1); R(dk ? "#3a2440" : "#8f6a60", x, -o.top, o.w, o.top);
-      for (let i = 6; i < o.w - 8; i += 14) { R(dk ? "#9b2335" : "#e8cf8a", x + i, -o.top + 6, 7, 6); }
-      R(dk ? "#1d0f1f" : "#5e5266", x - 2, -o.top - 3, o.w + 4, 3);
+      const body = { dumpster: dk ? "#3a3a2a" : "#3f6b4a", car: dk ? "#4a2a3a" : "#b8463e", cop: dk ? "#2a2a3a" : "#e8e4d8",
+        van: dk ? "#3a2440" : "#d9c79a", pickup: dk ? "#3a2a2a" : "#4f6fa8", bus: dk ? "#4a3a1a" : "#e0a62a" }[o.kind];
+      ctx.fillStyle = "#1a1124";
+      for (let i = 0; i < o.prof.length; i++) ctx.fillRect(x + i, -o.prof[i] - 1, 1, o.prof[i] + 1);
+      ctx.fillStyle = body;
+      for (let i = 1; i < o.prof.length - 1; i++) ctx.fillRect(x + i, -o.prof[i], 1, Math.max(0, o.prof[i] - 3));
+      const glass = dk ? "#5b1b3a" : "#9fc6d6";
+      if (o.kind === "car" || o.kind === "cop") { R(glass, x + o.w * 0.36, -o.top + 3, o.w * 0.15, 5); R(glass, x + o.w * 0.53, -o.top + 3, o.w * 0.15, 5); }
+      if (o.kind === "cop") { R("#1a1124", x + o.w * 0.45, -o.top - 1, o.w * 0.13, 2); R(Math.floor(G.t * 6) % 2 ? "#ff3d57" : "#4da3ff", x + o.w * 0.46, -o.top, o.w * 0.11, 2); }
+      if (o.kind === "van") for (let i = 0.28; i < 0.9; i += 0.2) R(glass, x + o.w * i, -o.top + 4, o.w * 0.14, 6);
+      if (o.kind === "pickup") R(glass, x + o.w * 0.34, -o.top + 3, o.w * 0.18, 5);
+      if (o.kind === "bus") for (let i = 0.08; i < 0.95; i += 0.1) R(glass, x + o.w * i, -o.top + 5, o.w * 0.07, 8);
+      if (o.kind === "dumpster") { R(dk ? "#2a2a1f" : "#2f5238", x + 1, -o.top, o.w - 2, 3); R("#1a1124", x + 4, -o.top + 7, o.w - 8, 1); }
+      if (o.kind !== "dumpster") for (const t of [0.18, 0.8]) { R("#1a1124", x + o.w * t - 4, -6, 9, 6); R("#4c4e5a", x + o.w * t - 2, -4, 5, 3); } // wheels
     }
-    // a faint line on the roof so it reads as something to stand on
-    ctx.globalAlpha = 0.55; R(o.side ? "#ff6b8f" : "#fff3b0", x + 2, -o.top - 1, o.w - 4, 1); ctx.globalAlpha = 1;
+  }
+  function drawBoard(x, y, w = 14) { // a skateboard: deck + two wheels
+    const img = ART("skate_board");
+    if (img) { ctx.drawImage(img, x, y - 1, w + 2, 5); return; }
+    R("#1a1124", x, y, w, 3); R("#ff3d57", x + 1, y, w - 2, 2); R("#ffd866", x + 2, y, 2, 1);
+    R("#1a1124", x + 2, y + 2, 3, 3); R("#1a1124", x + w - 5, y + 2, 3, 3); R("#ece6d6", x + 3, y + 3, 1, 1); R("#ece6d6", x + w - 4, y + 3, 1, 1);
   }
   function drawPick(k) {
+    if (k.kind === "skate") {
+      const x = Math.round(k.x), y = -Math.round(k.h) - 4 + Math.round(Math.sin(G.t * 5) * 2), img = ART("pickup_skate");
+      ctx.globalAlpha = 0.35 + Math.sin(G.t * 8) * 0.15; R(BULBS[Math.floor(G.t * 8) % 6][1], x - 4, y - 5, 22, 12); ctx.globalAlpha = 1;
+      if (img) ctx.drawImage(img, x - 2, y - 4, 18, 10); else drawBoard(x - 1, y);
+      return;
+    }
     const x = Math.round(k.x), y = -Math.round(k.h) - 4;
     const tw = 0.75 + Math.sin(G.t * 5 + k.ph) * 0.25;
     const img = ART("bulb_" + k.name);
@@ -872,13 +945,14 @@
     if (!out.length && SPR.ART[`${prefix}_${state}`]) out.push(`${prefix}_${state}`);
     return out;
   }
-  const PLAYER_FALLBACK = { idle: ["run2"], run: ["run1", "run2"], jump: ["jump"], attack: ["attack"], roll: ["roll"] };
+  const PLAYER_FALLBACK = { skate: ["run2"], idle: ["run2"], run: ["run1", "run2"], jump: ["jump"], attack: ["attack"], roll: ["roll"] };
   // the player's frames for a state: own class art, else the Fighter's, else placeholder
   function pframes(state) {
     const sh = SAVE.state.sheet;
     let f = sh ? frames(sh.cls, state) : [];
     if (!f.length) f = frames("fighter", state);
     if (!f.length && state === "idle") f = pframes("run").slice(-1);
+    if (!f.length && state === "skate") f = pframes("run").slice(-1); // riding pose: a run frame on the board
     return f.length ? f : PLAYER_FALLBACK[state];
   }
   const cyc = (list, time, fps) => list[Math.floor(time * fps) % list.length];
@@ -928,11 +1002,19 @@
       if (P.atk > 0) { // attack frames spread over the swing, legs keep running in the art
         state = "attack"; const af = pframes("attack"), dur = ranged() ? 0.22 : 0.2;
         key = af[Math.min(af.length - 1, Math.floor((1 - P.atk / dur) * af.length))];
-      } else if (idle) { state = "idle"; key = cyc(pframes("idle"), G.t, 3); }
+      } else if (P.skate > 0 && P.grounded) { state = "skate"; key = cyc(pframes("skate"), G.t, 6); }
+      else if (idle) { state = "idle"; key = cyc(pframes("idle"), G.t, 3); }
       else if (!P.grounded && P.flip <= 0) { // jump: first frame rising, last frame falling
         state = "jump"; const jf = pframes("jump"); key = P.vh > 0 ? jf[0] : jf[jf.length - 1];
       } else { state = "run"; key = cyc(pframes("run"), P.runT, pframes("run").length > 2 ? 12 : 8); }
-      draw(ctx, key, PX, -h);
+      const onBoard = P.skate > 0;
+      if (onBoard) { // rainbow shimmer like a star power-up, riding a board
+        ctx.filter = `hue-rotate(${Math.floor(G.t * 900) % 360}deg) saturate(1.6)`;
+        if (P.skate < 1 && Math.floor(G.t * 12) % 2) ctx.filter = "none"; // flicker as it runs out
+      }
+      draw(ctx, key, PX, -h - (onBoard ? 4 : 0));
+      ctx.filter = "none";
+      if (onBoard) drawBoard(PX - 1, -h - 4);
       if (P.atk > 0 && !ranged() && !SPR.ART[key]) {
         const reach = (G.stats || SAVE.runStats()).reach, pr = 1 - P.atk / 0.2, ang = -1.3 + pr * 2.2;
         for (let i = 0; i < reach; i++) R(i < 5 ? "#5a3220" : "#a8743a", PX + 9 + Math.cos(ang) * i, -h - 9 + Math.sin(ang) * i, 2, 2);
@@ -984,6 +1066,10 @@
     if (G.mode === "attract") return;
     const st = G.stats;
     for (let i = 0; i < st.hearts; i++) heart(6 + i * 11, 6, i < G.hearts);
+    if (P.skate > 0) { // skateboard time left, rainbow bar under the hearts
+      const f = P.skate / st.skate;
+      R("#1a1124", 5, 19, 52, 4); R(BULBS[Math.floor(G.t * 8) % 6][1], 6, 20, Math.round(50 * f), 2);
+    }
     if (perk().shield) { // the Fighter's lid: bright when ready, dim while recharging
       const x0 = 8 + st.hearts * 11 + (G.reviveLeft ? 12 : 0), ok = G.shieldT <= 0;
       R("#1a1124", x0, 6, 9, 9); R(ok ? "#c9d1dc" : "#4c4e5a", x0 + 1, 7, 7, 7); R(ok ? "#9a9caa" : "#3b3446", x0 + 3, 9, 3, 3);
@@ -1148,6 +1234,8 @@
     for (const k of G.picks) box(k.side, k.x - 1, k.h - 4, 6, k.h + 6, "#5fd068");
   }
   G.spawn = (type, dx = 0) => addOb(type, W + 10 + dx);
+  G.spawnPlatform = (kind, side = P.side, dx = 0) => addPlatform(side, W + 10 + dx, kind);
+  G.PLATS = PLATS;
   G.spawnLights = side => addLights(side, W + 10, 5);
 
   // ---------------- Loop ----------------

@@ -51,6 +51,7 @@
     crate: () => { noise(0.18, 0.6); tone("square", 140, 60, 0.15, 0.5); [988, 1319, 1568].forEach((f, i) => tone("triangle", f, f, 0.06, 0.3, 0.08 + i * 0.05)); },
     thud: () => { noise(0.1, 0.5); tone("sine", 90, 50, 0.12, 0.6); },
     sling: () => { tone("triangle", 220, 880, 0.08, 0.5); noise(0.04, 0.25); },
+    power: () => [523, 659, 784, 1047, 1319, 1568].forEach((f, i) => tone("square", f, f, 0.07, 0.45, i * 0.045)),
     click: () => tone("square", 440, 440, 0.04, 0.3),
     setMuted(m) { muted = m; MUSIC.refresh(); },
     setVolumes(music, sfx) {

@@ -20,7 +20,7 @@
     prop_hedge: [26, 11], prop_phonebooth: [12, 30], prop_hydrant: [7, 10],
   };
 
-  const BACKGROUND = ["set_house", "set_houses", "set_school"];
+  const BACKGROUND = Object.keys(BUILDINGS); // all buildings are background again (street objects are the platforms)
   const rand = (a, b) => a + Math.random() * (b - a);
   const pick = a => a[Math.floor(Math.random() * a.length)];
   const S = { chunks: [], nextX: 0, blanks: 2, last: "" };

@@ -1,4 +1,4 @@
-# The Upside Down — sprite prompts (players and enemies)
+# The Upside Down — sprite prompts (players, enemies, street objects, skateboard)
 
 Every frame has its own prompt, ready to paste. Scenery and UI are done, so they're not in this list.
 
@@ -627,6 +627,160 @@ Not an enemy: it rises far away in the Upside Down sky now and then. It's barely
 
 ---
 
+---
+
+## 4. Street objects you can jump on (12)
+
+These roll by with the street at real size. Kids jump onto them, so **the top outline is the surface they stand on**: keep roofs clean, no antennas, ladders or bars sticking up (the police car's light bar is fine). Draw them **upright**; the game flips the Upside Down versions. Make the normal version first, then attach it for the `_dark` one.
+
+**`plat_dumpster`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Object: a green metal street dumpster with a closed flat lid, a bit dented, side view, the long side facing the viewer. Flat side view, no perspective, wheels touching the bottom edge of the image. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`plat_dumpster_dark`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Use the attached image: the exact same object, same size, same outline and silhouette, but rotten in a dark parallel world: dusty purple and crimson colours, black vines creeping over it, dull red glow in the windows, rust and spores. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`plat_car`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Object: a boxy 1980s American sedan, faded red paint, chrome bumpers, side view with the FRONT of the car on the LEFT. Flat side view, no perspective, wheels touching the bottom edge of the image. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`plat_car_dark`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Use the attached image: the exact same object, same size, same outline and silhouette, but rotten in a dark parallel world: dusty purple and crimson colours, black vines creeping over it, dull red glow in the windows, rust and spores. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`plat_cop`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Object: a 1980s small-town police car, white with a dark stripe, a light bar on the roof, side view with the FRONT on the LEFT. Flat side view, no perspective, wheels touching the bottom edge of the image. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`plat_cop_dark`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Use the attached image: the exact same object, same size, same outline and silhouette, but rotten in a dark parallel world: dusty purple and crimson colours, black vines creeping over it, dull red glow in the windows, rust and spores. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`plat_van`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Object: a 1980s cream-coloured passenger van with side windows, side view with the FRONT on the LEFT. Flat side view, no perspective, wheels touching the bottom edge of the image. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`plat_van_dark`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Use the attached image: the exact same object, same size, same outline and silhouette, but rotten in a dark parallel world: dusty purple and crimson colours, black vines creeping over it, dull red glow in the windows, rust and spores. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`plat_pickup`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Object: a 1980s blue pickup truck with an open bed at the back, side view with the FRONT on the LEFT. Flat side view, no perspective, wheels touching the bottom edge of the image. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`plat_pickup_dark`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Use the attached image: the exact same object, same size, same outline and silhouette, but rotten in a dark parallel world: dusty purple and crimson colours, black vines creeping over it, dull red glow in the windows, rust and spores. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`plat_bus`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Object: a yellow 1980s school bus, long, with a row of windows, side view with the FRONT on the LEFT. Flat side view, no perspective, wheels touching the bottom edge of the image. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`plat_bus_dark`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Use the attached image: the exact same object, same size, same outline and silhouette, but rotten in a dark parallel world: dusty purple and crimson colours, black vines creeping over it, dull red glow in the windows, rust and spores. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+---
+
+## 5. Skateboard power-up
+
+Unlocked in the upgrade shop. Like a star power-up: grab the board and you ride through everything, invincible, for a few seconds.
+
+**`pickup_skate`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Object: a 1980s skateboard seen from the side, tilted slightly upward, bright red deck with a yellow lightning bolt, chunky white wheels, a few rainbow sparkle pixels around it. Wide image. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`skate_board`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Object: the same skateboard as attached, perfectly flat side view, wheels down, no sparkles. Very wide and thin image (about 4:1). OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`ui_up_skate`**
+
+```
+Pixel-art game UI icon, crisp pixels, no anti-aliasing, flat front view. A red skateboard with a yellow lightning bolt and rainbow motion lines on a dark violet rounded tile, square. FULLY TRANSPARENT BACKGROUND outside the tile, no text.
+```
+
+Riding frames, 2 per class (optional: without them the game shows a run frame standing on the board). Attach the class reference and the skateboard.
+
+**`fighter_skate1`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: the Fighter kid (red jacket, bat, trash-can lid), side view facing right, standing on the attached skateboard, crouched low on the skateboard, arms out for balance, hair and clothes blown back by the wind. The board's wheels touch the bottom edge of the image. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`fighter_skate2`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: the Fighter kid (red jacket, bat, trash-can lid), side view facing right, standing on the attached skateboard, leaning into the ride, one fist pumped forward, big grin, clothes blown back. The board's wheels touch the bottom edge of the image. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`ranger_skate1`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: the Ranger kid (bucket hat, vest, slingshot), side view facing right, standing on the attached skateboard, crouched low on the skateboard, arms out for balance, hair and clothes blown back by the wind. The board's wheels touch the bottom edge of the image. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`ranger_skate2`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: the Ranger kid (bucket hat, vest, slingshot), side view facing right, standing on the attached skateboard, leaning into the ride, one fist pumped forward, big grin, clothes blown back. The board's wheels touch the bottom edge of the image. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`rogue_skate1`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: the Rogue kid (grey hoodie, walkie-talkie), side view facing right, standing on the attached skateboard, crouched low on the skateboard, arms out for balance, hair and clothes blown back by the wind. The board's wheels touch the bottom edge of the image. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`rogue_skate2`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: the Rogue kid (grey hoodie, walkie-talkie), side view facing right, standing on the attached skateboard, leaning into the ride, one fist pumped forward, big grin, clothes blown back. The board's wheels touch the bottom edge of the image. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`wizard_skate1`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: the Wizard kid (bedsheet cape, cardboard hat), side view facing right, standing on the attached skateboard, crouched low on the skateboard, arms out for balance, hair and clothes blown back by the wind. The board's wheels touch the bottom edge of the image. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`wizard_skate2`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: the Wizard kid (bedsheet cape, cardboard hat), side view facing right, standing on the attached skateboard, leaning into the ride, one fist pumped forward, big grin, clothes blown back. The board's wheels touch the bottom edge of the image. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+---
+
 ## Checklist
 
 | Set | Files |
@@ -635,6 +789,8 @@ Not an enemy: it rises far away in the Upside Down sky now and then. It's barely
 | Crow 6, Hound 8, Stalker 7, Flyer 6, Spore pod 4 | 31 |
 | Projectiles | 3 |
 | The Watcher | 2 |
-| **Total** | **96** |
+| Street objects to jump on (6 + 6 dark) | 12 |
+| Skateboard: pickup, board, upgrade icon, 2 riding frames × 4 classes | 11 |
+| **Total** | **119** |
 
-Per player class: idle 2, run 4, jump 2 (rising, falling), roll 4, running attack 3.
+Per player class: idle 2, run 4, jump 2 (rising, falling), roll 4, running attack 3 (+ 2 optional skateboard frames).
