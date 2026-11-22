@@ -289,9 +289,9 @@ def slice_sheet(path, drop_short=0.35):
         if row: out.append(row)
     return out
 
-PLAYER_ROWS = [("idle", 2), ("run", 4), ("jump", 2), ("roll", 4), ("attack", 3), ("die", 4), ("skate", 2)]
-ENEMY_ROWS = {"crow": [("fly", 4), ("attack", 2)], "hound": [("run", 4), ("jump", 2), ("attack", 2)],
-              "stalker": [("walk", 4), ("attack", 3)], "flyer": [("fly", 4), ("attack", 2)], "pod": [("idle", 2), ("attack", 2)]}
+PLAYER_ROWS = [("idle", 3), ("run", 4), ("jump", 2), ("roll", 4), ("attack", 3), ("die", 4), ("skate", 2)]
+ENEMY_ROWS = {"crow": [("fly", 4), ("attack", 2), ("idle", 3)], "hound": [("run", 4), ("jump", 2), ("attack", 2), ("idle", 3)],
+              "stalker": [("walk", 4), ("attack", 3), ("idle", 3)], "flyer": [("fly", 4), ("attack", 2), ("idle", 3)], "pod": [("idle", 3), ("attack", 2)]}
 ITEM_SHEETS = {  # sheet name -> keys in reading order (left to right, top to bottom)
     **{"plat_" + k: ["plat_" + k, "plat_" + k + "_dark"] for k in ("dumpster", "car", "cop", "van", "pickup", "bus")},
     "watcher": ["watcher_body", "watcher_head"],
@@ -328,7 +328,7 @@ def sheet_player(cls, rows):
 # scaled by one of its own rows; the heights were measured on a full sheet,
 # relative to a 22 px run frame, so all parts line up.
 PLAYER_PARTS = {
-    1: ([("idle", 2), ("run", 4)], "run", 22),
+    1: ([("idle", 3), ("run", 4)], "run", 22),
     2: ([("jump", 2), ("attack", 3)], "attack", 20.5),
     3: ([("roll", 4), ("skate", 2)], "skate", 20),
     4: ([("die", 4), ("scale", 1)], "scale", 23.3),   # row 2 = one standing frame, only used for the scale

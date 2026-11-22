@@ -918,7 +918,7 @@
     f = frames(prefix, state);
     if (state === "jump" && f.length) return o.vh > 0 ? f[0] : f[f.length - 1];
     if (!f.length && state === "jump") f = frames(prefix, "run");
-    if (f.length) return cyc(f, o.t, f.length > 2 ? 10 : 8);
+    if (f.length) return state === "idle" ? idleCyc(f, o.t, 6) : cyc(f, o.t, f.length > 2 ? 10 : 8);
     if (!fallback) return null;
     return cyc(fallback, o.t, 8);
   }
@@ -1006,6 +1006,8 @@
     return f.length ? f : PLAYER_FALLBACK[state];
   }
   const cyc = (list, time, fps) => list[Math.floor(time * fps) % list.length];
+  // idle with a bounce: 3 frames play stand, bounce (knees bent), stand, breathe in
+  const idleCyc = (list, time, fps) => list.length === 3 ? list[[0, 1, 0, 2][Math.floor(time * fps) % 4]] : cyc(list, time, fps);
 
   // player art per class: "ranger_run1" etc., falling back to "run1"
   function pk(frame) {
@@ -1025,17 +1027,20 @@
   G.perk = perk;
   G.attackCfg = attackCfg; G.BAL = BAL;
   G.pk = pk;
+  let lampAt = null;
   function drawPlayer() {
     if (P.die) return; // drawn by drawDeath, over the floor
     if (P.inv > 0 && Math.floor(G.t * 20) % 2) return;
     let h = P.h;
     if (P.flip > 0) { const pr = 1 - P.flip / FLIP_T; h = pr < 0.5 ? -18 * pr * 2 : -18 * (1 - (pr - 0.5) * 2); }
     local(P.side);
-    if (P.side === 1) { // flashlight cone in the dark
-      const g = ctx.createRadialGradient(PX + 12, -h - 9, 2, PX + 40, -h - 9, 50);
+    if (P.side === 1) { // the clip lamp on the chest lights the way in the dark
+      const ly = -h - (P.roll > 0 && P.flip <= 0 ? 6 : 13) - (P.skate > 0 ? 4 : 0), lx = PX + 9;
+      const g = ctx.createRadialGradient(lx + 1, ly, 2, lx + 30, ly, 50);
       g.addColorStop(0, "rgba(255,243,176,.35)"); g.addColorStop(1, "rgba(255,243,176,0)");
-      ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(PX + 11, -h - 10); ctx.lineTo(PX + 90, -h - 34); ctx.lineTo(PX + 90, -h + 12); ctx.closePath(); ctx.fill();
-    }
+      ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(lx, ly - 1); ctx.lineTo(PX + 90, ly - 24); ctx.lineTo(PX + 90, ly + 22); ctx.closePath(); ctx.fill();
+      lampAt = [lx, ly];
+    } else lampAt = null;
     R("rgba(0,0,0,.3)", PX + 1, -1, 10 - Math.min(6, Math.floor(Math.max(0, h) / 8)), 1);
     const idle = G.mode === "attract";
     if (P.roll > 0 && P.flip <= 0) {
@@ -1053,7 +1058,7 @@
         state = "attack"; const af = pframes("attack"), dur = ranged() ? 0.22 : 0.2;
         key = af[Math.min(af.length - 1, Math.floor((1 - P.atk / dur) * af.length))];
       } else if (P.skate > 0 && P.grounded) { state = "skate"; key = cyc(pframes("skate"), G.t, 6); }
-      else if (idle) { state = "idle"; key = cyc(pframes("idle"), G.t, 3); }
+      else if (idle) { state = "idle"; key = idleCyc(pframes("idle"), G.t, 4); }
       else if (!P.grounded && P.flip <= 0) { // jump: first frame rising, last frame falling
         state = "jump"; const jf = pframes("jump"); key = P.vh > 0 ? jf[0] : jf[jf.length - 1];
       } else { state = "run"; key = cyc(pframes("run"), P.runT, pframes("run").length > 2 ? 12 : 8); }
@@ -1065,6 +1070,9 @@
       draw(ctx, key, PX, -h - (onBoard ? 4 : 0));
       ctx.filter = "none";
       if (onBoard) drawBoard(PX - 1, -h - 4);
+      if (lampAt && P.roll <= 0) { // the lamp itself glows on the jacket
+        ctx.globalAlpha = 0.55 + Math.sin(G.t * 9) * 0.1; R("#fff3b0", lampAt[0] - 1, lampAt[1] - 1, 2, 2); ctx.globalAlpha = 0.25; R("#fff3b0", lampAt[0] - 2, lampAt[1] - 2, 4, 4); ctx.globalAlpha = 1;
+      }
       if (P.atk > 0 && !ranged() && !SPR.ART[key]) {
         const reach = (G.stats || SAVE.runStats()).reach, pr = 1 - P.atk / 0.2, ang = -1.3 + pr * 2.2;
         for (let i = 0; i < reach; i++) R(i < 5 ? "#5a3220" : "#a8743a", PX + 9 + Math.cos(ang) * i, -h - 9 + Math.sin(ang) * i, 2, 2);
