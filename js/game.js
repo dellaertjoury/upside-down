@@ -60,7 +60,7 @@
   const G = {
     debug: { hitboxes: false, god: false, noDread: false, noSpawn: false, slow: 1 },
     mode: "attract", t: 0, speed: 0, scroll: 0, scroll0: 0, dist: 0, score: 0,
-    shards: 0, kills: 0, parries: 0, nextAt: 420, obs: [], picks: [], parts: [], shots: [], pops: [],
+    shards: 0, kills: 0, parries: 0, nextAt: 420, obs: [], picks: [], parts: [], shots: [], pshots: [], pops: [],
     shake: 0, flash: 0, flashCol: "#fff", bolt: null, boltT: 3, overT: 0,
     stats: null, hearts: 1, reviveLeft: false, dread: 0, fate: null, onOver: null, onPause: null,
   };
@@ -175,7 +175,7 @@
     const roll = 1 + Math.floor(Math.random() * 20);
     const f = FATE.find(x => roll >= x.min);
     Object.assign(G, { mode: "play", t: 0, speed: SPEED_START, dist: 0, score: 0, shards: 0, kills: 0, parries: 0, nextAt: 420,
-      obs: [], picks: [], parts: [], shots: [], pops: [], shake: 0, flash: 0,
+      obs: [], picks: [], parts: [], shots: [], pshots: [], pops: [], shake: 0, flash: 0,
       hearts: G.stats.hearts + f.hearts, reviveLeft: G.stats.revive, dread: 0, overT: 0,
       fate: { roll, f, t: 0 } });
     G.stats.hearts += f.hearts;
@@ -185,7 +185,7 @@
   };
   G.pause = () => { if (G.mode === "play") { G.mode = "pause"; G.onPause && G.onPause(); } };
   G.resume = () => { if (G.mode === "pause") { G.mode = "play"; last = performance.now(); } };
-  G.toHub = () => { G.scroll0 = G.scroll; SCN.reset(); G.mode = "attract"; G.obs = []; G.picks = []; G.shots = []; G.pops = []; G.dist = 0; G.speed = 0; G.fate = null; resetPlayer(); };
+  G.toHub = () => { G.scroll0 = G.scroll; SCN.reset(); G.mode = "attract"; G.obs = []; G.picks = []; G.shots = []; G.pshots = []; G.pops = []; G.dist = 0; G.speed = 0; G.fate = null; resetPlayer(); };
 
   function gameOver() {
     P.dead = true; G.mode = "dying"; G.overT = 0.9; SFX.over();
@@ -279,7 +279,13 @@
       if (P.grounded) { if (P.roll <= 0) SFX.roll(); P.roll = 0.5; P.blk = 0; P.bufRoll = 0; }
       else P.vh = Math.min(P.vh, -480);
     }
-    if (P.bufAtk > 0 && P.atkCd <= 0) { P.atk = 0.2; P.atkCd = 0.32; P.blk = 0; P.bufAtk = 0; SFX.swing(); }
+    if (P.bufAtk > 0 && P.atkCd <= 0) {
+      P.blk = 0; P.bufAtk = 0;
+      if (ranged()) { // Ranger: fire a marble across the screen
+        P.atk = 0.22; P.atkCd = 0.42; SFX.sling();
+        G.pshots.push({ side: P.side, x: PX + 16, h: P.h + 11, dead: false });
+      } else { P.atk = 0.2; P.atkCd = 0.32; SFX.swing(); }
+    }
     if (P.bufBlk > 0 && P.blkCd <= 0 && P.atk <= 0) { P.blk = st.block; P.blkAge = 0; P.blkCd = st.block + 0.25; P.roll = 0; P.bufBlk = 0; SFX.lid(); }
     P.atk = Math.max(0, P.atk - dt);
     P.roll = Math.max(0, P.roll - dt);
@@ -338,13 +344,13 @@
       }
       if (o.side !== P.side || P.flip > 0) continue;
       if (o.crate) { // smash with a hit for lights; running into it just kicks it over
-        if (P.atk > 0 && o.x < PX + 9 + st.reach && o.x + o.w > PX + 6 && P.h < 18) { breakCrate(o, true); continue; }
+        if (P.atk > 0 && !ranged() && o.x < PX + 9 + st.reach && o.x + o.w > PX + 6 && P.h < 18) { breakCrate(o, true); continue; }
         if (o.x < px1 && o.x + o.w > px0 && o.h1 > ph0) breakCrate(o, false);
         else if (!G.crateHint && o.x < PX + 70) { G.crateHint = true; pop("HIT THE CRATE!", "#ffd866", PX + 70, sy(o.side, 30)); }
         continue;
       }
       // bat hit
-      if (P.atk > 0 && o.enemy && o.x < PX + 9 + st.reach && o.x + o.w > PX + 6 && o.h0 < P.h + 24 && o.h1 > P.h - 2) {
+      if (P.atk > 0 && !ranged() && o.enemy && o.x < PX + 9 + st.reach && o.x + o.w > PX + 6 && o.h0 < P.h + 24 && o.h1 > P.h - 2) {
         o.dead = true; G.kills++; G.score += 30 * (P.side ? st.udMult : 1) * G.fate.f.score; SFX.kill(); G.shake = 3;
         burst(o.x + o.w / 2, sy(o.side, (o.h0 + o.h1) / 2), o.side ? "#b0305a" : "#433a52", 18, 90);
         continue;
@@ -372,6 +378,24 @@
       }
     }
     G.shots = G.shots.filter(s => !s.dead && s.x > -10 && s.x < W + 20);
+
+    // the Ranger's marbles: first enemy or crate on that side gets hit
+    for (const m of G.pshots) {
+      m.x += 330 * dt;
+      for (const o of G.obs) {
+        if (o.dead || o.side !== m.side || !(o.enemy || o.crate)) continue;
+        if (m.x + 6 > o.x && m.x < o.x + o.w && o.h0 < m.h + 10 && o.h1 > m.h - 12) { // same lane as the runner
+          m.dead = true;
+          if (o.crate) breakCrate(o, true);
+          else {
+            o.dead = true; G.kills++; G.score += 30 * (o.side ? st.udMult : 1) * G.fate.f.score; SFX.kill(); G.shake = 2;
+            burst(o.x + o.w / 2, sy(o.side, (o.h0 + o.h1) / 2), o.side ? "#b0305a" : "#433a52", 18, 90);
+          }
+          break;
+        }
+      }
+    }
+    G.pshots = G.pshots.filter(m => !m.dead && m.x < W + 10);
 
     // Christmas lights (with magnet)
     for (const k of G.picks) {
@@ -615,8 +639,10 @@
   // player art per class: "ranger_run1" etc., falling back to "run1"
   function pk(frame) {
     const sh = SAVE.state.sheet, k = sh && sh.cls + "_" + frame;
-    return k && SPR.ART[k] ? k : frame;
+    if (k && SPR.ART[k]) return k;
+    return SPR.ART["fighter_" + frame] ? "fighter_" + frame : frame; // class without art yet
   }
+  function ranged() { const sh = SAVE.state.sheet; return !!sh && SAVE.CLASSES.some(c => c.id === sh.cls && c.ranged); }
   G.pk = pk;
   function drawPlayer() {
     if (P.dead && Math.floor(G.t * 16) % 2) return;
@@ -648,7 +674,7 @@
       const fr = P.atk > 0 ? "attack" : idle ? (SPR.ART[pk("idle")] ? "idle" : "run2") : !P.grounded && P.flip <= 0 ? "jump" : Math.floor(P.runT * 10) % 2 ? "run1" : "run2";
       const key = pk(fr);
       draw(ctx, key, PX, -h - (idle && fr !== "idle" && Math.floor(G.t * 2) % 2 ? 1 : 0));
-      if (P.atk > 0) {
+      if (P.atk > 0 && !ranged() && !SPR.ART[pk("attack")]) {
         const reach = (G.stats || SAVE.runStats()).reach, pr = 1 - P.atk / 0.2, ang = -1.3 + pr * 2.2;
         for (let i = 0; i < reach; i++) R(i < 5 ? "#5a3220" : "#a8743a", PX + 9 + Math.cos(ang) * i, -h - 9 + Math.sin(ang) * i, 2, 2);
         ctx.fillStyle = "rgba(255,255,255,.5)";
@@ -729,6 +755,11 @@
       for (const k of G.picks) if (k.side === side) drawPick(k);
       for (const o of G.obs) if (o.side === side && !o.dead) drawOb(o);
       for (const s of G.shots) if (s.side === side) drawShot(s);
+      for (const m of G.pshots) if (m.side === side) {
+        const img = ART("ranger_shot"), y = -m.h - 3;
+        if (img) ctx.drawImage(img, Math.round(m.x) - 6, y - 1, 12, 6);
+        else { R("#1a1124", m.x - 1, y - 1, 5, 5); R("#4da3ff", m.x, y, 3, 3); R("#ffffff", m.x, y, 1, 1); }
+      }
       ctx.restore();
     }
     drawPlayer();

@@ -11,6 +11,8 @@ are merged into assets/manifest.json, so you can deliver art in batches.
 Unknown file names are listed at the end and skipped.
 """
 import json, os, re, sys
+from collections import deque
+import numpy as np
 from PIL import Image, ImageFilter
 
 SC = 3
@@ -22,8 +24,34 @@ if isinstance(manifest, list):
 
 def q(v): return round(v * SC) / SC
 
+# Names the art may arrive under -> the game's key
+ALIASES = {"ranger_bullet": "ranger_shot", "rogue_bullet": "rogue_shot", "wizard_bullet": "wizard_d20"}
+for _p in ("tree", "lamp", "mailbox", "hedge", "phonebooth", "hydrant"):
+    ALIASES["set_" + _p] = "prop_" + _p; ALIASES["set_" + _p + "_dark"] = "prop_" + _p + "_dark"
+
+def key_out_black(im, limit=16):
+    """Images without transparency: make the near-black area touching the
+    border transparent (e.g. a building painted on a black background)."""
+    a = np.array(im.convert("RGBA"))
+    dark = a[:, :, :3].max(axis=2) <= limit
+    h, w = dark.shape
+    seen = np.zeros_like(dark)
+    dq = deque([(y, x) for x in range(w) for y in (0, h - 1) if dark[y, x]] +
+               [(y, x) for y in range(h) for x in (0, w - 1) if dark[y, x]])
+    for y, x in dq: seen[y, x] = True
+    while dq:
+        y, x = dq.popleft()
+        for ny, nx in ((y + 1, x), (y - 1, x), (y, x + 1), (y, x - 1)):
+            if 0 <= ny < h and 0 <= nx < w and dark[ny, nx] and not seen[ny, nx]:
+                seen[ny, nx] = True; dq.append((ny, nx))
+    a[seen, 3] = 0
+    return Image.fromarray(a)
+
 def load(path):
-    im = Image.open(path).convert("RGBA")
+    raw = Image.open(path)
+    im = raw.convert("RGBA")
+    if "A" not in raw.getbands() or im.split()[3].getextrema()[0] == 255:
+        im = key_out_black(im)
     a = im.split()[3].point(lambda v: 255 if v > 40 else 0)
     box = a.getbbox() or (0, 0, im.width, im.height)
     return im.crop(box)
@@ -63,12 +91,15 @@ def fit_box(key, im, bw, bh, stretch=False):
 DARK, LIGHT, RIM = "#1a1124", "#f3e9dc", "#ff9fb4"
 CLASSES = ("fighter", "ranger", "rogue", "wizard")
 
+# Frames whose pose is much shorter/taller than standing (game px, sprite height)
+FRAME_H = {"ranger_block": 17, "ranger_run2": 23, "ranger_jump": 20, "fighter_idle": 23, "fighter_jump": 22}
+
 # key -> handler
 def player(key, im):
     frame = key.split("_")[-1]
     if frame == "roll":
         w, h = by_h(im, 14); write(key, im, w, h, DARK); manifest[key] = [w, h, 0, 0]; return
-    w, h = by_h(im, 20 if frame == "jump" else 22)
+    w, h = by_h(im, FRAME_H.get(key, 20 if frame == "jump" else 22))
     write(key, im, w, h, DARK)
     manifest[key] = [w, h, q(6 - body_x(im) * w / im.width), 0]
 
@@ -98,9 +129,9 @@ def obstacle(key, im):
     write(key, im, w, h, None if stretch else (RIM if key in ("stump", "crate_dark") else DARK))
     manifest[key] = [w, h, q((hw - w) / 2), 0]
 
-SET_H = {"set_house": 40, "set_houses": 40, "set_school": 58, "set_police": 50, "set_store": 46,
-         "set_arcade": 48, "set_diner": 40, "set_gas": 48, "prop_tree": 52, "prop_lamp": 44,
-         "prop_mailbox": 13, "prop_hedge": 12, "prop_phonebooth": 30, "prop_hydrant": 10}
+SET_H = {"set_house": 42, "set_houses": 40, "set_school": 50, "set_police": 46, "set_store": 46,
+         "set_arcade": 46, "set_diner": 38, "set_gas": 46, "set_camper": 30, "prop_tree": 54, "prop_lamp": 46,
+         "prop_mailbox": 14, "prop_hedge": 12, "prop_phonebooth": 30, "prop_hydrant": 11}
 def scenery(key, im):
     w, h = by_h(im, SET_H[key.replace("_dark", "")]); write(key, im, w, h); manifest[key] = [w, h]
 
@@ -122,16 +153,31 @@ UI_EXACT = {  # 9-slice frames and bars: stretched to an exact size (game px)
 }
 UI_FIT = {  # icons: fit inside a box, keep aspect
     "hud_heart_full": (9, 8), "hud_heart_empty": (9, 8), "hud_light": (7, 10), "hud_d20": (26, 24),
-    "hud_warning": (11, 13), "hud_revive": (9, 9), "shot_spore": (6, 6), "ranger_shot": (6, 6), "wizard_d20": (8, 8),
+    "hud_warning": (11, 13), "hud_revive": (9, 9), "shot_spore": (6, 6), "ranger_shot": (12, 6), "wizard_d20": (10, 8),
     "ui_logo": (520, 170),
 }
 ICON32 = re.compile(r"^ui_(class_\w+|touch_\w+|stat_\w+|up_\w+|lock|light|medal_[123])$")
 
 done, skipped = [], []
-for f in sorted(os.listdir(SRC)):
+files = sorted((os.path.join(r, f), f) for r, _, fs in os.walk(SRC) for f in fs)
+for full, f in files:
     if not f.lower().endswith(".png"): continue
     key, path = f[:-4].lower(), os.path.join(SRC, f)
-    if key.endswith("_ref"): continue  # reference sheets are only for ChatGPT
+    key = ALIASES.get(key, key); path = full
+    if key.endswith("_ref") or key in CLASSES: continue  # reference sheets are only for ChatGPT
+    if key == "ui_medals":  # gold, silver, bronze in one image: split on the gaps
+        im = load(path); a = np.array(im)[:, :, 3] > 40; cols = a.any(axis=0)
+        runs, x = [], 0
+        while x < len(cols):
+            if cols[x]:
+                st = x
+                while x < len(cols) and cols[x]: x += 1
+                if x - st > 20: runs.append((st, x))
+            x += 1
+        for i, (x0, x1) in enumerate(runs[:3]):
+            part = im.crop((x0, 0, x1, im.height)); part = part.crop(part.getbbox())
+            fit_box(f"ui_medal_{i + 1}", part, 32, 32); manifest[f"ui_medal_{i + 1}"] = True; done.append(f"ui_medal_{i + 1}")
+        continue
     frame_key = re.sub(r"^(%s)_" % "|".join(CLASSES), "", key)
     try:
         if frame_key in ("idle", "run1", "run2", "jump", "attack", "block", "roll"): player(key, load(path))

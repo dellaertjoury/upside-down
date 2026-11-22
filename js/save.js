@@ -13,7 +13,7 @@
 
   const CLASSES = [
     { id: "fighter", name: "Fighter", desc: "Swings a dented bat, blocks with a trash-can lid.", bonus: { STR: 2, CON: 1 }, locked: false },
-    { id: "ranger",  name: "Ranger",  desc: "Slingshot from range.", bonus: { DEX: 2, WIS: 1 }, locked: true },
+    { id: "ranger",  name: "Ranger",  desc: "Fires slingshot marbles across the screen; blocks behind a backpack.", bonus: { DEX: 2, WIS: 1 }, locked: false, ranged: true },
     { id: "rogue",   name: "Rogue",   desc: "Faster rolls, sneaky crits.", bonus: { DEX: 2, CHA: 1 }, locked: true },
     { id: "wizard",  name: "Wizard",  desc: "Bends the Dread meter.", bonus: { INT: 2, WIS: 1 }, locked: true },
   ];

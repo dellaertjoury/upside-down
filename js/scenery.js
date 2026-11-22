@@ -13,7 +13,7 @@
   // Placeholder sizes in game pixels; PNG art overrides via its manifest size.
   const BUILDINGS = {
     set_house:  [46, 40], set_houses: [104, 40], set_school: [140, 56], set_police: [86, 48],
-    set_store:  [84, 44], set_arcade: [76, 46], set_diner: [90, 38], set_gas: [100, 46],
+    set_store:  [84, 44], set_arcade: [76, 46], set_diner: [90, 38], set_gas: [100, 46], set_camper: [70, 28],
   };
   const PROPS = {
     prop_tree: [30, 52], prop_lamp: [10, 44], prop_mailbox: [8, 13],
@@ -36,9 +36,13 @@
       S.blanks--;
       c.w = Math.round(rand(110, 190));
       const n = Math.random() < 0.3 ? 0 : Math.random() < 0.7 ? 1 : 2;
-      for (let i = 0; i < n; i++) {
-        const key = pick(Object.keys(PROPS));
-        c.items.push({ key, x: Math.round(c.x + 10 + (c.w - 40) * (n === 1 ? Math.random() : i / 1.6 + Math.random() * 0.2)) });
+      let cur = c.x + 6;
+      for (let i = 0; i < n; i++) { // props side by side, never past the stretch
+        const key = pick(Object.keys(PROPS)), [pw] = size(key);
+        const room = c.x + c.w - 6 - pw - cur;
+        if (room < 0) break;
+        const x = Math.round(cur + Math.random() * room * (n === 1 ? 1 : 0.5));
+        c.items.push({ key, x }); cur = x + pw + 4;
       }
     } else {           // a building
       const key = pick(Object.keys(BUILDINGS).filter(k => k !== S.last));
@@ -46,7 +50,10 @@
       const [bw] = size(key), pad = Math.round(rand(20, 40));
       c.w = bw + pad * 2;
       c.items.push({ key, x: c.x + pad });
-      if (Math.random() < 0.5) c.items.push({ key: pick(["prop_tree", "prop_lamp", "prop_hedge", "prop_mailbox"]), x: c.x + pad + bw + 4 });
+      if (Math.random() < 0.5) { // a tree or lamp next to it
+        const pk = pick(["prop_tree", "prop_lamp", "prop_mailbox"]), [pw] = size(pk);
+        c.items.push({ key: pk, x: c.x + pad + bw + 4 }); c.w += pw + 4;
+      }
       S.blanks = MIN_BLANKS + Math.floor(Math.random() * (MAX_BLANKS - MIN_BLANKS + 1));
     }
     S.nextX += c.w;

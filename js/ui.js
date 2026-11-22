@@ -107,7 +107,7 @@
     $("#roll-note").textContent = "4d6, drop the lowest";
     const r = SAVE.runStats(s);
     const rows = [
-      ["Hearts", r.hearts], ["Bat reach", r.reach + " px"], ["Jump", Math.round(r.jumpV / 3.2) + "%"],
+      ["Hearts", r.hearts], SAVE.CLASSES.find(c => c.id === s.cls).ranged ? ["Slingshot", "full screen"] : ["Bat reach", r.reach + " px"], ["Jump", Math.round(r.jumpV / 3.2) + "%"],
       ["Block", r.block.toFixed(2) + " s"], ["Dread time", r.battery.toFixed(1) + " s"],
       ["Magnet", r.magnet + " px"], ["Light bonus", "1 per " + r.bonusDiv + " pts"],
     ];
