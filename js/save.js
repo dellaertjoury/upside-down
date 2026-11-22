@@ -16,13 +16,13 @@
     //         arc   = slingshot marble with gravity, reaches about half the screen;
     //         bolt  = straight across the screen, but half damage (2 hits per enemy)
     { id: "fighter", name: "Fighter", desc: "Swings a dented bat.", bonus: { STR: 2, CON: 1 }, locked: false,
-      attack: { type: "melee", dmg: 1, cd: 0.32 } },
+      attack: { type: "melee", dmg: 1, cd: 0.32 }, perk: { shield: 18 } },   // trash-can lid absorbs a hit, recharges in 18 s
     { id: "ranger",  name: "Ranger",  desc: "Lobs slingshot marbles in an arc.", bonus: { DEX: 2, WIS: 1 }, locked: false, ranged: true,
-      attack: { type: "arc", dmg: 1, cd: 0.45 } },
+      attack: { type: "arc", dmg: 1, cd: 0.45 }, perk: { skipShot: true, magnet: 1.5 } }, // roll + attack = low skipping shot
     { id: "rogue",   name: "Rogue",   desc: "Fast jabs, sneaky crits.", bonus: { DEX: 2, CHA: 1 }, locked: true,
-      attack: { type: "melee", dmg: 1, cd: 0.24, crit: 0.25 } },
+      attack: { type: "melee", dmg: 1, cd: 0.24, crit: 0.25 }, perk: { heatGrowth: 1.5 } },
     { id: "wizard",  name: "Wizard",  desc: "Straight magic bolts, half damage.", bonus: { INT: 2, WIS: 1 }, locked: true, ranged: true,
-      attack: { type: "bolt", dmg: 0.5, cd: 0.55 } },
+      attack: { type: "bolt", dmg: 0.5, cd: 0.55 }, perk: { pierce: 1, dread: 0.75 } },
   ];
 
   const LOOKS = {
@@ -96,8 +96,8 @@
       block: 0.32 + Math.max(0, m("DEX")) * 0.03 + lvl("lid") * 0.12,
       battery: Math.max(3, 5 + m("WIS") * 0.5) + lvl("battery") * 2,
       bonusDiv: Math.max(120, 250 - m("INT") * 25),
-      magnet: Math.max(6, 10 + m("CHA") * 4) + lvl("magnet") * 14,
-      udMult: 2 + lvl("greed") * 0.5,
+      magnet: Math.round((Math.max(6, 10 + m("CHA") * 4) + lvl("magnet") * 14) * (((CLASSES.find(c => c.id === sheet.cls) || {}).perk || {}).magnet || 1)),
+      heatMax: 4 + lvl("greed") * 0.5,          // top Heat multiplier in the Upside Down
       sporeBonus: lvl("greed"),
       djump: lvl("djump") > 0,
       revive: lvl("revive") > 0,

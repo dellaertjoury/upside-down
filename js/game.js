@@ -13,6 +13,10 @@
     lightPts: 5,                 // per light collected
     killPts: { crow: 10, wisp: 10, crawler: 15, pod: 15, stalker: 25 }, // bats 10, crawlers 15, walkers 25 (x2 upside down)
     dreadRate: 0.6,              // Dread fills at 60% speed: ~8 s in the Upside Down before upgrades
+    // HEAT: what you earn in the Upside Down is a HAUL, multiplied by Heat, kept only
+    // when you flip back up yourself. Thrown out by the Dread = lose half. Die down there = lose it all.
+    heat: { start: 1.5, step: 0.5, every: 2, edge: 0.75, edgeBonus: 0.25, ejectLoss: 0.5 },
+    lightsDown: 0.75,            // share of loose lights that spawn in the Upside Down
     // lights economy
     crateEvery: [16, 24],        // seconds between crates
     crateTiers: [[3, 0.6, 0.3], [5, 0.3, 0.4], [10, 0.1, 0.3]], // [lights, chance at the start, chance from 2000 m]
@@ -24,6 +28,7 @@
     roofHeight: [24, 34],        // roof height in game px (a jump reaches ~50)
     // ranged attacks
     arc: { vx: 200, perReach: 5, vh: 90, g: 380 }, // Ranger marble (reach upgrades add speed = range)
+    skip: { vx: 230, range: 120 },                 // Ranger low shot (roll + attack): skims the ground
     bolt: { vx: 300 },                             // Wizard bolt
   };
 
@@ -210,7 +215,7 @@
     if (r < 0.5) {
       const s = Math.random() < 0.5 ? 0 : 1;
       addOb(typeFor(s, d), X);
-      if (Math.random() < 0.35) addLightArc(Math.random() < 0.5 ? s : 1 - s, X + rand(30, 70), pick([1, 2, 3]));
+      if (Math.random() < 0.35) addLightArc(Math.random() < BAL.lightsDown ? 1 : 0, X + rand(30, 70), pick([1, 2, 3]));
       return gap;
     }
     if (r < 0.78) {
@@ -229,7 +234,7 @@
       for (const t of BAL.crateTiers) { r2 -= t[1] * (1 - p) + t[2] * p; if (r2 <= 0) { c.tier = t[0]; break; } }
       c.tier = c.heart ? 5 : (c.tier || 3);
       if (c.tier >= 5) { c.w = c.tier >= 10 ? 18 : 16; c.h1 = c.w; } // bigger crate, bigger haul
-    } else addLightArc(s, X, pick([2, 3]));
+    } else addLightArc(Math.random() < BAL.lightsDown ? 1 : 0, X, pick([2, 3]));
     if (G.dist > 400) addOb(typeFor(1 - s, d), X + 50);
     return gap;
   }
@@ -242,6 +247,7 @@
     const f = FATE.find(x => roll >= x.min);
     Object.assign(G, { mode: "play", t: 0, speed: SPEED_START, dist: 0, score: 0, shards: 0, kills: 0, parries: 0, nextAt: 420,
       sc: { dist: 0, combat: 0, lights: 0 }, crateT: rand(8, 12), platT: rand(6, 10), nextMile: BAL.milestoneEvery,
+      haul: { dist: 0, combat: 0, lights: 0, n: 0 }, udT: 0, heat: 1, banked: 0, bestHaul: 0, shieldT: 0,
       obs: [], picks: [], parts: [], shots: [], pshots: [], pops: [], shake: 0, flash: 0,
       hearts: G.stats.hearts + f.hearts, reviveLeft: G.stats.revive, dread: 0, overT: 0,
       fate: { roll, f, t: 0 } });
@@ -263,13 +269,21 @@
     const newBest = score > st.best;
     st.shards += earned; st.runs += 1; if (newBest) st.best = score; SAVE.save();
     G.result = { score, shards: G.shards, bonus, earned, kills: G.kills, parries: G.parries,
-      pts: { dist: Math.floor(G.sc.dist), combat: Math.floor(G.sc.combat), lights: Math.floor(G.sc.lights) },
+      pts: { dist: Math.floor(G.sc.dist), combat: Math.floor(G.sc.combat), lights: Math.floor(G.sc.lights) }, bestHaul: Math.floor(G.bestHaul),
+      lostHaul: Math.floor(G.haul.dist + G.haul.combat + G.haul.lights), lostLights: G.haul.n,
       dist: Math.floor(G.dist / 10), newBest, fate: G.fate ? G.fate.roll : 0 };
   }
 
   function hurt() {
     if (G.debug.god) { G.flash = 0.1; G.flashCol = "#5fd0c8"; return; }
     if (P.inv > 0 || P.flip > 0 || P.dead) return;
+    const pk_ = perk();
+    if (pk_.shield && G.shieldT <= 0) { // Fighter: the trash-can lid takes the hit
+      G.shieldT = pk_.shield; P.inv = 0.8; SFX.block(); G.shake = 3;
+      burst(PX + 10, sy(P.side, P.h + 9), "#c9d1dc", 12, 70); pop(T_("pop.shield"), "#c9d1dc");
+      return;
+    }
+    if (P.side === 1) { G.udT = 0; G.heat = BAL.heat.start; } // a hit cools the Heat back down
     G.hearts -= 1; G.shake = 7; G.flash = 0.25; G.flashCol = "#ff3d57"; SFX.hurt();
     burst(PX + 6, sy(P.side, P.h + 8), "#ff3d57", 14);
     if (G.hearts <= 0) {
@@ -294,6 +308,8 @@
     G.pops.push({ txt, col, x: x == null ? PX + 6 : x, y: y == null ? sy(P.side, P.h + 26) : y, life: 0.9 });
   }
   function startFlip(forced) {
+    if (P.side === 1 && G.mode === "play") { bankHaul(forced); G.udT = 0; } // coming up: bank (or lose half)
+    if (P.side === 0 && G.mode === "play") { G.udT = 0; G.heat = BAL.heat.start; }
     P.flip = FLIP_T; P.switched = false; P.roll = 0; P.blk = 0; P.bufFlip = 0; P.h = 0; P.vh = 0; P.plat = null;
     if (G.mode === "play") (P.side === 0 ? SFX.flip : SFX.flipUp)();
     burst(PX + 6, FT + 5, P.side === 0 ? "#b0305a" : "#ffd866", 16, 80);
@@ -311,14 +327,34 @@
       return;
     }
     // lights go straight into your count (a heart crate at full health gives lights too)
-    const n = (o.tier || 3) * (o.side ? 2 : 1);
-    G.shards += n; addPts("lights", BAL.lightPts * n); SFX.gold();
+    const n = o.tier || 3;
+    addLights(n, o.side); addPts("lights", BAL.lightPts * n, o.side); SFX.gold();
     pop(T_("pop.lights", { n }), "#ffd866", o.x + 7, sy(o.side, 26));
     G.onLight && G.onLight("#ffd866");
   }
   // Hit an enemy. Most die at once; tough ones (hp > 1) flinch and get
   // knocked back first. Returns true when the hit landed.
-  function addPts(kind, n) { const v = n * G.fate.f.score; G.sc[kind] += v; G.score += v; }
+  function addPts(kind, n, side = 0) {
+    const v = n * G.fate.f.score;
+    if (side === 1 && G.mode === "play") { G.haul[kind] += v * G.heat; return; } // unbanked until you flip up
+    G.sc[kind] += v; G.score += v;
+  }
+  function addLights(n, side = 0) { if (side === 1 && G.mode === "play") G.haul.n += n; else G.shards += n; }
+  // flip back up on your own: bank the haul (+25% if the Dread was nearly full);
+  // thrown out by the Dread: keep only half
+  function bankHaul(forced) {
+    const H_ = G.haul, pts = H_.dist + H_.combat + H_.lights;
+    if (pts <= 0 && H_.n <= 0) return;
+    const edge = !forced && G.dread / G.stats.battery >= BAL.heat.edge;
+    const k = forced ? 1 - BAL.heat.ejectLoss : edge ? 1 + BAL.heat.edgeBonus : 1;
+    for (const kind of ["dist", "combat", "lights"]) { G.sc[kind] += H_[kind] * k; G.score += H_[kind] * k; }
+    const n = Math.round(H_.n * k); G.shards += n;
+    G.bestHaul = Math.max(G.bestHaul, pts * k); G.banked += pts * k;
+    pop(T_(forced ? "pop.lost" : "pop.bank", { p: Math.round(pts * k), n }), forced ? "#ff6b8f" : "#5fd0c8", W / 2, FT - 52);
+    if (edge) pop(T_("pop.edge"), "#ffd866", W / 2, FT - 40);
+    if (!forced) { SFX.gold(); G.onLight && G.onLight(edge ? "#ffd866" : "#5fd0c8"); }
+    G.haul = { dist: 0, combat: 0, lights: 0, n: 0 };
+  }
   // how: "melee" (bat), "ranged" (marble, bolt) or "reflect" (spore shot sent back)
   function damage(o, how, amount = 1) {
     if (o.hitCd > 0) return false;           // one swing = one hit
@@ -332,9 +368,9 @@
       return true;
     }
     o.dead = true; G.kills++;
-    const pts = Math.round((BAL.killPts[o.type] || 10) * (o.side ? st.udMult : 1));
-    addPts("combat", pts);
-    pop("+" + pts, "#ffd866", at[0], at[1] - 12);
+    const pts = BAL.killPts[o.type] || 10;
+    addPts("combat", pts, o.side);
+    pop("+" + Math.round(pts * (o.side ? G.heat : 1)), o.side ? "#ff9fb4" : "#ffd866", at[0], at[1] - 12);
     SFX.kill(); G.shake = how === "melee" ? 3 : 2;
     burst(at[0], at[1], o.side ? "#b0305a" : "#433a52", 18, 90);
     // loot: sometimes a light, the stalker always leaves three
@@ -345,7 +381,7 @@
   function parry(o, viaShot) {
     o.dead = true; G.parries++;
     const perfect = !viaShot && P.blkAge < 0.12;
-    const pts = (perfect ? 50 : 25) * (P.side ? G.stats.udMult : 1);
+    const pts = (perfect ? 50 : 25);
     G.score += pts * G.fate.f.score; SFX.block(); G.shake = 3;
     burst(o.x + o.w / 2, sy(o.side, (o.h0 + o.h1) / 2), "#5fd0c8", 16, 90);
     pop(perfect ? "PERFECT!" : "PARRY", perfect ? "#ffd866" : "#5fd0c8");
@@ -384,12 +420,15 @@
       P.blk = 0; P.bufAtk = 0;
       const atk = attackCfg();
       P.atkCd = atk.cd;
-      if (atk.type === "arc") { // Ranger: a marble lobbed in an arc; reach upgrades throw it further
+      if (atk.type === "arc" && perk().skipShot && P.roll > 0) { // Ranger perk: roll + attack = low skipping shot
+        P.atk = 0.22; SFX.sling();
+        G.pshots.push({ kind: "skip", side: P.side, x: PX + 16, h: P.h + 3, x0: PX + 16, vx: BAL.skip.vx, vh: 0, dmg: atk.dmg, dead: false });
+      } else if (atk.type === "arc") { // Ranger: a marble lobbed in an arc; reach upgrades throw it further
         P.atk = 0.22; SFX.sling();
         G.pshots.push({ kind: "arc", side: P.side, x: PX + 16, h: P.h + 11, vx: BAL.arc.vx + (st.reach - 16) * BAL.arc.perReach, vh: BAL.arc.vh, dmg: atk.dmg, dead: false });
       } else if (atk.type === "bolt") { // Wizard: straight bolt, half damage
         P.atk = 0.22; SFX.sling();
-        G.pshots.push({ kind: "bolt", side: P.side, x: PX + 16, h: P.h + 11, vx: BAL.bolt.vx, vh: 0, dmg: atk.dmg, dead: false });
+        G.pshots.push({ kind: "bolt", side: P.side, x: PX + 16, h: P.h + 11, vx: BAL.bolt.vx, vh: 0, dmg: atk.dmg, pierce: perk().pierce || 0, dead: false });
       } else { P.atk = 0.2; SFX.swing(); }
     }
     P.atk = Math.max(0, P.atk - dt);
@@ -410,7 +449,7 @@
 
     if (G.mode === "play") {
       if (P.side === 1) {
-        if (!G.debug.noDread) G.dread += dt * G.fate.f.dread * BAL.dreadRate;
+        if (!G.debug.noDread) G.dread += dt * G.fate.f.dread * BAL.dreadRate * (perk().dread || 1);
         if (G.dread >= st.battery) { G.dread = st.battery; startFlip(true); }
       } else G.dread = Math.max(0, G.dread - dt * 1.6);
     }
@@ -435,7 +474,12 @@
 
     if (playing) {
       G.dist += dx;
-      addPts("dist", dx / 10 * BAL.metrePts * (P.side === 1 ? G.stats.udMult : 1));
+      addPts("dist", dx / 10 * BAL.metrePts, P.side);
+      if (P.side === 1 && P.flip <= 0) { // Heat climbs the longer you stay down
+        G.udT += dt * (perk().heatGrowth || 1);
+        G.heat = Math.min(G.stats.heatMax, BAL.heat.start + Math.floor(G.udT / BAL.heat.every) * BAL.heat.step);
+      }
+      if (G.shieldT > 0) { G.shieldT -= dt; if (G.shieldT <= 0) pop(T_("pop.shieldUp"), "#c9d1dc"); }
       G.crateT -= dt;
       G.platT -= dt;
       if (G.dist / 10 >= G.nextMile) { // distance milestone(s): a handful of lights
@@ -513,14 +557,18 @@
         m.h += m.vh * dt; m.vh -= BAL.arc.g * dt;
         if (m.h <= 0) { m.dead = true; burst(m.x, sy(m.side, 1), "#9fb7ff", 5, 30); continue; } // lands
       }
+      if (m.kind === "skip") { // skims along the ground, then rolls to a stop
+        if (Math.floor(m.x / 18) % 2) burst(m.x, sy(m.side, 1), "#c9b9a0", 1, 15);
+        if (m.x - m.x0 > BAL.skip.range) { m.dead = true; continue; }
+      }
       for (const s2 of G.shots) if (!s2.ref && !s2.dead && s2.side === m.side && Math.abs(s2.x - m.x) < 6) { s2.dead = true; m.dead = true; burst(m.x, sy(m.side, s2.h + 2), "#ff6bd0", 8, 50); }
       if (m.dead) continue;
       for (const o of G.obs) {
         if (o.dead || o.side !== m.side || !(o.enemy || o.crate)) continue;
         // the arcing marble hits what it actually touches; the straight bolt covers the runner's lane
-        const hitV = m.kind === "arc" ? (o.h0 < m.h + 4 && o.h1 > m.h - 3) : (o.h0 < m.h + 10 && o.h1 > m.h - 12);
-        if (m.x + 6 > o.x && m.x < o.x + o.w && hitV) {
-          m.dead = true;
+        const hitV = m.kind === "arc" ? (o.h0 < m.h + 4 && o.h1 > m.h - 3) : m.kind === "skip" ? (o.h0 < m.h + 6) : (o.h0 < m.h + 10 && o.h1 > m.h - 12);
+        if (m.x + 6 > o.x && m.x < o.x + o.w && hitV && !(m.hit && m.hit.includes(o))) {
+          if (m.pierce > 0) { m.pierce--; (m.hit = m.hit || []).push(o); } else m.dead = true; // Wizard bolt goes through one
           if (o.crate) breakCrate(o, true);
           else damage(o, "ranged", m.dmg);
           break;
@@ -544,8 +592,8 @@
       }
       if (k.side === P.side && P.flip <= 0 && Math.abs(k.x - cx) < 9 && Math.abs(k.h - ch) < 12) {
         k.taken = true;
-        const val = (k.gold ? 5 : 1) * (k.side ? 2 : 1) + (k.side ? st.sporeBonus : 0);
-        G.shards += val; addPts("lights", BAL.lightPts * val);
+        const val = (k.gold ? 5 : 1) + (k.side ? st.sporeBonus : 0);
+        addLights(val, k.side); addPts("lights", BAL.lightPts * val, k.side);
         (k.gold ? SFX.gold : SFX.light)();
         G.onLight && G.onLight(k.col);
         burst(k.x, sy(k.side, k.h), k.col, 6, 40);
@@ -846,6 +894,11 @@
     return c.attack || { type: "melee", dmg: 1, cd: 0.32 };
   }
   function ranged() { return attackCfg().type !== "melee"; }
+  function perk() {
+    const sh = SAVE.state.sheet, c = SAVE.CLASSES.find(x => sh && x.id === sh.cls) || SAVE.CLASSES[0];
+    return c.perk || {};
+  }
+  G.perk = perk;
   G.attackCfg = attackCfg; G.BAL = BAL;
   G.pk = pk;
   function drawPlayer() {
@@ -931,6 +984,11 @@
     if (G.mode === "attract") return;
     const st = G.stats;
     for (let i = 0; i < st.hearts; i++) heart(6 + i * 11, 6, i < G.hearts);
+    if (perk().shield) { // the Fighter's lid: bright when ready, dim while recharging
+      const x0 = 8 + st.hearts * 11 + (G.reviveLeft ? 12 : 0), ok = G.shieldT <= 0;
+      R("#1a1124", x0, 6, 9, 9); R(ok ? "#c9d1dc" : "#4c4e5a", x0 + 1, 7, 7, 7); R(ok ? "#9a9caa" : "#3b3446", x0 + 3, 9, 3, 3);
+      if (!ok) R("#5fd0c8", x0, 16, Math.round(9 * (1 - G.shieldT / perk().shield)), 1);
+    }
     if (G.reviveLeft) { if (ART("hud_revive")) ctx.drawImage(ART("hud_revive"), 8 + st.hearts * 11, 6, 9, 9); else text("+1", 8 + st.hearts * 11, 7, "#5fd0c8"); }
     text(String(Math.floor(G.score)).padStart(6, "0"), W - 6, 6, "#ffd866", "right");
     text(T_("hud.hi") + " " + String(Math.max(SAVE.state.best, Math.floor(G.score))).padStart(6, "0"), W - 64, 6, "#f3e9dc", "right");
@@ -940,7 +998,11 @@
 
     const bw = 70, f = G.dread / st.battery, DX = Math.round(W / 2 - bw / 2) - 6; // centred, clear of phone buttons
     ctx.save(); ctx.translate(DX, 0);
-    text(P.side ? "x" + (st.udMult * G.fate.f.score).toFixed(1) : T_("hud.dread"), 6, H - 22, P.side ? "#ff6b8f" : "#a998b8");
+    if (P.side) { // HEAT x2.5   haul +340  12 lights
+      const hp = Math.round(G.haul.dist + G.haul.combat + G.haul.lights);
+      text(T_("hud.heat") + " x" + G.heat.toFixed(1), 6, H - 22, G.heat >= 3 ? "#ffd866" : "#ff6b8f");
+      text("+" + hp + (G.haul.n ? "  \u2022" + G.haul.n : ""), bw + 12, H - 22, "#5fd0c8");
+    } else text(T_("hud.dread"), 6, H - 22, "#a998b8");
     const fr = ART("hud_dread_frame"), fl = ART("hud_dread_fill");
     if (fr) ctx.drawImage(fr, 3, H - 13, bw + 6, 10);
     else { R("#1a1124", 5, H - 11, bw + 2, 6); R("#3a2550", 6, H - 10, bw, 4); }
@@ -976,7 +1038,7 @@
       }
       for (const s of G.shots) if (s.side === side) drawShot(s);
       for (const m of G.pshots) if (m.side === side) {
-        const bolt = m.kind === "bolt", img = ART(bolt ? "wizard_d20" : "ranger_shot"), y = Math.round(-m.h - 3);
+        const bolt = m.kind === "bolt", img = ART(bolt ? "wizard_d20" : "ranger_shot"), y = Math.round(-m.h - 3) + (m.kind === "skip" ? Math.round(Math.abs(Math.sin(m.x / 9)) * -2) : 0);
         if (img) ctx.drawImage(img, Math.round(m.x) - (bolt ? 8 : 6), y - 1, bolt ? 10 : 12, bolt ? 8 : 6);
         else if (bolt) { R("#1a1124", m.x - 1, y - 2, 6, 6); R("#a46bff", m.x, y - 1, 4, 4); R("#ffffff", m.x + 1, y, 1, 1); }
         else { R("#1a1124", m.x - 1, y - 1, 5, 5); R("#4da3ff", m.x, y, 3, 3); R("#ffffff", m.x, y, 1, 1); }

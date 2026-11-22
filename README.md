@@ -86,10 +86,16 @@ the menu.
   hit or avoid. The tall **stalker** takes two hits. Hounds sometimes pounce.
   Spore pods shoot along the ground every few seconds: jump them, flip away,
   or hit the shot back.
-- **The Upside Down** scores ×2 (more with upgrades) and its lights count
-  double. But the **Dread** meter fills while you're down there (about 8
-  seconds before upgrades). When it's full you get thrown back up and can't
-  flip again for a moment.
+- **The Upside Down: Heat and the haul.** Everything you earn down there
+  (distance, kills, lights) goes into a **haul**, multiplied by **Heat**:
+  x1.5 when you arrive, +0.5 every 2 seconds you stay, up to x4 (more with
+  Dark greed). Most loose lights spawn down there. Getting hit cools the Heat
+  back to x1.5.
+  - **Flip back up yourself** to bank the haul. Flip with the Dread over 75%
+    for a **close call: +25%**.
+  - **Dragged out** when the Dread fills: you keep only half.
+  - **Die down there**: the haul is lost.
+  The Dread fills in about 8 seconds (before upgrades) and drains on the street.
 - **Rooftops:** every 11–17 seconds a store, police station, diner, arcade,
   camper or gas station rolls by with the street. Jump onto its roof (only
   from above; the walls never hurt) for the lights and crates up there. Run
@@ -97,12 +103,12 @@ the menu.
 
 ## Classes and attacks
 
-| Class | Attack | Why it's fair |
-|---|---|---|
-| Fighter | Bat, short reach, kills in 1 hit, knocks spore shots back | Riskiest: has to get close |
-| Ranger | Slingshot marble lobbed in an arc with gravity: lands at about **half the screen**, hits what it actually touches | Safe but limited range. Longer-bat upgrades and STR throw it further |
-| Wizard *(locked)* | Magic bolt straight across the whole screen | Half damage: every enemy takes **2 hits** (the stalker 4) |
-| Rogue *(locked)* | Fast melee jabs | 1 in 4 hits is a double-damage crit |
+| Class | Attack | Perk | Weakness |
+|---|---|---|---|
+| Fighter | Bat: kills in 1 hit, knocks spore shots back | **Trash-can lid** absorbs one hit, recharges in 18 s | Has to get close |
+| Ranger | Marble lobbed in an arc to about half the screen | **Roll + attack** = low skipping shot for ground enemies; light magnet ×1.5 | Arc misses low targets unless you skip-shoot |
+| Wizard *(locked)* | Bolt straight across the whole screen, pierces 1 enemy | Dread fills **25% slower** | Half damage: 2 hits per enemy (stalker 4) |
+| Rogue *(locked)* | Fast jabs, 1 in 4 crits for double damage | Heat climbs **50% faster** | Short reach |
 
 ## Score
 
@@ -110,14 +116,14 @@ The high score is one number made of three parts, shown after each run:
 
 - **Distance:** 1 point per metre (×2 in the Upside Down).
 - **Combat:** points per kill: flyers (crows, flyers) 10, crawlers (hounds,
-  spore pods) 15, walkers (stalkers) 25. ×2 in the Upside Down.
+  spore pods) 15, walkers (stalkers) 25. In the Upside Down × Heat (banked).
 - **Lights:** 5 points per light collected.
 
 ## Christmas lights (the currency)
 
 - Bulbs float high (jump for them), alone or in rows of 2–3 that follow the
-  arc of a jump, so one well-timed jump collects them all. Upside Down ones
-  count double, the rare gold bulb is worth 5.
+  arc of a jump, so one well-timed jump collects them all. Three in four
+  spawn in the Upside Down and go into your haul. The rare gold bulb is worth 5.
 - **Crates** about every 20 seconds: small (3 lights), medium (5) or big with
   a gold glow (10); big crates get more common the further you run. One in
   four crates holds a heart instead (lights if you're at full health). Hit
@@ -137,7 +143,7 @@ All of these numbers live in the `BAL` block at the top of `js/game.js`.
 | Longer bat | 3 | +6 px melee reach |
 | Flashlight battery | 4 | +2 s in the Upside Down |
 | Light magnet | 3 | Bigger pickup radius |
-| Dark greed | 3 | +0.5× Upside Down multiplier, +1 per Upside Down light |
+| Dark greed | 3 | +0.5 maximum Heat, +1 per Upside Down light |
 | Double jump | 1 | Jump again in mid-air |
 | Second wind | 1 | Survive one fatal hit per run |
 
