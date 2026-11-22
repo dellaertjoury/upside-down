@@ -46,7 +46,7 @@
   const $ = s => el.querySelector(s);
 
   $("#dbg-type").innerHTML = Object.keys(G._TYPES).map(t => `<option>${t}</option>`).join("") +
-    Object.keys(G.PLATS).map(k => `<option value="plat:${k}">${k} (jump on)</option>`).join("") + '<option value="skate">skateboard</option>';
+    Object.keys(G.PLATS).map(k => `<option value="plat:${k}">${k} (jump on)</option>`).join("") + '<option value="skate">skateboard</option><option value="dice">dice crate</option>';
 
   function toggle(on) {
     el.hidden = on === undefined ? !el.hidden : !on;
@@ -67,6 +67,7 @@
     if (a === "spawn") {
       const v = $("#dbg-type").value;
       if (v.startsWith("plat:")) G.spawnPlatform(v.slice(5));
+      else if (v === "dice") G.picks.push({ kind: "dice", side: G._P.side, x: 420, h: 7, taken: false, ph: 0, col: "#ff3d57" });
       else if (v === "skate") G.picks.push({ kind: "skate", side: G._P.side, x: 420, h: 12, taken: false, ph: 0, col: "#ff3d57" });
       else G.spawn(v);
     }
@@ -96,7 +97,7 @@
       score: Math.floor(G.score), lights: G.shards, hearts: G.hearts, side: P.side ? "upside down" : "normal",
       h: +P.h.toFixed(1), dread: +G.dread.toFixed(2), obstacles: G.obs.length, lightsOnScreen: G.picks.length,
       shots: G.shots.length, scenery: SCN.state.chunks.map(c => (c.items.map(i => i.key.replace(/^(set|prop)_/, "")).join("+") || "blank")).join(" | "),
-      fate: G.fate ? G.fate.roll : null, artLoaded: Object.keys(SPR.ART).length, leaderboard: LB.mode };
+      dice: G.dice, diceSaved: SAVE.state.dice, artLoaded: Object.keys(SPR.ART).length, leaderboard: LB.mode };
   }
 
   function render() {

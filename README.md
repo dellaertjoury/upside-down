@@ -6,7 +6,7 @@ suburban street. The bottom half is the **Upside Down**. Flip through the floor
 to dodge whatever blocks your side.
 
 Every run starts at the door of the **Hellfire Club**, the D&D group's hangout.
-Roll up a character sheet there, then head out.
+Fill in your character sheet there, then head out.
 
 Plain HTML + JavaScript. No build step, no dependencies.
 
@@ -47,21 +47,38 @@ the controls above. Everything is saved in the browser.
 
 ## Character sheet (D&D style)
 
-Roll **4d6, drop the lowest** for each ability. You get 3 free rerolls, then
-each reroll costs 10 lights. Pick a class: Fighter (bat, STR +2, CON +1) or
-Ranger (slingshot, DEX +2, WIS +1). Rogue and Wizard are still locked.
+No dice rolls for stats: everyone starts with every ability at 10, plus the
+class bonus. Pick a class: Fighter (bat, STR +2, CON +1) or Ranger (slingshot,
+DEX +2, WIS +1). Rogue and Wizard are still locked. Each upgrade level raises
+its ability by 2, so the sheet levels up as you buy upgrades:
 
-| Ability | In game |
+| Ability | Grows with |
 |---|---|
-| STR | Bat reach |
-| DEX | Jump height |
-| CON | Extra hearts (+1 per +2 modifier) |
-| INT | Bigger light bonus after each run |
-| WIS | Longer in the Upside Down before the Dread throws you out |
-| CHA | Light magnet range |
+| STR | Longer bat |
+| DEX | Double jump, Skateboard |
+| CON | Extra heart |
+| INT | Dark greed |
+| WIS | Flashlight battery |
+| CHA | Light magnet |
 
-**D20 fate:** each run opens with a d20 roll. A natural 20 gives +1 heart, 15–19
-gives +20% score, 2–5 fills Dread 15% faster, and a natural 1 fills it 30% faster.
+## Dice Crates (the d20)
+
+The dice live in **Dice Crates**: red-marked crates that turn up about once a
+minute (more often in the Upside Down, sometimes on top of a car). Grab one and
+it's yours for the run, even if you die. After the run you open them on the
+game-over screen: roll the d20 (Space / A), and the roll sets the odds.
+
+| Roll | Rare (40–60 lights) | Legendary (a free upgrade level) |
+|---|---|---|
+| 1 | 2.5% | 0% |
+| 10 | 25% | 0% |
+| 16 | 40% | 3% |
+| 19 | 47.5% | 12% |
+| Natural 20 | | 100% |
+
+Otherwise it's uncommon (15–25 lights, 40%) or common (5–10). A legendary pays
+150 lights once every upgrade is maxed. Unopened crates wait for your next
+game-over screen.
 
 ## The Watcher
 
@@ -99,9 +116,11 @@ the menu.
 - **Things to jump on:** every 9–14 seconds a dumpster, car, police car, van,
   pickup or school bus rolls by at real size, sometimes two in a row to hop
   between. Land on it from above (running past its front never hurts); its
-  surface follows its shape, so you can step from a car roof down to the
-  trunk. Lights float above them, sometimes a crate sits on top. Works in the
-  Upside Down too.
+  surface follows its shape: run up the windshield onto the roof and down
+  onto the trunk. Each one carries one thing: lights showing the way up
+  (jump where the arc starts and you land on it), lights to jump off its end,
+  lights above a wide one to jump for from its roof, a crate, or a Dice
+  Crate. Works in the Upside Down too.
 
 ## Classes and attacks
 
@@ -130,7 +149,7 @@ The high score is one number made of three parts, shown after each run:
   a gold glow (10); big crates get more common the further you run. One in
   four crates holds a heart instead (lights if you're at full health). Hit
   a crate to open it; running into it wastes it.
-- **Kills:** enemies sometimes drop a light; the stalker always drops three.
+- **Kills** pay in points only: enemies never drop lights.
 - **Milestones:** every 500 m gives +10 lights.
 - At the end of a run you bank the lights plus a score bonus, and spend them
   on permanent upgrades. That's the roguelike loop.

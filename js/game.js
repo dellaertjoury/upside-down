@@ -21,7 +21,7 @@
     crateEvery: [16, 24],        // seconds between crates
     crateTiers: [[3, 0.6, 0.3], [5, 0.3, 0.4], [10, 0.1, 0.3]], // [lights, chance at the start, chance from 2000 m]
     heartCrate: 0.25,            // share of crates holding a heart instead
-    killDrop: 0.2,               // chance an enemy drops a light (the stalker always drops 3)
+    dice: { first: [25, 40], every: [50, 80], down: 0.6 }, // Dice Crates: kept, opened after the run (60% in the Upside Down)
     milestoneEvery: 500, milestoneLights: 10, // every 500 m: +10 lights
     lightHeight: [20, 38],       // single lights float this high: jump for them
     platformEvery: [9, 14],      // seconds between cars / dumpsters / buses to jump on
@@ -151,8 +151,8 @@
   function addLight(side, x, h) { G.picks.push(bulb(side, x, h == null ? rand(BAL.lightHeight[0], BAL.lightHeight[1]) : h, null, 0)); }
   // 1-3 lights along the path of a jump that takes off at x (at the current speed),
   // so one well-timed jump collects them all. base = floor or roof height.
-  function addLightArc(side, x, n, base = 0) {
-    const J = (G.stats || SAVE.runStats()).jumpV, T = 2 * J / GRAV, v = Math.max(60, G.speed);
+  function addLightArc(side, x, n, base = 0, tEnd) {
+    const J = (G.stats || SAVE.runStats()).jumpV, T = tEnd || 2 * J / GRAV, v = Math.max(60, G.speed);
     for (let i = 0; i < n; i++) {
       const tt = T * (n === 1 ? 0.5 : (i + 1) / (n + 1));
       G.picks.push(bulb(side, x + v * tt, base + J * tt - GRAV * tt * tt / 2 + 6, null, i));
@@ -206,18 +206,36 @@
     const prof = (img && artProfile(img, Math.round(w), h)) || Array.from({ length: Math.round(w) }, (_, i) => D.prof(i / w));
     const top = Math.max(...prof);
     const o = { type: "platform", platform: true, kind: type, side, x: X, w, h0: 0, h1: top, top, prof, drawH: h, t: 0, dead: false };
-    G.obs.push(o);
-    // lights over the highest part, sometimes a crate on top
-    const hi = prof.indexOf(top);
-    addLightArc(side, X + Math.max(0, hi - 6), pick([2, 3]), top);
-    if ((G.crateT <= 0 || Math.random() < 0.3) && w > 50) {
+    // what's on it: ONE of a crate, a dice crate, or lights showing a way up / off / over it
+    const hi = prof.indexOf(top), J = (G.stats || SAVE.runStats()).jumpV, v = Math.max(60, G.speed);
+    let what = pick(["onto", "onto", "off", "off", "over", "crate"]);
+    if (what === "over" && w < 60) what = pick(["onto", "off"]);   // only wide ones have room to jump up from
+    if (G.crateT <= 0) what = "crate";
+    if (G.diceT <= 0 && Math.random() < 0.5) what = "dice";
+    if (what === "onto") { // an arc from the street that lands you on its first high part
+      const land = Math.min(w - 4, hi + 4), hl = prof[land];
+      const tl = (J + Math.sqrt(Math.max(0, J * J - 2 * GRAV * hl))) / GRAV; // time to come down onto it
+      const first = o.x + land - v * tl + v * tl / 4;
+      if (first < W + 6) o.x += W + 6 - first;                            // never pop in on screen
+      addLightArc(side, o.x + land - v * tl, 3, 0, tl);
+    } else if (what === "off") { // run along the top and jump off its end
+      const e = Math.max(0, w - 8);
+      addLightArc(side, o.x + e, pick([2, 3]), prof[e]);
+    } else if (what === "over") { // land on top, then jump up again for them
+      addLightArc(side, o.x + Math.max(0, hi - 4), pick([2, 3]), top);
+    } else if (what === "crate") {
       if (G.crateT <= 0) G.crateT = rand(BAL.crateEvery[0], BAL.crateEvery[1]);
-      const cx = X + Math.min(w - 18, hi + 10);
+      const cw = 16, cx = o.x + Math.max(2, Math.min(w - cw - 2, hi + 6));
       addOb(side ? "crate_dark" : "crate", cx);
       const c = G.obs[G.obs.length - 1];
       c.tier = pick([3, 5, 5, 10]); if (c.tier >= 5) { c.w = c.tier >= 10 ? 18 : 16; }
-      c.h0 = surface(o, cx - X, cx - X + c.w); c.h1 = c.h0 + c.w; c.onRoof = true;
+      c.h0 = surface(o, cx - o.x, cx - o.x + c.w); c.h1 = c.h0 + c.w; c.onRoof = true;
+    } else if (what === "dice") {
+      G.diceT = rand(BAL.dice.every[0], BAL.dice.every[1]);
+      const dx_ = Math.max(4, Math.min(w - 14, hi + 6));
+      G.picks.push({ kind: "dice", side, x: o.x + dx_, h: surface(o, dx_, dx_ + 10) + 6, taken: false, ph: 0, col: "#ff3d57" });
     }
+    G.obs.push(o);
     return o;
   }
   // highest surface of a platform between two x offsets (relative to its left edge)
@@ -239,8 +257,13 @@
       G.platT = rand(BAL.platformEvery[0], BAL.platformEvery[1]);
       const side = Math.random() < 0.55 ? P.side : 1 - P.side;
       const p = addPlatform(side, X + 30);
-      if (Math.random() < 0.4) { const q = addPlatform(side, X + 30 + p.w + rand(30, 60)); return q.x - X + q.w + G.speed * 0.8; } // a second one to hop to
-      return p.w + 30 + G.speed * 0.8;
+      if (Math.random() < 0.4) { const q = addPlatform(side, p.x + p.w + rand(30, 60)); return q.x - X + q.w + G.speed * 0.8; } // a second one to hop to
+      return p.x - X + p.w + G.speed * 0.8;
+    }
+    if (G.diceT <= 0) { // a Dice Crate, more often in the Upside Down; opened after the run
+      G.diceT = rand(BAL.dice.every[0], BAL.dice.every[1]);
+      G.picks.push({ kind: "dice", side: Math.random() < BAL.dice.down ? 1 : 0, x: X + 20, h: 7, taken: false, ph: 0, col: "#ff3d57" });
+      return gap * 0.8;
     }
     if (r < 0.5) {
       const s = Math.random() < 0.5 ? 0 : 1;
@@ -273,19 +296,16 @@
   G.start = function () {
     SFX.unlock();
     G.stats = SAVE.runStats();
-    const roll = 1 + Math.floor(Math.random() * 20);
-    const f = FATE.find(x => roll >= x.min);
+    const f = FATE[2]; // the start-of-run fate roll is gone: no random head start or handicap
     Object.assign(G, { mode: "play", t: 0, speed: SPEED_START, dist: 0, score: 0, shards: 0, kills: 0, parries: 0, nextAt: 420,
       sc: { dist: 0, combat: 0, lights: 0 }, crateT: rand(8, 12), platT: rand(6, 10), nextMile: BAL.milestoneEvery,
-      haul: { dist: 0, combat: 0, lights: 0, n: 0 }, udT: 0, heat: 1, banked: 0, bestHaul: 0, shieldT: 0, skateT: rand(20, 35),
+      haul: { dist: 0, combat: 0, lights: 0, n: 0 }, dice: 0, diceT: rand(BAL.dice.first[0], BAL.dice.first[1]), udT: 0, heat: 1, banked: 0, bestHaul: 0, shieldT: 0, skateT: rand(20, 35),
       obs: [], picks: [], parts: [], shots: [], pshots: [], pops: [], shake: 0, flash: 0,
       hearts: G.stats.hearts + f.hearts, reviveLeft: G.stats.revive, dread: 0, overT: 0,
-      fate: { roll, f, t: 0 } });
-    G.stats.hearts += f.hearts;
+      fate: { roll: 0, f, t: 99 } });
     G.scroll0 = G.scroll; SCN.reset(); G.crateHint = false;
     SFX.music.setMode("play");
     resetPlayer();
-    SFX.dice();
   };
   G.pause = () => { if (G.mode === "play") { G.mode = "pause"; SFX.music.setMode("pause"); G.onPause && G.onPause(); } };
   G.resume = () => { if (G.mode === "pause") { G.mode = "play"; SFX.music.setMode(P.side ? "down" : "play"); last = performance.now(); } };
@@ -302,11 +322,12 @@
     const earned = G.shards + bonus;
     const st = SAVE.state, score = Math.floor(G.score);
     const newBest = score > st.best;
-    st.shards += earned; st.runs += 1; if (newBest) st.best = score; SAVE.save();
+    st.shards += earned; st.runs += 1; if (newBest) st.best = score;
+    st.dice = (st.dice || 0) + G.dice; SAVE.save();               // Dice Crates wait to be opened
     G.result = { score, shards: G.shards, bonus, earned, kills: G.kills, parries: G.parries,
       pts: { dist: Math.floor(G.sc.dist), combat: Math.floor(G.sc.combat), lights: Math.floor(G.sc.lights) }, bestHaul: Math.floor(G.bestHaul),
       lostHaul: Math.floor(G.haul.dist + G.haul.combat + G.haul.lights), lostLights: G.haul.n,
-      dist: Math.floor(G.dist / 10), newBest, fate: G.fate ? G.fate.roll : 0 };
+      dist: Math.floor(G.dist / 10), newBest, dice: G.dice };
   }
 
   function hurt() {
@@ -409,10 +430,7 @@
     pop("+" + Math.round(pts * (o.side ? G.heat : 1)), o.side ? "#ff9fb4" : "#ffd866", at[0], at[1] - 12);
     SFX.kill(); G.shake = how === "melee" ? 3 : 2;
     burst(at[0], at[1], o.side ? "#b0305a" : "#433a52", 18, 90);
-    // loot: sometimes a light, the stalker always leaves three
-    const drops = o.type === "stalker" ? 3 : Math.random() < BAL.killDrop ? 1 : 0;
-    for (let i = 0; i < drops; i++) addLight(o.side, Math.max(PX + 14, o.x + i * 9), Math.max(6, o.h0 + 6));
-    return true;
+    return true; // enemies drop no lights: kills pay in points
   }
   function parry(o, viaShot) {
     o.dead = true; G.parries++;
@@ -477,14 +495,19 @@
       if (P.vh < 0) for (const o of G.obs) { // falling onto a car, dumpster... (one-way: only from above)
         if (!o.platform || o.side !== P.side || o.x > PX + 9 || o.x + o.w < PX + 4) continue;
         const top = surface(o, PX + 4 - o.x, PX + 9 - o.x);
-        if (top > 0 && prev >= top - 0.5 && P.h <= top) { P.h = top; P.vh = 0; P.grounded = true; P.jumps = 0; P.plat = o; break; }
+        // forgiving: also lands when the edge arrives while you're a few px below its top
+        if (top > 0 && prev >= top - 7 && P.h <= top) { P.h = top; P.vh = 0; P.grounded = true; P.jumps = 0; P.plat = o; break; }
       }
       if (P.h <= 0) { P.h = 0; P.vh = 0; P.grounded = true; P.jumps = 0; P.plat = null; }
     } else if (P.plat) { // follow the shape: step down onto the trunk, or drop off the end
       const o = P.plat, top = o.side === P.side ? surface(o, PX + 4 - o.x, PX + 9 - o.x) : -1;
+      const slope = Math.max(G.speed, 60) * dt * 2 + 1.5;                  // how much a slope may rise/fall this frame
       if (top <= 0) { P.plat = null; P.grounded = false; P.vh = 0; }
-      else if (top < P.h - 0.5) { P.grounded = false; P.vh = 0; }          // edge of the roof: fall to the lower part
-      else if (top > P.h + 0.5 && top - P.h <= 3) P.h = top;                // small step up (windshield slope)
+      else if (top < P.h - 0.5) {
+        if (P.h - top <= slope) P.h = top;                                  // run down the rear window
+        else { P.grounded = false; P.vh = 0; }                              // edge of the roof: fall to the lower part
+      }
+      else if (top > P.h + 0.5 && top - P.h <= slope + 3) P.h = top;        // run up the windshield onto the roof
     }
 
     if (G.mode === "play") {
@@ -523,7 +546,7 @@
       }
       if (G.shieldT > 0) { G.shieldT -= dt; if (G.shieldT <= 0) pop(T_("pop.shieldUp"), "#c9d1dc"); }
       G.crateT -= dt;
-      G.platT -= dt; G.skateT -= dt;
+      G.platT -= dt; G.skateT -= dt; G.diceT -= dt;
       if (P.skate > 0) {
         P.skate -= dt;
         if (Math.random() < 0.5) G.parts.push({ x: PX - 2, y: sy(P.side, P.h + rand(2, 14)), vx: -rand(40, 90), vy: rand(-10, 10), life: 0.35, col: BULBS[Math.floor(Math.random() * 6)][1], s: 1 });
@@ -644,6 +667,10 @@
       const ddx = k.x - cx, ddh = k.h - ch, dist = Math.hypot(ddx, ddh);
       if (k.side === P.side && P.flip <= 0 && dist < st.magnet + 12) {
         k.x -= ddx * Math.min(1, dt * 10); k.h -= ddh * Math.min(1, dt * 10);
+      }
+      if (k.side === P.side && P.flip <= 0 && Math.abs(k.x - cx) < 10 && Math.abs(k.h - ch) < 13 && k.kind === "dice") {
+        k.taken = true; G.dice++; SFX.dice(); pop(T_("pop.dice"), "#ff6b8f", k.x, sy(k.side, k.h + 14));
+        G.onLight && G.onLight("#ff3d57"); burst(k.x, sy(k.side, k.h), "#ff3d57", 10, 50); continue;
       }
       if (k.side === P.side && P.flip <= 0 && Math.abs(k.x - cx) < 9 && Math.abs(k.h - ch) < 12 && k.kind === "skate") {
         k.taken = true; P.skate = st.skate; SFX.power(); pop(T_("pop.skate"), "#ffd866");
@@ -918,7 +945,17 @@
     R("#1a1124", x, y, w, 3); R("#ff3d57", x + 1, y, w - 2, 2); R("#ffd866", x + 2, y, 2, 1);
     R("#1a1124", x + 2, y + 2, 3, 3); R("#1a1124", x + w - 5, y + 2, 3, 3); R("#ece6d6", x + 3, y + 3, 1, 1); R("#ece6d6", x + w - 4, y + 3, 1, 1);
   }
+  function drawDiceCrate(x, y) { // a small wooden crate with a red d20 painted on it
+    R("#1a1124", x - 1, y - 1, 12, 12); R("#8a5a30", x, y, 10, 10); R("#6b4222", x, y + 4, 10, 1); R("#a8743a", x, y, 10, 1);
+    R("#1a1124", x + 2, y + 2, 6, 6); R("#ff3d57", x + 3, y + 2, 4, 6); R("#ff3d57", x + 2, y + 3, 6, 4); R("#ffd0dc", x + 4, y + 4, 2, 2);
+  }
   function drawPick(k) {
+    if (k.kind === "dice") {
+      const x = Math.round(k.x), y = -Math.round(k.h) - 6 + Math.round(Math.sin(G.t * 4) * 1.5), img = ART("pickup_dice");
+      ctx.globalAlpha = 0.3 + Math.sin(G.t * 6) * 0.15; R("#ff3d57", x - 3, y - 3, 16, 16); ctx.globalAlpha = 1;
+      if (img) ctx.drawImage(img, x - 1, y - 1, 12, 12); else drawDiceCrate(x, y);
+      return;
+    }
     if (k.kind === "skate") {
       const x = Math.round(k.x), y = -Math.round(k.h) - 4 + Math.round(Math.sin(G.t * 5) * 2), img = ART("pickup_skate");
       ctx.globalAlpha = 0.35 + Math.sin(G.t * 8) * 0.15; R(BULBS[Math.floor(G.t * 8) % 6][1], x - 4, y - 5, 22, 12); ctx.globalAlpha = 1;
@@ -1097,6 +1134,10 @@
     if (ART("hud_light")) ctx.drawImage(ART("hud_light"), W - 47, 16, 7, 10);
     else { R("#3b3446", W - 45, 16, 3, 2); R("#1a1124", W - 46, 18, 5, 7); R(BULBS[Math.floor(G.t * 2) % 6][1], W - 45, 18, 3, 6); }
     text(String(G.shards), W - 6, 18, "#f3e9dc", "right");
+    if (G.dice > 0) { // Dice Crates found this run
+      if (ART("pickup_dice")) ctx.drawImage(ART("pickup_dice"), W - 48, 29, 9, 9); else { ctx.save(); ctx.translate(W - 48, 29); ctx.scale(0.8, 0.8); drawDiceCrate(0, 0); ctx.restore(); }
+      text(String(G.dice), W - 6, 30, "#ff9fb4", "right");
+    }
 
     const bw = 70, f = G.dread / st.battery, DX = Math.round(W / 2 - bw / 2) - 6; // centred, clear of phone buttons
     ctx.save(); ctx.translate(DX, 0);

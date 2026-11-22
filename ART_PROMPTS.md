@@ -835,6 +835,22 @@ When the last heart is lost the kid is knocked up and backwards, spins and falls
 
 ---
 
+## 7. Dice Crates (2)
+
+**`pickup_dice`**
+
+```
+Pixel-art game pickup for a 2D side-scrolling runner, crisp hard-edged pixels, no anti-aliasing, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. A small square wooden crate, front view, slightly worn planks, with a big glossy red twenty-sided die (d20) painted or stamped on the front, a faint red glow seeping from the gaps. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no blur.
+```
+
+**`ui_d20`**
+
+```
+Pixel-art game UI icon, crisp pixels, no anti-aliasing, flat front view. A big red twenty-sided die (d20) seen face-on, hexagon outline with the triangular facets shaded in three tones of red, the front face left EMPTY (no number: the game prints the number on top), small white highlight top-left. FULLY TRANSPARENT BACKGROUND, no text, no frame.
+```
+
+---
+
 ## Checklist
 
 | Set | Files |
@@ -846,6 +862,7 @@ When the last heart is lost the kid is knocked up and backwards, spins and falls
 | Street objects to jump on (6 + 6 dark) | 12 |
 | Skateboard: pickup, board, upgrade icon, 2 riding frames × 4 classes | 11 |
 | Death tumble: 2 frames × 4 classes (optional) | 8 |
-| **Total** | **127** |
+| Dice Crates: pickup, d20 for the opening screen | 2 |
+| **Total** | **129** |
 
 Per player class: idle 2, run 4, jump 2 (rising, falling), roll 4, running attack 3 (+ 2 optional skateboard frames, + 2 optional death-tumble frames).

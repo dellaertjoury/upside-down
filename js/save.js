@@ -49,9 +49,43 @@
     { id: "revive",  name: "Second wind",        desc: "Once per run, survive a fatal hit.",                 costs: [400] },
   ];
 
-  const FREE_REROLLS = 3, REROLL_COST = 10;
+  // Abilities are no longer rolled: everyone starts at 10 (+ class bonus) and
+  // each upgrade level raises its ability by 2, like levelling up in D&D.
+  const ABIL_UP = { STR: ["reach"], DEX: ["djump", "skate"], CON: ["heart"], INT: ["greed"], WIS: ["battery"], CHA: ["magnet"] };
 
-  const fresh = () => ({ shards: 0, best: 0, runs: 0, muted: false, music: true, up: {}, sheet: null });
+  // ---- Dice Crates: found in runs, opened after. The d20 sets the odds of something rare. ----
+  const LOOT = [ // tier, colour, lights range
+    { id: "common",    col: "#c9d1dc", lights: [5, 10] },
+    { id: "uncommon",  col: "#5fd0c8", lights: [15, 25] },
+    { id: "rare",      col: "#ffd866", lights: [40, 60] },
+    { id: "legendary", col: "#ff6b8f", lights: [0, 0] },   // a free upgrade level (or 150 lights when all are maxed)
+  ];
+  // chances (0..1) for a given d20 roll
+  function diceOdds(roll) {
+    const leg = roll === 20 ? 1 : Math.max(0, roll - 15) * 0.03;     // 16: 3% … 19: 12%, natural 20: guaranteed
+    const rare = roll === 20 ? 0 : Math.min(1 - leg, roll * 0.025);  // 1: 2.5% … 19: 47.5%
+    const unc = roll === 20 ? 0 : Math.min(1 - leg - rare, 0.4);
+    return { legendary: leg, rare, uncommon: unc, common: Math.max(0, 1 - leg - rare - unc) };
+  }
+  // open one crate: roll, pick the tier, pay out into the save
+  function openDice() {
+    if (!(state.dice > 0)) return null;
+    state.dice -= 1;
+    const roll = 1 + Math.floor(Math.random() * 20), odds = diceOdds(roll);
+    let u = Math.random(), tier = "common";
+    for (const k of ["legendary", "rare", "uncommon", "common"]) { if (u < odds[k]) { tier = k; break; } u -= odds[k]; }
+    const T = LOOT.find(l => l.id === tier), out = { roll, odds, tier, col: T.col, lights: 0, upgrade: null };
+    if (tier === "legendary") {
+      const open = UPGRADES.filter(x => lvl(x.id) < x.costs.length);
+      if (open.length) { const u2 = open[Math.floor(Math.random() * open.length)]; state.up[u2.id] = lvl(u2.id) + 1; out.upgrade = u2.id; }
+      else out.lights = 150;
+    } else out.lights = T.lights[0] + Math.floor(Math.random() * (T.lights[1] - T.lights[0] + 1));
+    state.shards += out.lights;
+    save();
+    return out;
+  }
+
+  const fresh = () => ({ shards: 0, best: 0, runs: 0, dice: 0, muted: false, music: true, up: {}, sheet: null });
   function load() {
     try { return Object.assign(fresh(), JSON.parse(localStorage.getItem(KEY) || "{}")); }
     catch (e) { return fresh(); }
@@ -64,32 +98,21 @@
   const lvl = id => state.up[id] || 0;
   const mod = score => Math.floor((score - 10) / 2);
 
-  // 4d6, drop the lowest
-  function rollAbility() {
-    const d = [1, 2, 3, 4].map(() => 1 + Math.floor(Math.random() * 6));
-    const sorted = d.slice().sort((a, b) => a - b);
-    return { dice: d, drop: sorted[0], total: sorted[1] + sorted[2] + sorted[3] };
-  }
-  function rollAll() {
-    const out = {}; ABIL.forEach(a => out[a] = rollAbility()); return out;
-  }
+  function newSheet() { return { name: "", cls: "fighter", hair: "brown", jacket: "red" }; }
+  // old saves: forget the rolled scores
+  if (state.sheet) { delete state.sheet.scores; delete state.sheet.dice; delete state.sheet.rerolls; }
 
-  function newSheet() {
-    const r = rollAll(), scores = {}, dice = {};
-    ABIL.forEach(a => { scores[a] = r[a].total; dice[a] = r[a].dice; });
-    return { name: "", cls: "fighter", hair: "brown", jacket: "red", scores, dice, rerolls: 0 };
-  }
-
-  // Ability score including the class bonus
+  const clsOf = sheet => CLASSES.find(c => c.id === sheet.cls) || CLASSES[0];
+  // Ability score shown on the sheet: 10 + class bonus + 2 per upgrade level
   function score(sheet, a) {
-    const cls = CLASSES.find(c => c.id === sheet.cls) || CLASSES[0];
-    return sheet.scores[a] + (cls.bonus[a] || 0);
+    return 10 + (clsOf(sheet).bonus[a] || 0) + 2 * ABIL_UP[a].reduce((n, id) => n + lvl(id), 0);
   }
+  const fromUpgrades = (a) => 2 * ABIL_UP[a].reduce((n, id) => n + lvl(id), 0);
 
-  // Final stats for a run = rolled abilities + class + upgrades
+  // Final stats for a run = the same base for everyone + class bonus + upgrades
   function runStats(sheet) {
     sheet = sheet || state.sheet || newSheet();
-    const m = a => mod(score(sheet, a));
+    const m = a => mod(10 + (clsOf(sheet).bonus[a] || 0)); // upgrades are added below, not twice
     return {
       hearts: 1 + Math.max(0, Math.floor(m("CON") / 2)) + lvl("heart"),
       reach: Math.max(10, 16 + m("STR") * 2) + lvl("reach") * 6,
@@ -114,6 +137,6 @@
     state.shards -= cost; state.up[id] = l + 1; save(); return true;
   }
 
-  window.SAVE = { state, save, lvl, buy, runStats, mod, score, rollAll, newSheet,
-    UPGRADES, CLASSES, LOOKS, ABIL, ABIL_INFO, FREE_REROLLS, REROLL_COST };
+  window.SAVE = { state, save, lvl, buy, runStats, mod, score, newSheet, fromUpgrades, ABIL_UP,
+    openDice, diceOdds, LOOT, UPGRADES, CLASSES, LOOKS, ABIL, ABIL_INFO };
 })();

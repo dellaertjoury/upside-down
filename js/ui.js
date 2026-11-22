@@ -119,12 +119,12 @@
     if (INPUT.listening) return;
     if (e.target.tagName === "INPUT" && e.target.type !== "range") { if (e.key === "Enter") e.target.blur(); return; }
     const hubOpen = current === "menu" || current === "over";
+    if (current === "over" && e.code === "Space" && (st.dice > 0 || rolling)) { e.preventDefault(); rollDice(); return; } // open Dice Crates first
     if (hubOpen && e.code === "Space" && (GAME.mode === "attract" || GAME.mode === "over")) { e.preventDefault(); startRun(); }
     if (e.code === "Escape" && current && !["menu", "pause", "over"].includes(current)) { e.preventDefault(); show(GAME.mode === "pause" ? "pause" : "menu"); }
   });
 
   // ---- character sheet ----
-  let rolling = false;
   function renderSheet() {
     const s = sheet();
     $("#cname").value = s.name;
@@ -141,26 +141,16 @@
     renderAbil();
     drawPreview();
   }
-  function renderAbil(fake) {
+  function renderAbil() {
     const s = sheet();
     $("#abil").innerHTML = SAVE.ABIL.map(a => {
-      const base = fake ? fake[a].total : s.scores[a];
       const cls = SAVE.CLASSES.find(c => c.id === s.cls).bonus[a] || 0;
-      const total = base + cls, m = SAVE.mod(total);
-      const dice = fake ? fake[a].dice : (s.dice && s.dice[a]) || [];
-      const low = Math.min(...dice);
-      let dropped = false;
-      const faces = dice.map(d => { const drop = !dropped && d === low; if (drop) dropped = true; return SPR.ART.ui_dice
-        ? `<i class="die${drop ? " drop" : ""}" style="background-position:${(d - 1) * 20}% 0" aria-label="${d}"></i>`
-        : `<i class="${drop ? "drop" : ""}">${d}</i>`; }).join("");
+      const total = SAVE.score(s, a), m = SAVE.mod(total), up = SAVE.fromUpgrades(a);
       const sic = SPR.ART["ui_stat_" + a.toLowerCase()];
-      return `<div class="ab${fake ? " spin" : ""}"><span class="an">${sic ? `<img class="sic" src="${sic.src}" alt="">` : ""}${a}</span><span class="av">${total}</span>
-        <span class="am">${sign(m)}</span><span class="dice">${faces}</span>
-        <span class="ai">${esc(t("ab." + a))}${cls ? ` <em>${esc(t("ab.class", { n: cls }))}</em>` : ""}</span></div>`;
+      return `<div class="ab"><span class="an">${sic ? `<img class="sic" src="${sic.src}" alt="">` : ""}${a}</span><span class="av">${total}</span>
+        <span class="am">${sign(m)}</span>
+        <span class="ai">${esc(t("ab." + a))}${cls ? ` <em>${esc(t("ab.class", { n: cls }))}</em>` : ""}${up ? ` <em>${esc(t("ab.up", { n: up }))}</em>` : ""}</span></div>`;
     }).join("");
-    const used = s.rerolls || 0, free = SAVE.FREE_REROLLS - used;
-    $("#roll").innerHTML = free > 0 ? esc(t("sheet.reroll", { n: free })) : esc(t("sheet.rerollCost", { n: SAVE.REROLL_COST })) + ' <i class="bulb"></i>';
-    $("#roll").disabled = rolling || (free <= 0 && st.shards < SAVE.REROLL_COST);
     const r = SAVE.runStats(s);
     const rows = [
       [t("d.hearts"), r.hearts],
@@ -193,24 +183,41 @@
     const l = e.target.closest("[data-look]");
     if (l) { sheet()[l.dataset.look] = l.dataset.id; SAVE.save(); applyLook(); renderSheet(); SFX.click(); }
   });
-  $("#roll").addEventListener("click", () => {
-    const s = sheet();
-    const free = SAVE.FREE_REROLLS - (s.rerolls || 0);
-    if (free <= 0) { if (st.shards < SAVE.REROLL_COST) return; st.shards -= SAVE.REROLL_COST; }
-    s.rerolls = (s.rerolls || 0) + 1;
-    rolling = true; $("#roll").disabled = true;
-    const result = SAVE.rollAll();
-    let n = 0;
+  // ---- Dice Crates: open them after a run, the d20 sets the odds ----
+  let rolling = false;
+  const pct = x => Math.round(x * 100) + "%";
+  function renderDice(res) {
+    const box = $("#over-dice"), left = st.dice || 0;
+    box.hidden = left <= 0 && !res;
+    if (box.hidden) return;
+    $("#dice-left").textContent = left > 0 ? t("dice.left", { n: left }) : t("dice.none");
+    $("#dice-roll").textContent = left > 0 ? t("dice.roll") : t("dice.done");
+    $("#dice-roll").disabled = rolling || left <= 0;
+    $("#dice-roll").hidden = left <= 0;
+    if (!res) { $("#dice-res").innerHTML = `<small>${esc(t("dice.hint"))}</small>`; return; }
+    const what = res.upgrade ? t("dice.upgrade", { u: t("up." + res.upgrade) }) : t("dice.lights", { n: res.lights });
+    $("#dice-res").innerHTML = `<b style="color:${res.col}">${esc(t("dice.t." + res.tier))}</b>${esc(what)}
+      <br><small>${esc(t("dice.odds", { r: res.roll, rare: pct(res.odds.rare), leg: pct(res.odds.legendary) }))}</small>`;
+  }
+  function rollDice() {
+    if (rolling || !(st.dice > 0)) return;
+    rolling = true; renderDice(null); $("#dice-roll").disabled = true;
+    const res = SAVE.openDice(), d = $("#d20");
+    d.className = "d20 spin"; let n = 0;
     const spin = setInterval(() => {
-      renderAbil(SAVE.rollAll()); SFX.roll20();
-      if (++n >= 8) {
-        clearInterval(spin);
-        SAVE.ABIL.forEach(a => { s.scores[a] = result[a].total; s.dice[a] = result[a].dice; });
-        rolling = false; SAVE.save(); renderAbil(); SFX.buy();
-        document.querySelectorAll(".bank-n").forEach(b => b.textContent = st.shards);
-      }
-    }, 90);
-  });
+      d.firstChild.textContent = 1 + Math.floor(Math.random() * 20); SFX.roll20();
+      if (++n < 10) return;
+      clearInterval(spin);
+      d.firstChild.textContent = res.roll;
+      d.className = "d20" + (res.roll === 20 ? " nat20" : res.roll === 1 ? " nat1" : "");
+      rolling = false; renderDice(res);
+      (res.tier === "legendary" || res.tier === "rare" ? SFX.gold : SFX.buy)();
+      document.querySelectorAll(".bank-n").forEach(b => b.textContent = st.shards);
+      const tot = $("#over-total"); if (tot) tot.textContent = t("over.total", { n: st.shards });
+      if (st.dice <= 0) { const again = $('#p-over [data-go="play"]'); again && again.focus({ preventScroll: true }); }
+    }, 80);
+  }
+  $("#dice-roll").addEventListener("click", rollDice);
 
   // ---- upgrades ----
   function renderUpgrades() {
@@ -318,11 +325,13 @@
       <span>${esc(t("over.kills"))}</span><b>${r.kills}</b>
       <span>${esc(t("over.haul"))}</span><b>${r.bestHaul}</b>
       ${r.lostHaul > 0 ? `<span>${esc(t("over.lost"))}</span><b style="color:#ff6b8f">−${r.lostHaul} · −${r.lostLights} <i class="bulb"></i></b>` : ""}
-      <span>${esc(t("over.fate"))}</span><b>${r.fate}</b>
+      ${r.dice ? `<span>${esc(t("over.dice"))}</span><b style="color:#ff9fb4">${r.dice}</b>` : ""}
       <span>${esc(t("over.found"))}</span><b>${r.shards}</b>
       <span>${esc(t("over.bonus"))}</span><b>+${r.bonus}</b>
-      <span>${esc(t("over.banked"))}</span><b><i class="bulb"></i> ${r.earned} (${esc(t("over.total", { n: st.shards }))})</b>`;
-    show("over");
+      <span>${esc(t("over.banked"))}</span><b><i class="bulb"></i> ${r.earned} (<span id="over-total">${esc(t("over.total", { n: st.shards }))}</span>)</b>`;
+    const d = $("#d20"); d.className = "d20"; d.firstChild.textContent = "?";
+    show("over"); renderDice(null);
+    if (st.dice > 0) $("#dice-roll").focus({ preventScroll: true });
     const msg = $("#over-lb");
     if (r.score <= 0) { msg.textContent = ""; return; }
     msg.textContent = t("lb.posting");
@@ -360,7 +369,7 @@
   });
 
   // ---- menu art from assets/ ----
-  const CSS_ART = ["ui_button", "ui_button_primary", "ui_panel", "ui_box", "ui_dice", "ui_sheet", "ui_light", "ui_row"];
+  const CSS_ART = ["ui_button", "ui_button_primary", "ui_panel", "ui_box", "ui_dice", "ui_sheet", "ui_light", "ui_row", "ui_d20"];
   function applyUiArt() {
     const A = SPR.ART, rt = document.documentElement;
     CSS_ART.forEach(k => { if (A[k]) { rt.style.setProperty("--" + k.replace(/_/g, "-"), `url("${A[k].src}")`); document.body.classList.add("has-" + k.replace(/_/g, "-")); } });

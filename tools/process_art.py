@@ -171,7 +171,7 @@ UI_EXACT = {  # 9-slice frames and bars: stretched to an exact size (game px)
     "hud_dread_frame": (76, 10), "hud_dread_fill": (70, 4),
 }
 UI_FIT = {  # icons: fit inside a box, keep aspect
-    "hud_heart_full": (9, 8), "hud_heart_empty": (9, 8), "hud_light": (7, 10), "hud_d20": (26, 24),
+    "hud_heart_full": (9, 8), "hud_heart_empty": (9, 8), "hud_light": (7, 10), "hud_d20": (26, 24), "ui_d20": (48, 48),
     "hud_warning": (11, 13), "hud_revive": (9, 9), "shot_spore": (6, 6), "ranger_shot": (12, 6), "wizard_d20": (10, 8),
     "ui_logo": (520, 170),
 }
@@ -206,6 +206,8 @@ for full, f in files:
             im = load(path); kind = key.split("_")[1]
             w, h = by_h(im, {"dumpster": 18, "car": 21, "cop": 24, "van": 27, "pickup": 23, "bus": 33}[kind])
             write(key, im, w, h, DARK if not key.endswith("_dark") else RIM); manifest[key] = [w, h]
+        elif key == "pickup_dice":
+            fit_box(key, load(path), 12, 12); manifest[key] = True
         elif key in ("pickup_skate", "skate_board"):
             fit_box(key, load(path), *((18, 10) if key == "pickup_skate" else (16, 5))); manifest[key] = True
         elif key in ("watcher_body", "watcher_head"):

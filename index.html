@@ -51,10 +51,7 @@
           </div>
           <div class="sheet-right">
             <div class="abil" id="abil"></div>
-            <div class="rollbar">
-              <button class="btn" id="roll"></button>
-              <span class="muted" data-i18n="sheet.rollNote"></span>
-            </div>
+            <p class="rollbar muted" data-i18n="sheet.growNote"></p>
             <dl class="derived" id="derived"></dl>
           </div>
         </div>
@@ -124,7 +121,16 @@
     <!-- GAME OVER -->
     <section class="panel hidden" id="p-over">
       <h2 class="over-t" data-i18n="over.title"></h2>
-      <div class="stats" id="over-stats"></div>
+      <div class="over-row">
+        <div class="stats" id="over-stats"></div>
+        <div class="dicebox" id="over-dice" hidden>
+          <h3 data-i18n="dice.title"></h3>
+          <p class="muted" id="dice-left"></p>
+          <div class="d20" id="d20"><span>?</span></div>
+          <div class="dice-res" id="dice-res"></div>
+          <button class="btn primary" id="dice-roll"></button>
+        </div>
+      </div>
       <p class="muted" id="over-lb"></p>
       <div class="menu-grid">
         <button class="btn primary" data-go="play" data-i18n="over.again"></button>
