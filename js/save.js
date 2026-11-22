@@ -12,10 +12,17 @@
   };
 
   const CLASSES = [
-    { id: "fighter", name: "Fighter", desc: "Swings a dented bat, blocks with a trash-can lid.", bonus: { STR: 2, CON: 1 }, locked: false },
-    { id: "ranger",  name: "Ranger",  desc: "Fires slingshot marbles across the screen; blocks behind a backpack.", bonus: { DEX: 2, WIS: 1 }, locked: false, ranged: true },
-    { id: "rogue",   name: "Rogue",   desc: "Faster rolls, sneaky crits.", bonus: { DEX: 2, CHA: 1 }, locked: true },
-    { id: "wizard",  name: "Wizard",  desc: "Bends the Dread meter.", bonus: { INT: 2, WIS: 1 }, locked: true },
+    // attack: melee = bat range, 1 hit kills, +50% kill points (risky);
+    //         arc   = slingshot marble with gravity, reaches about half the screen;
+    //         bolt  = straight across the screen, but half damage (2 hits per enemy)
+    { id: "fighter", name: "Fighter", desc: "Swings a dented bat.", bonus: { STR: 2, CON: 1 }, locked: false,
+      attack: { type: "melee", dmg: 1, cd: 0.32 } },
+    { id: "ranger",  name: "Ranger",  desc: "Lobs slingshot marbles in an arc.", bonus: { DEX: 2, WIS: 1 }, locked: false, ranged: true,
+      attack: { type: "arc", dmg: 1, cd: 0.45 } },
+    { id: "rogue",   name: "Rogue",   desc: "Fast jabs, sneaky crits.", bonus: { DEX: 2, CHA: 1 }, locked: true,
+      attack: { type: "melee", dmg: 1, cd: 0.24, crit: 0.25 } },
+    { id: "wizard",  name: "Wizard",  desc: "Straight magic bolts, half damage.", bonus: { INT: 2, WIS: 1 }, locked: true, ranged: true,
+      attack: { type: "bolt", dmg: 0.5, cd: 0.55 } },
   ];
 
   const LOOKS = {

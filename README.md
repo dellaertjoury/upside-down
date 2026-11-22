@@ -80,22 +80,50 @@ the menu.
 
 ## Rules
 
-- You run automatically, starting slow and speeding up gradually (tune
-  `SPEED_START`, `SPEED_GAIN`, `SPEED_MAX` at the top of `js/game.js`).
+- You run automatically, starting slow and speeding up gradually.
 - **Obstacles:** crows at head height (roll under, jump over or hit them),
   stumps you jump, hanging vines you roll under, and Upside Down creatures you
-  hit or avoid. The tall **stalker** takes two hits. Spore pods shoot along the ground every few
-  seconds: jump them, flip away, or hit the shot back.
-- **The Upside Down** scores at ×2 (more with upgrades) and its lights count
-  double. But the **Dread** meter fills while you're down there. When
-  it's full you get thrown back up and can't flip again for a moment.
-- **Christmas lights** are the currency: single bulbs in random colours now
-  and then, and **crates**. Hit a crate and its lights go straight into your
-  count; a crate with a heart on it gives back a heart (or lights if you're at
-  full health). Running into a crate just kicks it over for nothing. Every
-  pickup makes the game's border glow in that light's colour. Upside Down
-  lights count double, and the rare gold bulb is worth 5. Lights are banked at the end of every run
-  (plus a bonus of 1 per 250 score, or better with high INT). Spend them on permanent upgrades between runs. That's the roguelike loop.
+  hit or avoid. The tall **stalker** takes two hits. Hounds sometimes pounce.
+  Spore pods shoot along the ground every few seconds: jump them, flip away,
+  or hit the shot back.
+- **The Upside Down** scores ×2 (more with upgrades) and its lights count
+  double. But the **Dread** meter fills while you're down there. When it's
+  full you get thrown back up and can't flip again for a moment.
+
+## Classes and attacks
+
+| Class | Attack | Why it's fair |
+|---|---|---|
+| Fighter | Bat, short reach, kills in 1 hit, knocks spore shots back | Riskiest: kills count **×1.5** (close-range bonus) |
+| Ranger | Slingshot marble lobbed in an arc with gravity: lands at about **half the screen**, hits what it actually touches | Safe but limited range; no close-range bonus. Longer-bat upgrades and STR throw it further |
+| Wizard *(locked)* | Magic bolt straight across the whole screen | Half damage: every enemy takes **2 hits** (the stalker 4) |
+| Rogue *(locked)* | Fast melee jabs | 1 in 4 hits is a double-damage crit |
+
+## Score
+
+The high score is one number made of three parts, shown after each run:
+
+- **Distance:** 1 point per metre (×2 in the Upside Down).
+- **Combat:** points per kill (crow 25, hound 40, flyer 40, spore pod 60,
+  stalker 120) × the **combo**: every kill within 5 seconds of the last
+  raises the multiplier (×1.5, ×2, ×2.5, up to ×3). Getting hit resets it.
+  Melee kills ×1.5, Upside Down ×2.
+- **Lights:** 5 points per light collected.
+
+## Christmas lights (the currency)
+
+- Single bulbs in random colours now and then (Upside Down ones count double,
+  the rare gold bulb is worth 5).
+- **Crates** about every 20 seconds: small (3 lights), medium (5) or big with
+  a gold glow (10); big crates get more common the further you run. One in
+  four crates holds a heart instead (lights if you're at full health). Hit
+  a crate to open it; running into it wastes it.
+- **Kills:** enemies sometimes drop a light; the stalker always drops three.
+- **Milestones:** every 500 m gives +10 lights.
+- At the end of a run you bank the lights plus a score bonus, and spend them
+  on permanent upgrades. That's the roguelike loop.
+
+All of these numbers live in the `BAL` block at the top of `js/game.js`.
 
 ## Upgrades
 

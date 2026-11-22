@@ -164,7 +164,12 @@
     const r = SAVE.runStats(s);
     const rows = [
       [t("d.hearts"), r.hearts],
-      SAVE.CLASSES.find(c => c.id === s.cls).ranged ? [t("d.sling"), t("d.fullscreen")] : [t("d.reach"), r.reach + " px"],
+      (() => { const a = (SAVE.CLASSES.find(c => c.id === s.cls).attack || {}).type, B = GAME.BAL;
+        if (a === "arc") { // flight time of the lobbed marble x its speed
+          const vx = B.arc.vx + (r.reach - 16) * B.arc.perReach, tf = (B.arc.vh + Math.sqrt(B.arc.vh ** 2 + 2 * B.arc.g * 11)) / B.arc.g;
+          return [t("d.range"), Math.round(vx * tf) + " px"]; }
+        if (a === "bolt") return [t("d.bolt"), t("d.boltVal")];
+        return [t("d.reach"), r.reach + " px"]; })(),
       [t("d.jump"), Math.round(r.jumpV / 3.2) + "%"],
       [t("d.dread"), r.battery.toFixed(1) + " s"],
       [t("d.magnet"), r.magnet + " px"], [t("d.bonus"), t("d.bonusVal", { n: r.bonusDiv })],
@@ -307,7 +312,10 @@
     $("#over-stats").innerHTML = `
       <span>${esc(t("over.score"))}</span><b>${r.score}${r.newBest ? " ★ " + esc(t("over.best")) : ""}</b>
       <span>${esc(t("over.dist"))}</span><b>${r.dist} m</b>
-      <span>${esc(t("over.kills"))}</span><b>${r.kills}</b>
+      <span>${esc(t("over.ptsDist"))}</span><b>${r.pts.dist}</b>
+      <span>${esc(t("over.ptsCombat"))}</span><b>${r.pts.combat}</b>
+      <span>${esc(t("over.ptsLights"))}</span><b>${r.pts.lights}</b>
+      <span>${esc(t("over.kills"))} · ${esc(t("over.combo"))}</span><b>${r.kills} · x${Math.min(GAME.BAL.comboMax, 1 + (Math.max(1, r.bestCombo) - 1) * GAME.BAL.comboStep).toFixed(1)}</b>
       <span>${esc(t("over.fate"))}</span><b>${r.fate}</b>
       <span>${esc(t("over.found"))}</span><b>${r.shards}</b>
       <span>${esc(t("over.bonus"))}</span><b>+${r.bonus}</b>

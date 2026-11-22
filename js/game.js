@@ -6,6 +6,26 @@
   const FB = 121;          // y of the bottom surface (Upside Down "floor")
   const SCALE = 3;         // canvas = 3 device pixels per game pixel (crisp art)
   const PX = 64;           // player's fixed screen x
+  // ---------------- Balance (tune here) ----------------
+  const BAL = {
+    // score
+    metrePts: 1,                 // per metre run (10 game px = 1 m)
+    lightPts: 5,                 // per light collected
+    killPts: { crow: 25, crawler: 40, wisp: 40, pod: 60, stalker: 120 },
+    meleeBonus: 1.5,             // close-range kills are riskier: worth more
+    comboWindow: 5,              // seconds to land the next kill and keep the combo
+    comboStep: 0.5, comboMax: 3, // x1, x1.5, x2, x2.5, x3
+    // lights economy
+    crateEvery: [16, 24],        // seconds between crates
+    crateTiers: [[3, 0.6, 0.3], [5, 0.3, 0.4], [10, 0.1, 0.3]], // [lights, chance at the start, chance from 2000 m]
+    heartCrate: 0.25,            // share of crates holding a heart instead
+    killDrop: 0.2,               // chance an enemy drops a light (the stalker always drops 3)
+    milestoneEvery: 500, milestoneLights: 10, // every 500 m: +10 lights
+    // ranged attacks
+    arc: { vx: 200, perReach: 5, vh: 90, g: 380 }, // Ranger marble (reach upgrades add speed = range)
+    bolt: { vx: 300 },                             // Wizard bolt
+  };
+
   // Run speed: starts gentle and builds up slowly (game px per second)
   const SPEED_START = 70, SPEED_GAIN = 1.2, SPEED_MAX = 320;
   const GRAV = 980, FLIP_T = 0.26, STAND_H = 15, ROLL_H = 9;
@@ -146,9 +166,16 @@
       return gap + 60;
     }
     const s = Math.random() < 0.5 ? 0 : 1;
-    if (Math.random() < 0.55) { // a crate: lights inside, or now and then a heart
+    if (G.crateT <= 0) { // a crate every ~20 s: 3, 5 or 10 lights, or a heart
+      G.crateT = rand(BAL.crateEvery[0], BAL.crateEvery[1]);
       addOb(s ? "crate_dark" : "crate", X);
-      G.obs[G.obs.length - 1].heart = Math.random() < 0.25;
+      const c = G.obs[G.obs.length - 1];
+      c.heart = Math.random() < BAL.heartCrate;
+      const p = Math.min(1, G.dist / 10 / 2000);
+      let r2 = Math.random() * BAL.crateTiers.reduce((a, t) => a + t[1] * (1 - p) + t[2] * p, 0);
+      for (const t of BAL.crateTiers) { r2 -= t[1] * (1 - p) + t[2] * p; if (r2 <= 0) { c.tier = t[0]; break; } }
+      c.tier = c.heart ? 5 : (c.tier || 3);
+      if (c.tier >= 5) { c.w = c.tier >= 10 ? 18 : 16; c.h1 = c.w; } // bigger crate, bigger haul
     } else addLight(s, X);
     if (G.dist > 400) addOb(typeFor(1 - s, d), X + 50);
     return gap;
@@ -161,6 +188,7 @@
     const roll = 1 + Math.floor(Math.random() * 20);
     const f = FATE.find(x => roll >= x.min);
     Object.assign(G, { mode: "play", t: 0, speed: SPEED_START, dist: 0, score: 0, shards: 0, kills: 0, parries: 0, nextAt: 420,
+      sc: { dist: 0, combat: 0, lights: 0 }, combo: 0, comboT: 0, bestCombo: 0, crateT: rand(8, 12), nextMile: BAL.milestoneEvery,
       obs: [], picks: [], parts: [], shots: [], pshots: [], pops: [], shake: 0, flash: 0,
       hearts: G.stats.hearts + f.hearts, reviveLeft: G.stats.revive, dread: 0, overT: 0,
       fate: { roll, f, t: 0 } });
@@ -182,6 +210,7 @@
     const newBest = score > st.best;
     st.shards += earned; st.runs += 1; if (newBest) st.best = score; SAVE.save();
     G.result = { score, shards: G.shards, bonus, earned, kills: G.kills, parries: G.parries,
+      pts: { dist: Math.floor(G.sc.dist), combat: Math.floor(G.sc.combat), lights: Math.floor(G.sc.lights) }, bestCombo: G.bestCombo,
       dist: Math.floor(G.dist / 10), newBest, fate: G.fate ? G.fate.roll : 0 };
   }
 
@@ -189,6 +218,7 @@
     if (G.debug.god) { G.flash = 0.1; G.flashCol = "#5fd0c8"; return; }
     if (P.inv > 0 || P.flip > 0 || P.dead) return;
     G.hearts -= 1; G.shake = 7; G.flash = 0.25; G.flashCol = "#ff3d57"; SFX.hurt();
+    G.combo = 0; G.comboT = 0; // getting hit breaks the combo
     burst(PX + 6, sy(P.side, P.h + 8), "#ff3d57", 14);
     if (G.hearts <= 0) {
       if (G.reviveLeft) {
@@ -229,26 +259,39 @@
       return;
     }
     // lights go straight into your count (a heart crate at full health gives lights too)
-    const n = (o.heart ? 5 : 4 + Math.floor(Math.random() * 4)) * (o.side ? 2 : 1);
-    G.shards += n; G.score += 10 * n * G.fate.f.score; SFX.gold();
+    const n = (o.tier || 3) * (o.side ? 2 : 1);
+    G.shards += n; addPts("lights", BAL.lightPts * n); SFX.gold();
     pop(T_("pop.lights", { n }), "#ffd866", o.x + 7, sy(o.side, 26));
     G.onLight && G.onLight("#ffd866");
   }
   // Hit an enemy. Most die at once; tough ones (hp > 1) flinch and get
   // knocked back first. Returns true when the hit landed.
-  function damage(o, ranged) {
+  function addPts(kind, n) { const v = n * G.fate.f.score; G.sc[kind] += v; G.score += v; }
+  // how: "melee" (bat), "ranged" (marble, bolt) or "reflect" (spore shot sent back)
+  function damage(o, how, amount = 1) {
     if (o.hitCd > 0) return false;           // one swing = one hit
     const st = G.stats, at = [o.x + o.w / 2, sy(o.side, (o.h0 + o.h1) / 2)];
-    o.hp = (o.hp || 1) - 1;
-    if (o.hp > 0) {
+    const atk = attackCfg();
+    if (how === "melee" && atk.crit && Math.random() < atk.crit) { amount *= 2; pop(T_("pop.crit"), "#ffd866", at[0], at[1] - 22); }
+    o.hp = (o.hp || 1) - amount;
+    if (o.hp > 0.001) {
       o.hitCd = 0.3; o.flash = 0.15; o.x += 14; SFX.thud(); G.shake = 2;
       burst(at[0], at[1], "#ffffff", 8, 60); pop(T_("pop.tough"), "#ff9fb4", at[0], at[1] - 14);
       return true;
     }
     o.dead = true; G.kills++;
-    G.score += (o.type === "stalker" ? 80 : 30) * (o.side ? st.udMult : 1) * G.fate.f.score;
-    SFX.kill(); G.shake = ranged ? 2 : 3;
+    // combo: every kill within the window raises the multiplier
+    G.combo = G.comboT > 0 ? G.combo + 1 : 1; G.comboT = BAL.comboWindow; G.bestCombo = Math.max(G.bestCombo, G.combo);
+    const mult = Math.min(BAL.comboMax, 1 + (G.combo - 1) * BAL.comboStep);
+    const pts = Math.round((BAL.killPts[o.type] || 30) * mult * (how === "melee" ? BAL.meleeBonus : 1) * (o.side ? st.udMult : 1));
+    addPts("combat", pts);
+    pop("+" + pts, "#ffd866", at[0], at[1] - 12);
+    if (G.combo >= 2) pop(T_("pop.combo", { n: mult.toFixed(1) }), "#5fd0c8", at[0], at[1] - 24);
+    SFX.kill(); G.shake = how === "melee" ? 3 : 2;
     burst(at[0], at[1], o.side ? "#b0305a" : "#433a52", 18, 90);
+    // loot: sometimes a light, the stalker always leaves three
+    const drops = o.type === "stalker" ? 3 : Math.random() < BAL.killDrop ? 1 : 0;
+    for (let i = 0; i < drops; i++) addLight(o.side, Math.max(PX + 14, o.x + i * 9));
     return true;
   }
   function parry(o, viaShot) {
@@ -291,10 +334,15 @@
     }
     if (P.bufAtk > 0 && P.atkCd <= 0) {
       P.blk = 0; P.bufAtk = 0;
-      if (ranged()) { // Ranger: fire a marble across the screen
-        P.atk = 0.22; P.atkCd = 0.42; SFX.sling();
-        G.pshots.push({ side: P.side, x: PX + 16, h: P.h + 11, dead: false });
-      } else { P.atk = 0.2; P.atkCd = 0.32; SFX.swing(); }
+      const atk = attackCfg();
+      P.atkCd = atk.cd;
+      if (atk.type === "arc") { // Ranger: a marble lobbed in an arc; reach upgrades throw it further
+        P.atk = 0.22; SFX.sling();
+        G.pshots.push({ kind: "arc", side: P.side, x: PX + 16, h: P.h + 11, vx: BAL.arc.vx + (st.reach - 16) * BAL.arc.perReach, vh: BAL.arc.vh, dmg: atk.dmg, dead: false });
+      } else if (atk.type === "bolt") { // Wizard: straight bolt, half damage
+        P.atk = 0.22; SFX.sling();
+        G.pshots.push({ kind: "bolt", side: P.side, x: PX + 16, h: P.h + 11, vx: BAL.bolt.vx, vh: 0, dmg: atk.dmg, dead: false });
+      } else { P.atk = 0.2; SFX.swing(); }
     }
     P.atk = Math.max(0, P.atk - dt);
     P.roll = Math.max(0, P.roll - dt);
@@ -332,7 +380,15 @@
 
     if (playing) {
       G.dist += dx;
-      G.score += dx / 8 * (P.side === 1 ? G.stats.udMult : 1) * G.fate.f.score;
+      addPts("dist", dx / 10 * BAL.metrePts * (P.side === 1 ? G.stats.udMult : 1));
+      G.crateT -= dt;
+      if (G.comboT > 0) { G.comboT -= dt; if (G.comboT <= 0) G.combo = 0; }
+      if (G.dist / 10 >= G.nextMile) { // distance milestone: a handful of lights
+        G.shards += BAL.milestoneLights; addPts("lights", BAL.lightPts * BAL.milestoneLights);
+        pop(T_("pop.mile", { m: G.nextMile, n: BAL.milestoneLights }), "#ffd866", W / 2, FT - 40);
+        SFX.gold(); G.onLight && G.onLight("#ffd866");
+        G.nextMile += BAL.milestoneEvery;
+      }
       if (G.dist >= G.nextAt) G.nextAt = G.dist + (G.debug.noSpawn ? 200 : spawnChunk());
     } else if (G.mode === "dying") G.dist += dx;
 
@@ -368,7 +424,7 @@
       }
       // bat hit
       if (P.atk > 0 && !ranged() && o.enemy && o.x < PX + 9 + st.reach && o.x + o.w > PX + 6 && o.h0 < P.h + 24 && o.h1 > P.h - 2) {
-        if (damage(o)) continue;
+        if (damage(o, "melee", attackCfg().dmg)) continue;
       }
       if (o.x < px1 && o.x + o.w > px0 && o.h0 < ph1 && o.h1 > ph0) {
         hurt();
@@ -381,8 +437,7 @@
       if (s.ref) {
         s.x += 260 * dt;
         for (const o of G.obs) if (o.enemy && !o.dead && o.side === s.side && s.x + 4 > o.x && s.x < o.x + o.w && 7 > o.h0 && 4 < o.h1) {
-          o.dead = true; s.dead = true; G.kills++; SFX.kill(); G.score += 40 * G.fate.f.score;
-          burst(o.x + o.w / 2, sy(o.side, 6), "#b0305a", 16, 80); pop("REFLECT +40", "#5fd0c8", o.x, sy(o.side, 26));
+          s.dead = true; damage(o, "reflect", 1);
         }
       } else s.x -= dx + 120 * dt;
       if (!playing || s.ref || s.dead || s.side !== P.side || P.flip > 0) continue;
@@ -396,15 +451,21 @@
 
     // the Ranger's marbles: first enemy or crate on that side gets hit
     for (const m of G.pshots) {
-      m.x += 330 * dt;
+      m.x += m.vx * dt;
+      if (m.kind === "arc") {
+        m.h += m.vh * dt; m.vh -= BAL.arc.g * dt;
+        if (m.h <= 0) { m.dead = true; burst(m.x, sy(m.side, 1), "#9fb7ff", 5, 30); continue; } // lands
+      }
       for (const s2 of G.shots) if (!s2.ref && !s2.dead && s2.side === m.side && Math.abs(s2.x - m.x) < 6) { s2.dead = true; m.dead = true; burst(m.x, sy(m.side, s2.h + 2), "#ff6bd0", 8, 50); }
       if (m.dead) continue;
       for (const o of G.obs) {
         if (o.dead || o.side !== m.side || !(o.enemy || o.crate)) continue;
-        if (m.x + 6 > o.x && m.x < o.x + o.w && o.h0 < m.h + 10 && o.h1 > m.h - 12) { // same lane as the runner
+        // the arcing marble hits what it actually touches; the straight bolt covers the runner's lane
+        const hitV = m.kind === "arc" ? (o.h0 < m.h + 4 && o.h1 > m.h - 3) : (o.h0 < m.h + 10 && o.h1 > m.h - 12);
+        if (m.x + 6 > o.x && m.x < o.x + o.w && hitV) {
           m.dead = true;
           if (o.crate) breakCrate(o, true);
-          else damage(o, true);
+          else damage(o, "ranged", m.dmg);
           break;
         }
       }
@@ -427,7 +488,7 @@
       if (k.side === P.side && P.flip <= 0 && Math.abs(k.x - cx) < 9 && Math.abs(k.h - ch) < 12) {
         k.taken = true;
         const val = (k.gold ? 5 : 1) * (k.side ? 2 : 1) + (k.side ? st.sporeBonus : 0);
-        G.shards += val; G.score += 10 * val * G.fate.f.score;
+        G.shards += val; addPts("lights", BAL.lightPts * val);
         (k.gold ? SFX.gold : SFX.light)();
         G.onLight && G.onLight(k.col);
         burst(k.x, sy(k.side, k.h), k.col, 6, 40);
@@ -564,6 +625,11 @@
 
   function drawOb(o) {
     const x = Math.round(o.x), t = o.t, img = SPR.ART[o.type];
+    if (img && o.crate) { // crate art grows with the tier
+      const sz = SPR.SIZE[o.type] || [16, 16, -1, 0], k = o.w / 14;
+      ctx.drawImage(img, x + sz[2] * k, Math.round(-sz[1] * k + sz[3]), sz[0] * k, sz[1] * k);
+      return;
+    }
     if (img && !o.enemy) {
       const sz = SPR.SIZE[o.type];
       if (sz && sz.length >= 4) ctx.drawImage(img, x + sz[2], Math.round(-o.h0 - sz[1] + sz[3]), sz[0], sz[1]);
@@ -611,13 +677,15 @@
         break; }
       case "wisp": draw(ctx, enemyKey(o, "flyer", "fly", ["wisp1", "wisp2"]), x, -o.h0); break;
       case "pod": draw(ctx, enemyKey(o, "pod", "idle", o.t < 0.3 ? ["pod2"] : ["pod1"]), x, 0); break;
-      case "crate": case "crate_dark": {
-        const dk = o.type === "crate_dark";
-        R("#1a1124", x - 1, -15, 16, 15); R(dk ? "#4a2a3a" : "#a8743a", x, -14, 14, 14);
-        R(dk ? "#2f1a26" : "#7a5228", x, -10, 14, 1); R(dk ? "#2f1a26" : "#7a5228", x, -5, 14, 1);
-        R(dk ? "#2f1a26" : "#7a5228", x + 3, -14, 1, 14); R(dk ? "#2f1a26" : "#7a5228", x + 10, -14, 1, 14);
-        if (!o.heart) { const c = BULBS[Math.floor(t * 2) % BULBS.length][1];
-          R(c, x + 5, -9, 2, 2); R(BULBS[(Math.floor(t * 2) + 3) % BULBS.length][1], x + 7, -4, 2, 2); }
+      case "crate": case "crate_dark": { // 14 px = 3 lights, 16 px = 5, 18 px (gold glow) = 10
+        const dk = o.type === "crate_dark", s = o.w, sl = dk ? "#2f1a26" : "#7a5228";
+        if (o.tier >= 10) { ctx.globalAlpha = 0.35 + Math.sin(t * 6) * 0.15; R("#ffd866", x - 3, -s - 3, s + 6, s + 3); ctx.globalAlpha = 1; }
+        R("#1a1124", x - 1, -s - 1, s + 2, s + 1); R(dk ? "#4a2a3a" : "#a8743a", x, -s, s, s);
+        R(sl, x, -Math.round(s * 0.7), s, 1); R(sl, x, -Math.round(s * 0.35), s, 1);
+        R(sl, x + 3, -s, 1, s); R(sl, x + s - 4, -s, 1, s);
+        if (o.tier >= 10) { R("#ffd866", x, -s, s, 1); R("#ffd866", x, -1, s, 1); }
+        if (!o.heart) for (let i = 0; i < Math.min(4, Math.ceil((o.tier || 3) / 2.5)); i++)
+          R(BULBS[(Math.floor(t * 2) + i * 2) % BULBS.length][1], x + 5 + (i % 2) * (s - 10), -s + 4 + Math.floor(i / 2) * (s / 2 - 1), 2, 2);
         break; }
       case "rift": {
         const p = 0.6 + Math.sin(t * 10) * 0.4;
@@ -703,7 +771,12 @@
     if (k && SPR.ART[k]) return k;
     return SPR.ART["fighter_" + frame] ? "fighter_" + frame : frame; // class without art yet
   }
-  function ranged() { const sh = SAVE.state.sheet; return !!sh && SAVE.CLASSES.some(c => c.id === sh.cls && c.ranged); }
+  function attackCfg() {
+    const sh = SAVE.state.sheet, c = SAVE.CLASSES.find(x => sh && x.id === sh.cls) || SAVE.CLASSES[0];
+    return c.attack || { type: "melee", dmg: 1, cd: 0.32 };
+  }
+  function ranged() { return attackCfg().type !== "melee"; }
+  G.attackCfg = attackCfg; G.BAL = BAL;
   G.pk = pk;
   function drawPlayer() {
     if (P.dead && Math.floor(G.t * 16) % 2) return;
@@ -794,6 +867,11 @@
     if (ART("hud_light")) ctx.drawImage(ART("hud_light"), W - 47, 16, 7, 10);
     else { R("#3b3446", W - 45, 16, 3, 2); R("#1a1124", W - 46, 18, 5, 7); R(BULBS[Math.floor(G.t * 2) % 6][1], W - 45, 18, 3, 6); }
     text(String(G.shards), W - 6, 18, "#f3e9dc", "right");
+    if (G.combo >= 2 && G.comboT > 0) { // combo meter under the light count
+      const m = Math.min(BAL.comboMax, 1 + (G.combo - 1) * BAL.comboStep);
+      text(T_("hud.combo") + " x" + m.toFixed(1), W - 6, 30, "#5fd0c8", "right");
+      R("#1a1124", W - 61, 40, 56, 3); R("#5fd0c8", W - 60, 41, Math.round(54 * G.comboT / BAL.comboWindow), 1);
+    }
     const bw = 70, f = G.dread / st.battery, DX = Math.round(W / 2 - bw / 2) - 6; // centred, clear of phone buttons
     ctx.save(); ctx.translate(DX, 0);
     text(P.side ? "x" + (st.udMult * G.fate.f.score).toFixed(1) : T_("hud.dread"), 6, H - 22, P.side ? "#ff6b8f" : "#a998b8");
@@ -822,15 +900,16 @@
         if (o.flash > 0) ctx.filter = "brightness(3)";
         drawOb(o); ctx.filter = "none";
         if (o.heart) { // heart crate: a beating heart on the front, always upright
-          ctx.save(); ctx.translate(o.x + 7, -7); if (side) ctx.scale(1, -1);
+          ctx.save(); ctx.translate(o.x + o.w / 2, -o.w / 2); if (side) ctx.scale(1, -1);
           ctx.globalAlpha = 0.3 + Math.sin(G.t * 6) * 0.15; R("#ff3d57", -6, -6, 12, 11); ctx.globalAlpha = 1;
           heart(-4.5, -4, true); ctx.restore();
         }
       }
       for (const s of G.shots) if (s.side === side) drawShot(s);
       for (const m of G.pshots) if (m.side === side) {
-        const img = ART("ranger_shot"), y = -m.h - 3;
-        if (img) ctx.drawImage(img, Math.round(m.x) - 6, y - 1, 12, 6);
+        const bolt = m.kind === "bolt", img = ART(bolt ? "wizard_d20" : "ranger_shot"), y = Math.round(-m.h - 3);
+        if (img) ctx.drawImage(img, Math.round(m.x) - (bolt ? 8 : 6), y - 1, bolt ? 10 : 12, bolt ? 8 : 6);
+        else if (bolt) { R("#1a1124", m.x - 1, y - 2, 6, 6); R("#a46bff", m.x, y - 1, 4, 4); R("#ffffff", m.x + 1, y, 1, 1); }
         else { R("#1a1124", m.x - 1, y - 1, 5, 5); R("#4da3ff", m.x, y, 3, 3); R("#ffffff", m.x, y, 1, 1); }
       }
       ctx.restore();
