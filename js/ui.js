@@ -37,19 +37,20 @@
   let current = null;
   function show(name) {
     current = name;
+    GAME.subMenu = GAME.mode === "pause" && name !== "pause";
     panels.forEach(p => $("#p-" + p).classList.toggle("hidden", p !== name));
     $("#touch").classList.add("hide");
     if (name === "menu") refreshMenu();
     if (name === "sheet") renderSheet();
     if (name === "upgrades") renderUpgrades();
     if (name === "leaderboard") renderBoard();
-    if (name === "settings") renderSettings();
+    if (name === "settings") { bindTab = INPUT.padName_ ? "pad" : "key"; renderSettings(); fitSettings(); }
     document.querySelectorAll(".bank-n").forEach(n => n.textContent = st.shards);
     const first = name && $("#p-" + name + " .btn");
     if (first && (!matchMedia("(pointer:coarse)").matches || INPUT.padName_)) first.focus({ preventScroll: true });
   }
   const hideAll = () => {
-    current = null;
+    current = null; GAME.subMenu = false;
     panels.forEach(p => $("#p-" + p).classList.add("hidden")); $("#touch").classList.remove("hide");
     if (document.activeElement) document.activeElement.blur();
   };
@@ -282,6 +283,16 @@
     $("#fs").disabled = !fsApi;
     renderBinds();
   }
+  // short screens: scale the settings panel down until it fits (never up)
+  function fitSettings() {
+    const el = $("#p-settings .settings"); if (!el || current !== "settings") return;
+    el.style.zoom = "";
+    const frame = el.closest(".frame") || document.body;
+    const avail = Math.min(frame.clientHeight || innerHeight, innerHeight) * 0.97, need = el.getBoundingClientRect().height;
+    if (need > avail) el.style.zoom = (avail / need).toFixed(3);
+  }
+  addEventListener("resize", fitSettings);
+  let bindTab = "key";   // Settings > Controls shows one tab: keyboard or controller
   function renderBinds() {
     const slot = (kind, a, i) => {
       const L = listening && listening.kind === kind && listening.action === a && listening.slot === i;
@@ -289,18 +300,20 @@
       const label = L ? t(kind === "key" ? "set.press" : "set.pressPad") : v == null ? "—" : kind === "key" ? INPUT.keyName(v) : INPUT.padName(v);
       return `<td><button class="btn tiny bind${L ? " on" : ""}" data-bind="${kind}" data-act="${a}" data-slot="${i}">${esc(label)}</button></td>`;
     };
+    document.querySelectorAll("#p-settings [data-tab]").forEach(b => { const on = b.dataset.tab === bindTab; b.classList.toggle("on", on); b.setAttribute("aria-selected", on); });
     $("#s-binds").innerHTML = INPUT.ACTIONS.map(a =>
-      `<tr><th>${esc(t("act." + a))}</th>${slot("key", a, 0)}${slot("key", a, 1)}${slot("pad", a, 0)}${slot("pad", a, 1)}</tr>`).join("");
-    $("#s-pad").textContent = INPUT.padName_ ? t("set.padFound", { n: INPUT.padName_ }) : t("set.padNone");
+      `<tr><th>${esc(t("act." + a))}</th>${slot(bindTab, a, 0)}${slot(bindTab, a, 1)}</tr>`).join("");
+    $("#s-pad").textContent = bindTab === "key" ? t("set.bindHint") : INPUT.padName_ ? t("set.padFound", { n: INPUT.padName_ }) : t("set.padNone");
   }
-  setInterval(() => { if (current === "settings" && !listening) { const el = $("#s-pad"), want = INPUT.padName_ ? t("set.padFound", { n: INPUT.padName_ }) : t("set.padNone"); if (el.textContent !== want) el.textContent = want; } }, 1000);
+  setInterval(() => { if (current === "settings" && !listening && bindTab === "pad") { const el = $("#s-pad"), want = INPUT.padName_ ? t("set.padFound", { n: INPUT.padName_ }) : t("set.padNone"); if (el.textContent !== want) el.textContent = want; } }, 1000);
 
   $("#p-settings").addEventListener("click", e => {
     const b = e.target.closest("button"); if (!b) return;
     if (b.id === "s-music") { S.musicOn = !S.musicOn; applySound(); SAVE.save(); renderSettings(); return; }
     if (b.id === "s-sfx") { S.sfxOn = !S.sfxOn; applySound(); SAVE.save(); renderSettings(); SFX.click(); return; }
     if (b.id === "s-reset") { INPUT.reset(); renderBinds(); SFX.buy(); return; }
-    if (b.dataset.lang) { S.lang = b.dataset.lang; SAVE.save(); I18N.set(S.lang); relabel(); return; }
+    if (b.dataset.tab) { bindTab = b.dataset.tab; listening = null; INPUT.listening = null; INPUT.capture = null; renderBinds(); SFX.click(); return; }
+    if (b.dataset.lang) { S.lang = b.dataset.lang; SAVE.save(); I18N.set(S.lang); relabel(); fitSettings(); return; }
     if (b.dataset.touch) { S.touch = b.dataset.touch; SAVE.save(); applyTouch(); renderSettings(); return; }
     if (b.dataset.bind) {
       listening = { kind: b.dataset.bind, action: b.dataset.act, slot: +b.dataset.slot };

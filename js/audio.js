@@ -96,7 +96,7 @@
       return a;
     },
     level() {
-      if (muted || !this.on || this.mode === "off") return 0;
+      if (!this.on || this.mode === "off") return 0;   // the sound-effects switch never touches the music
       return musicVol * 1.25 * (this.mode === "over" ? 0.05 : this.mode === "pause" ? 0.03 : this.mode === "hub" ? 0.12 : 0.08);
     },
     refresh() {

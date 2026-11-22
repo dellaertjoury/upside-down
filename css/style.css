@@ -160,25 +160,46 @@ body.has-ui-row .board li{border:12px solid transparent;border-image:var(--ui-ro
 @media (prefers-reduced-motion:reduce){.frame.glow::after{animation-duration:.4s}}
 
 /* ---- settings ---- */
-.settings{width:min(100%,1060px)}
-.set-grid{display:grid;grid-template-columns:minmax(0,4fr) minmax(0,6fr);gap:24px;width:100%;text-align:left}
-.set-col h3{margin:14px 0 8px;font-size:clamp(11px,1.3vw,15px);color:var(--gold)}
-.set-col h3:first-child{margin-top:0}
-.set-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:6px 0;font-size:clamp(10px,1.15vw,14px)}
-.set-row>span{min-width:9em}
-.seg{display:flex;gap:6px;flex-wrap:wrap}
+#p-settings .settings{width:min(96vw,1240px);padding:clamp(10px,1.6vw,24px)}
+#p-settings .ph{width:100%;align-items:center}
+#p-settings .ph .btn.back{margin:0;min-width:8em}
+body.has-ui-sheet #p-settings .settings{padding:clamp(6px,1vw,14px)}
+.set-grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr) minmax(0,1fr);gap:clamp(12px,1.8vw,24px);width:100%;text-align:left;margin:clamp(6px,1vw,12px) 0 0}
+.set-controls{grid-column:1/-1;display:grid;grid-template-rows:auto auto 1fr;grid-template-columns:minmax(0,1fr) minmax(180px,.42fr);column-gap:clamp(16px,2.4vw,32px);align-items:start}
+.set-controls .ctl-head{grid-column:1/-1;display:flex;align-items:center;gap:clamp(12px,2vw,28px);margin-bottom:8px}
+.set-controls .ctl-head h3{margin:0}
+.set-controls .tabs{flex:0 1 460px;margin:0}
+.set-controls .binds{grid-column:1;grid-row:2 / span 2}
+.set-controls #s-pad{grid-column:2;margin:0 0 12px}
+.set-controls #s-reset{grid-column:2;justify-self:start}
+.set-card{background:rgba(22,13,34,.75);box-shadow:0 0 0 3px #2b1a3d;padding:clamp(12px,1.6vw,20px)}
+.set-card h3{margin:0 0 clamp(10px,1.3vw,16px);font-size:clamp(12px,1.45vw,17px);color:var(--gold)}
+.set-row{display:grid;grid-template-columns:minmax(6.5em,9em) auto minmax(60px,1fr);align-items:center;gap:12px;margin:10px 0;font-size:clamp(10px,1.15vw,14px)}
+.set-row:last-child{margin-bottom:0}
+.set-row>.seg{grid-column:2/-1}
+.set-row.inline{grid-template-columns:auto minmax(0,1fr);gap:10px}
+.set-row.inline>.seg{grid-column:2}
+.seg-fill{gap:5px}
+.seg-fill{flex-wrap:nowrap}.seg-fill .btn{flex:1;padding-left:4px;padding-right:4px}
+#p-settings .ph h2{margin:0}
+.binds .bind,.set-card .tog{min-height:30px;padding-top:3px;padding-bottom:3px}
+body.has-ui-button .binds .bind,body.has-ui-button .set-card .tog,body.has-ui-button .tabs .tab{border-width:8px;border-image-width:8px;min-height:0}
+.set-row{margin:6px 0}
+.binds thead th{padding-bottom:6px}
+.set-row input[type=range]{width:100%}
+.seg{display:flex;gap:8px;flex-wrap:wrap}
+.seg-lang{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.seg-lang .btn{width:100%}
+.tabs{display:flex;gap:8px;margin-bottom:14px}
+.tabs .tab{flex:1}
 .btn.on,.seg .btn.on{color:var(--gold);box-shadow:inset -3px -3px 0 #160c22,inset 3px 3px 0 #4a3266,0 0 0 3px var(--gold)}
-body.has-ui-button .btn.on{filter:brightness(1.35) drop-shadow(0 0 3px var(--gold))}
 input[type=range]{accent-color:#ff3d57;width:min(220px,40%);height:28px}
 .binds{border-collapse:collapse;width:100%;font-size:clamp(9px,1.05vw,13px)}
 .binds th{text-align:left;color:var(--muted);font-weight:400;padding:4px 6px 4px 0;white-space:nowrap}
-.binds td{padding:3px}
+.binds td{padding:2px 4px}
 .binds .bind{width:100%;min-width:5.5em;white-space:nowrap}
 .small{font-size:clamp(9px,.95vw,12px);line-height:1.6}
-.menu-grid .wide{grid-column:1/-1}
-body.touch-always .touch{display:flex}
-body.touch-never .touch{display:none!important}
-@media (max-width:800px){.set-grid{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:860px){.set-grid{grid-template-columns:minmax(0,1fr)}.set-controls{grid-template-columns:1fr}.set-controls .binds,.set-controls #s-pad,.set-controls #s-reset{grid-column:1;grid-row:auto}.set-row{grid-template-columns:1fr auto}.set-row input[type=range]{grid-column:1/-1}}
 
 /* Dice Crates on the game-over screen */
 .over-row{display:flex;gap:20px;align-items:center;justify-content:center;flex-wrap:wrap}
@@ -223,3 +244,4 @@ body.has-ui-d20 .d20{background:var(--ui-d20) center/contain no-repeat;clip-path
 .toast.on{opacity:1;transform:translate(-50%,0)}
 #p-report{background:rgba(14,8,24,.94);box-shadow:0 0 0 3px #2b1a3d,0 10px 40px rgba(0,0,0,.6);padding:16px 20px}
 body.has-ui-panel #p-report{border:24px solid transparent;border-image:var(--ui-panel) 24 fill / 24px stretch;image-rendering:pixelated;box-shadow:none;background:none}
+

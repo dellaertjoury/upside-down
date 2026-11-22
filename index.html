@@ -80,33 +80,42 @@
     <!-- SETTINGS -->
     <section class="panel hidden sheet-panel" id="p-settings">
       <div class="sheet settings">
-        <header class="ph"><h2 data-i18n="set.title"></h2></header>
+        <header class="ph"><h2 data-i18n="set.title"></h2><button class="btn back" data-go="menu" data-i18n="back"></button></header>
         <div class="set-grid">
-          <div class="set-col">
-            <h3 data-i18n="set.sound"></h3>
-            <div class="set-row"><span data-i18n="set.music"></span>
-              <button class="btn tiny tog" id="s-music"></button>
-              <input type="range" id="s-musicvol" min="0" max="1" step="0.05" data-i18n-attr="aria-label:set.volume"></div>
-            <div class="set-row"><span data-i18n="set.sfx"></span>
-              <button class="btn tiny tog" id="s-sfx"></button>
-              <input type="range" id="s-sfxvol" min="0" max="1" step="0.05" data-i18n-attr="aria-label:set.volume"></div>
-            <h3 data-i18n="set.language"></h3>
-            <div class="seg" id="s-lang"></div>
-            <h3 data-i18n="set.display"></h3>
-            <div class="set-row"><span data-i18n="set.fullscreen"></span><button class="btn tiny tog" id="fs"></button></div>
-            <div class="set-row"><span data-i18n="set.touch"></span><div class="seg" id="s-touch"></div></div>
-          </div>
-          <div class="set-col">
-            <h3 data-i18n="set.keys"></h3>
-            <table class="binds">
-              <thead><tr><th data-i18n="set.action"></th><th data-i18n="set.keyboard" colspan="2"></th><th data-i18n="set.controller" colspan="2"></th></tr></thead>
-              <tbody id="s-binds"></tbody>
-            </table>
-            <p class="muted small" id="s-pad"></p>
-            <button class="btn tiny" id="s-reset" data-i18n="set.reset"></button>
-          </div>
+            <section class="set-card">
+              <h3 data-i18n="set.sound"></h3>
+              <div class="set-row"><span data-i18n="set.music"></span>
+                <button class="btn tiny tog" id="s-music"></button>
+                <input type="range" id="s-musicvol" min="0" max="1" step="0.05" data-i18n-attr="aria-label:set.volume"></div>
+              <div class="set-row"><span data-i18n="set.sfx"></span>
+                <button class="btn tiny tog" id="s-sfx"></button>
+                <input type="range" id="s-sfxvol" min="0" max="1" step="0.05" data-i18n-attr="aria-label:set.volume"></div>
+            </section>
+            <section class="set-card">
+              <h3 data-i18n="set.language"></h3>
+              <div class="seg seg-lang" id="s-lang"></div>
+            </section>
+            <section class="set-card">
+              <h3 data-i18n="set.display"></h3>
+              <div class="set-row"><span data-i18n="set.fullscreen"></span><button class="btn tiny tog" id="fs"></button></div>
+              <div class="set-row inline"><span data-i18n="set.touch"></span><div class="seg seg-fill" id="s-touch"></div></div>
+            </section>
+            <section class="set-card set-controls">
+              <div class="ctl-head">
+                <h3 data-i18n="set.keys"></h3>
+                <div class="tabs" role="tablist">
+                  <button class="btn tiny tab on" id="tab-key" role="tab" data-tab="key" data-i18n="set.keyboard"></button>
+                  <button class="btn tiny tab" id="tab-pad" role="tab" data-tab="pad" data-i18n="set.controller"></button>
+                </div>
+              </div>
+              <table class="binds">
+                <thead><tr><th data-i18n="set.action"></th><th data-i18n="set.primary"></th><th data-i18n="set.secondary"></th></tr></thead>
+                <tbody id="s-binds"></tbody>
+              </table>
+              <p class="muted small" id="s-pad"></p>
+              <button class="btn tiny" id="s-reset" data-i18n="set.reset"></button>
+            </section>
         </div>
-        <button class="btn back" data-go="menu" data-i18n="back"></button>
       </div>
     </section>
 
@@ -115,8 +124,9 @@
       <h2 data-i18n="pause.title"></h2>
       <div class="menu-grid">
         <button class="btn primary" data-go="resume" data-i18n="pause.resume"></button>
+        <button class="btn" data-go="settings" data-i18n="menu.settings"></button>
+        <button class="btn" data-go="report" data-i18n="menu.report"></button>
         <button class="btn" data-go="quit" data-i18n="pause.quit"></button>
-        <button class="btn wide" data-go="report" data-i18n="menu.report"></button>
       </div>
     </section>
 

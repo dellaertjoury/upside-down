@@ -201,7 +201,7 @@ Upside Down mirrors the same street, rotten. Tune it in `js/scenery.js`
 
 ## Reporting bugs and ideas
 
-**Report bug / idea** in the hub, pause or game-over menu, or press **F8** in
+**Report bug / idea** in the hub, pause or game-over menu (Settings is in the pause menu too), or press **F8** in
 the middle of a run: the game pauses and takes a screenshot of that exact frame.
 Pick Bug or Idea, write what happened, and save (Ctrl+Enter). Each report also
 stores the game state at that moment (build, distance, speed, side, player
@@ -220,9 +220,10 @@ python3 tools/unpack_reports.py upside-down-reports-<date>.json
 The game uses the painted pixel art in `assets/`. Anything without art falls
 back to a built-in placeholder drawn in `js/sprites.js`.
 
-New art goes through **[ART_PROMPTS.md](ART_PROMPTS.md)**: 26 sprite-sheet
-prompts (one per character, creature, vehicle or UI set, 180 frames in all).
-Save each sheet as `<name>_sheet.png` (e.g. `fighter_sheet.png`), then run
+New art goes through **[ART_PROMPTS.md](ART_PROMPTS.md)**: 38 sprite-sheet
+prompts, 180 frames in all. Players come in 4 sheets each (`fighter_sheet1.png`
+… `fighter_sheet4.png`, 2 rows per image for more detail); creatures, vehicles
+and UI sets in one sheet each (`hound_sheet.png`, `plat_car_sheet.png`). Then run
 
 ```
 python3 tools/process_art.py <folder with raw PNGs> assets/

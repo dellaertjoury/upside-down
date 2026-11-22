@@ -1,114 +1,380 @@
 # The Upside Down — sprite-sheet prompts
 
-One prompt per sheet. Each sheet holds every animation frame (or every item) of one subject, so ChatGPT draws them together and keeps them consistent. The art processor cuts the sheet into frames by itself.
+One prompt per sheet. Each sheet holds a set of animation frames (or items) of one subject, so ChatGPT draws them together and keeps them consistent. The art processor cuts the sheets into frames by itself.
+
+**Why the players are split in 4:** ChatGPT makes one image of about 1500 × 1000 px. With 20 frames on it, each frame gets only ~200 px and loses detail. Two rows per image doubles the pixels per frame.
 
 ## How to deliver
 
-1. **Save each result under the sheet's file name**, e.g. `fighter_sheet.png`, `hound_sheet.png`, `plat_car_sheet.png`. Lowercase, no spaces. Keep ChatGPT's full-size PNG.
-2. **Attach a reference** when you have one: your current art of that character or creature. The prompts say "match the attached reference".
+1. **Save each result under the sheet's file name**, e.g. `fighter_sheet1.png`, `hound_sheet.png`, `plat_car_sheet.png`. Lowercase, no spaces. Keep ChatGPT's full-size PNG.
+2. **Attach a reference** for detail: your earlier single-frame art of that character (e.g. the old detailed `fighter_run1.png`). The prompts say "match the attached reference's level of detail". If a result looks simpler than the reference, reply: *"Same sheet, but with the detail of the reference: more shading, larger sprites."*
 3. **Magenta background:** the prompts ask for flat magenta (#FF00FF) instead of transparency. ChatGPT gets that right far more often than real transparency, and the processor removes it. A real transparent background works too.
 4. **Check before you send:** count the rows and frames against the prompt. A missing or merged frame shifts everything after it. Small differences in size or spacing don't matter: frames are found by the gaps between them and scaled together.
 5. Zip the sheets (subfolders are fine) and send them.
 
-**If ChatGPT keeps failing on a full sheet**, ask for one row at a time instead: *"Same character, only Row 2 – RUN, 4 frames in one row"*. Save it as a **strip**: `<name>_<animation>_strip.png`, e.g. `fighter_run_strip.png`, `hound_attack_strip.png`. (Use the animation names in lowercase: idle, run, jump, roll, attack, die, skate, fly, walk.)
+**If ChatGPT keeps failing on a full sheet**, ask for one row at a time instead: *"Same character, only Row 2 – RUN, 4 frames in one row"*. Save it as a **strip**: `<name>_<animation>_strip.png`, e.g. `fighter_run_strip.png`, `fighter_die_strip.png`, `hound_attack_strip.png`. (Use the animation names in lowercase: idle, run, jump, roll, attack, die, skate, fly, walk.)
 
 **Useful follow-ups in ChatGPT:**
+- *"Strict side view: the camera sees the character from the side. Redraw frames 1 and 4 of the death row in profile, rotated only in the picture plane."*
 - *"Keep everything identical, but leave more empty magenta space between the frames."*
 - *"Remove all text and labels. Keep the sprites exactly the same."*
 - *"Row 4 has 3 frames, it needs 4. Redraw the sheet with 4 frames in row 4."*
 
 **Facing:** players face **right**, enemies face **left**. The game mirrors everything in the Upside Down, so draw every sprite upright.
 
-**Single frames still work.** The old one-prompt-per-frame list is in `ART_PROMPTS_frames.md`, and frame files named like `fighter_run3.png` are still accepted.
+**A single full sheet (`fighter_sheet.png`, 7 rows) and single frames still work too.** The old one-prompt-per-frame list is in `ART_PROMPTS_frames.md`, and frame files named like `fighter_run3.png` are still accepted.
 
 ---
 
-## 1. Players (4 sheets)
+## 1. Players (4 characters × 4 sheets)
 
-Grid: **7 rows × 4 columns**, 20 frames. Rows: idle 2 · run 4 · jump 2 · roll 4 · attack 3 · death 4 · skate 2.
+Each character is split over **4 small sheets of 2 rows**, so every frame gets enough pixels for full detail. Save them as `<class>_sheet1.png` … `<class>_sheet4.png`. Make sheet 1 first, then attach it (plus your best detailed single frame) as the reference for sheets 2–4.
 
-### Fighter → `fighter_sheet.png`
+| Sheet | Row 1 | Row 2 |
+|---|---|---|
+| `_sheet1` | idle (2) | run (4) |
+| `_sheet2` | jump (2) | attack while running (3) |
+| `_sheet3` | roll (4) | skate (2) |
+| `_sheet4` | death (4) | 1 standing frame, only for the scale |
+
+### Fighter
+
+**Idle + run → `fighter_sheet1.png`**
 
 ```
-Create ONE image: a pixel-art sprite sheet. 16-bit pixel art for a 2D side-scrolling endless runner game: crisp hard-edged pixels, bold saturated colours, a dark 1-pixel outline (#1a1124) around every sprite, 1980s small-town horror mood.
+Create ONE image: a pixel-art sprite sheet. Detailed 16-bit pixel art (late SNES / arcade quality) for a 2D side-scrolling endless runner: crisp hard-edged pixels, bold saturated colours, a dark 1-pixel outline (#1a1124) around every sprite, 1980s small-town horror mood.
 
-SUBJECT: an original 12-year-old kid, a tabletop-RPG nerd: messy brown hair, red zip-up jacket over a striped shirt, blue jeans, white sneakers, a yellow flashlight clipped to the jacket, a dented wooden baseball bat in the right hand, a dented metal trash-can lid strapped to the left arm as a shield. Match the attached reference exactly. Side view, facing RIGHT in every frame.
+SUBJECT: an original 12-year-old kid, a tabletop-RPG nerd: messy brown hair, red zip-up jacket over a striped shirt, blue jeans, white sneakers, a yellow flashlight clipped to the jacket, a dented wooden baseball bat in the right hand, a dented metal trash-can lid strapped to the left arm as a shield. Match the attached reference exactly: same character, outfit, colours and proportions.
 
-LAYOUT (very important): a grid of 7 rows × 4 columns, portrait image. Every ROW is one animation, frames read left to right. If a row has fewer than 4 frames, leave the rest of that row empty. Every frame shows the SAME character at the SAME size, proportions, colours and pixel size, feet on one baseline within each row. Leave wide empty space between all frames and between rows: nothing touches or overlaps the next frame.
+CAMERA (important): strict side view, like a classic 2D platformer. The camera looks at the character from the side at body height: face in profile, one eye visible, facing RIGHT. Never a front view, never a 3/4 view, never seen from above or below. In jumping, rolling, tumbling and falling poses the body only rotates within the flat picture plane, like a paper cut-out spinning on the screen; it never turns towards or away from the camera.
 
-Row 1 – IDLE (2 frames): standing relaxed, weapon lowered; frame 2 breathes in (chest and shoulders 1 pixel higher).
-Row 2 – RUN (4 frames): a run cycle: 1 contact (right leg reaching forward, heel down), 2 passing (legs together, body lowest), 3 contact (left leg forward), 4 airborne (both feet off the ground, body highest). Arms swing opposite to the legs.
-Row 3 – JUMP (2 frames): 1 rising: knees tucked up, arms up; 2 falling: legs reaching down, arms out for balance.
-Row 4 – ROLL (4 frames): curled into a tight ball rolling forward, the ball turned a quarter turn further in each frame. The ball is about 60% of the standing height.
-Row 5 – ATTACK (3 frames): the legs keep RUNNING in every frame (never standing still): 1 the bat raised back over the shoulder while running (wind-up); 2 the bat swung level in front at full reach, a white slash arc touching the bat; 3 the bat follows through low, shield arm forward.
-Row 6 – DEATH (4 frames): 1 hit: knocked backwards off the feet, body arched back, arms and legs flung out, eyes squeezed shut; 2 tumbling: curled into a ball, arms over the head; 3 tumbling: upside down, legs over the head; 4 falling limp: stretched out, arms and legs dangling. Draw each pose upright (the game spins them).
-Row 7 – SKATE (2 frames): riding stance as if standing on a skateboard, but DO NOT draw the skateboard (the game adds it): 1 knees bent, arms out for balance; 2 leaning forward, one fist pumped, big grin, clothes blown back.
+DETAIL (important): draw every frame LARGE, the character about 350–400 px tall, filling its cell. Rich shading with 3–4 tones per colour, highlights and shadows, fabric folds and seams, readable face and hands, detailed shoes, wood grain and dents on the props. Match the attached reference's level of detail exactly. Do not simplify or shrink the sprites to make them fit.
+
+LAYOUT (very important): a landscape image with 2 rows and up to 4 frames per row. Every ROW is one animation, frames read left to right. Every frame shows the SAME character at the SAME size; feet on one baseline within each row. Leave wide empty space between all frames and between the rows: nothing touches or overlaps the next frame.
+
+Row 1 – IDLE (2 frames): standing relaxed in profile, weapon lowered; frame 2 breathes in (chest and shoulders slightly higher).
+Row 2 – RUN (4 frames): a run cycle in profile: 1 contact (front leg reaching forward, heel down), 2 passing (legs together, body lowest), 3 contact with the other leg forward, 4 airborne (both feet off the ground, body highest). Arms swing opposite to the legs.
 
 BACKGROUND: one flat, solid, pure magenta colour (#FF00FF) everywhere behind and between the sprites. No gradient, no floor, no ground shadows, no checkerboard, no scenery.
 
 DO NOT DRAW: any text, letters, numbers, labels, row titles, arrows, grid lines, cell borders or frames around the sprites. Effects (sparks, slash lines, motion lines) must touch the body or the weapon, never float on their own. Sharp hard pixel edges, no anti-aliasing, no blur.
 ```
 
-### Ranger → `ranger_sheet.png`
+**Jump + attack → `fighter_sheet2.png`**
 
 ```
-Create ONE image: a pixel-art sprite sheet. 16-bit pixel art for a 2D side-scrolling endless runner game: crisp hard-edged pixels, bold saturated colours, a dark 1-pixel outline (#1a1124) around every sprite, 1980s small-town horror mood.
+Create ONE image: a pixel-art sprite sheet. Detailed 16-bit pixel art (late SNES / arcade quality) for a 2D side-scrolling endless runner: crisp hard-edged pixels, bold saturated colours, a dark 1-pixel outline (#1a1124) around every sprite, 1980s small-town horror mood.
 
-SUBJECT: an original 12-year-old kid ranger: freckles, sandy hair under a faded green bucket hat, an olive army-surplus vest with bulging pockets over a yellow T-shirt, brown corduroy shorts, knee socks, hiking boots, a small backpack, a wooden Y-slingshot in the left hand. Match the attached reference exactly. Side view, facing RIGHT in every frame.
+SUBJECT: an original 12-year-old kid, a tabletop-RPG nerd: messy brown hair, red zip-up jacket over a striped shirt, blue jeans, white sneakers, a yellow flashlight clipped to the jacket, a dented wooden baseball bat in the right hand, a dented metal trash-can lid strapped to the left arm as a shield. Match the attached reference exactly: same character, outfit, colours and proportions.
 
-LAYOUT (very important): a grid of 7 rows × 4 columns, portrait image. Every ROW is one animation, frames read left to right. If a row has fewer than 4 frames, leave the rest of that row empty. Every frame shows the SAME character at the SAME size, proportions, colours and pixel size, feet on one baseline within each row. Leave wide empty space between all frames and between rows: nothing touches or overlaps the next frame.
+CAMERA (important): strict side view, like a classic 2D platformer. The camera looks at the character from the side at body height: face in profile, one eye visible, facing RIGHT. Never a front view, never a 3/4 view, never seen from above or below. In jumping, rolling, tumbling and falling poses the body only rotates within the flat picture plane, like a paper cut-out spinning on the screen; it never turns towards or away from the camera.
 
-Row 1 – IDLE (2 frames): standing relaxed, weapon lowered; frame 2 breathes in (chest and shoulders 1 pixel higher).
-Row 2 – RUN (4 frames): a run cycle: 1 contact (right leg reaching forward, heel down), 2 passing (legs together, body lowest), 3 contact (left leg forward), 4 airborne (both feet off the ground, body highest). Arms swing opposite to the legs.
-Row 3 – JUMP (2 frames): 1 rising: knees tucked up, arms up; 2 falling: legs reaching down, arms out for balance.
-Row 4 – ROLL (4 frames): curled into a tight ball rolling forward, the ball turned a quarter turn further in each frame. The ball is about 60% of the standing height.
-Row 5 – ATTACK (3 frames): the legs keep RUNNING in every frame (never standing still): 1 pulling the slingshot band back at eye level while running; 2 releasing: arm straight, band snapping forward, a small blue marble just leaving the pouch (touching it); 3 slingshot arm lowering, still running.
-Row 6 – DEATH (4 frames): 1 hit: knocked backwards off the feet, body arched back, arms and legs flung out, eyes squeezed shut; 2 tumbling: curled into a ball, arms over the head; 3 tumbling: upside down, legs over the head; 4 falling limp: stretched out, arms and legs dangling. Draw each pose upright (the game spins them).
-Row 7 – SKATE (2 frames): riding stance as if standing on a skateboard, but DO NOT draw the skateboard (the game adds it): 1 knees bent, arms out for balance; 2 leaning forward, one fist pumped, big grin, clothes blown back.
+DETAIL (important): draw every frame LARGE, the character about 350–400 px tall, filling its cell. Rich shading with 3–4 tones per colour, highlights and shadows, fabric folds and seams, readable face and hands, detailed shoes, wood grain and dents on the props. Match the attached reference's level of detail exactly. Do not simplify or shrink the sprites to make them fit.
+
+LAYOUT (very important): a landscape image with 2 rows and up to 4 frames per row. Every ROW is one animation, frames read left to right. Every frame shows the SAME character at the SAME size; feet on one baseline within each row. Leave wide empty space between all frames and between the rows: nothing touches or overlaps the next frame.
+
+Row 1 – JUMP (2 frames): 1 rising: knees tucked up, arms up; 2 falling: legs reaching down, arms out for balance.
+Row 2 – ATTACK (3 frames): the legs keep RUNNING in every frame (never standing still): 1 the bat raised back over the shoulder (wind-up); 2 the bat swung level in front at full reach, a white slash arc touching the bat; 3 the bat follows through low, shield arm forward.
 
 BACKGROUND: one flat, solid, pure magenta colour (#FF00FF) everywhere behind and between the sprites. No gradient, no floor, no ground shadows, no checkerboard, no scenery.
 
 DO NOT DRAW: any text, letters, numbers, labels, row titles, arrows, grid lines, cell borders or frames around the sprites. Effects (sparks, slash lines, motion lines) must touch the body or the weapon, never float on their own. Sharp hard pixel edges, no anti-aliasing, no blur.
 ```
 
-### Rogue → `rogue_sheet.png`
+**Roll + skate → `fighter_sheet3.png`**
 
 ```
-Create ONE image: a pixel-art sprite sheet. 16-bit pixel art for a 2D side-scrolling endless runner game: crisp hard-edged pixels, bold saturated colours, a dark 1-pixel outline (#1a1124) around every sprite, 1980s small-town horror mood.
+Create ONE image: a pixel-art sprite sheet. Detailed 16-bit pixel art (late SNES / arcade quality) for a 2D side-scrolling endless runner: crisp hard-edged pixels, bold saturated colours, a dark 1-pixel outline (#1a1124) around every sprite, 1980s small-town horror mood.
 
-SUBJECT: an original 12-year-old kid rogue: dark grey zip hoodie with the hood up, black hair poking out, a chunky 1980s walkie-talkie clipped to the chest with its antenna up, black jeans, beat-up canvas high-tops, fingerless gloves, a small metal flashlight in the right hand, sly grin. Match the attached reference exactly. Side view, facing RIGHT in every frame.
+SUBJECT: an original 12-year-old kid, a tabletop-RPG nerd: messy brown hair, red zip-up jacket over a striped shirt, blue jeans, white sneakers, a yellow flashlight clipped to the jacket, a dented wooden baseball bat in the right hand, a dented metal trash-can lid strapped to the left arm as a shield. Match the attached reference exactly: same character, outfit, colours and proportions.
 
-LAYOUT (very important): a grid of 7 rows × 4 columns, portrait image. Every ROW is one animation, frames read left to right. If a row has fewer than 4 frames, leave the rest of that row empty. Every frame shows the SAME character at the SAME size, proportions, colours and pixel size, feet on one baseline within each row. Leave wide empty space between all frames and between rows: nothing touches or overlaps the next frame.
+CAMERA (important): strict side view, like a classic 2D platformer. The camera looks at the character from the side at body height: face in profile, one eye visible, facing RIGHT. Never a front view, never a 3/4 view, never seen from above or below. In jumping, rolling, tumbling and falling poses the body only rotates within the flat picture plane, like a paper cut-out spinning on the screen; it never turns towards or away from the camera.
 
-Row 1 – IDLE (2 frames): standing relaxed, weapon lowered; frame 2 breathes in (chest and shoulders 1 pixel higher).
-Row 2 – RUN (4 frames): a run cycle: 1 contact (right leg reaching forward, heel down), 2 passing (legs together, body lowest), 3 contact (left leg forward), 4 airborne (both feet off the ground, body highest). Arms swing opposite to the legs.
-Row 3 – JUMP (2 frames): 1 rising: knees tucked up, arms up; 2 falling: legs reaching down, arms out for balance.
-Row 4 – ROLL (4 frames): curled into a tight ball rolling forward, the ball turned a quarter turn further in each frame. The ball is about 60% of the standing height.
-Row 5 – ATTACK (3 frames): the legs keep RUNNING in every frame (never standing still): 1 low fast running stride, the flashlight drawn back at the hip; 2 lunge, the flashlight thrust forward with a bright white strobe flash burst at its tip; 3 pulling the flashlight back, the last white sparks fading at its tip.
-Row 6 – DEATH (4 frames): 1 hit: knocked backwards off the feet, body arched back, arms and legs flung out, eyes squeezed shut; 2 tumbling: curled into a ball, arms over the head; 3 tumbling: upside down, legs over the head; 4 falling limp: stretched out, arms and legs dangling. Draw each pose upright (the game spins them).
-Row 7 – SKATE (2 frames): riding stance as if standing on a skateboard, but DO NOT draw the skateboard (the game adds it): 1 knees bent, arms out for balance; 2 leaning forward, one fist pumped, big grin, clothes blown back.
+DETAIL (important): draw every frame LARGE, the character about 350–400 px tall, filling its cell. Rich shading with 3–4 tones per colour, highlights and shadows, fabric folds and seams, readable face and hands, detailed shoes, wood grain and dents on the props. Match the attached reference's level of detail exactly. Do not simplify or shrink the sprites to make them fit.
+
+LAYOUT (very important): a landscape image with 2 rows and up to 4 frames per row. Every ROW is one animation, frames read left to right. Every frame shows the SAME character at the SAME size; feet on one baseline within each row. Leave wide empty space between all frames and between the rows: nothing touches or overlaps the next frame.
+
+Row 1 – ROLL (4 frames): curled into a tight ball rolling forward (to the right), seen from the side; the ball turns a quarter turn further in each frame (0°, 90°, 180°, 270°). The ball is about 60% of the standing height.
+Row 2 – SKATE (2 frames): riding stance as if standing on a skateboard, but DO NOT draw the skateboard (the game adds it): 1 knees bent, arms out for balance; 2 leaning forward, one fist pumped, big grin, clothes blown back.
 
 BACKGROUND: one flat, solid, pure magenta colour (#FF00FF) everywhere behind and between the sprites. No gradient, no floor, no ground shadows, no checkerboard, no scenery.
 
 DO NOT DRAW: any text, letters, numbers, labels, row titles, arrows, grid lines, cell borders or frames around the sprites. Effects (sparks, slash lines, motion lines) must touch the body or the weapon, never float on their own. Sharp hard pixel edges, no anti-aliasing, no blur.
 ```
 
-### Wizard → `wizard_sheet.png`
+**Death → `fighter_sheet4.png`**
 
 ```
-Create ONE image: a pixel-art sprite sheet. 16-bit pixel art for a 2D side-scrolling endless runner game: crisp hard-edged pixels, bold saturated colours, a dark 1-pixel outline (#1a1124) around every sprite, 1980s small-town horror mood.
+Create ONE image: a pixel-art sprite sheet. Detailed 16-bit pixel art (late SNES / arcade quality) for a 2D side-scrolling endless runner: crisp hard-edged pixels, bold saturated colours, a dark 1-pixel outline (#1a1124) around every sprite, 1980s small-town horror mood.
 
-SUBJECT: an original 12-year-old kid wizard: a cape made from a striped bedsheet tied at the neck, a cardboard cone hat with tinfoil stars, round glasses, curly red hair, a knitted sweater, a wand made from a painted stick, a cloth pouch of RPG dice on the belt. Match the attached reference exactly. Side view, facing RIGHT in every frame.
+SUBJECT: an original 12-year-old kid, a tabletop-RPG nerd: messy brown hair, red zip-up jacket over a striped shirt, blue jeans, white sneakers, a yellow flashlight clipped to the jacket, a dented wooden baseball bat in the right hand, a dented metal trash-can lid strapped to the left arm as a shield. Match the attached reference exactly: same character, outfit, colours and proportions.
 
-LAYOUT (very important): a grid of 7 rows × 4 columns, portrait image. Every ROW is one animation, frames read left to right. If a row has fewer than 4 frames, leave the rest of that row empty. Every frame shows the SAME character at the SAME size, proportions, colours and pixel size, feet on one baseline within each row. Leave wide empty space between all frames and between rows: nothing touches or overlaps the next frame.
+CAMERA (important): strict side view, like a classic 2D platformer. The camera looks at the character from the side at body height: face in profile, one eye visible, facing RIGHT. Never a front view, never a 3/4 view, never seen from above or below. In jumping, rolling, tumbling and falling poses the body only rotates within the flat picture plane, like a paper cut-out spinning on the screen; it never turns towards or away from the camera.
 
-Row 1 – IDLE (2 frames): standing relaxed, weapon lowered; frame 2 breathes in (chest and shoulders 1 pixel higher).
-Row 2 – RUN (4 frames): a run cycle: 1 contact (right leg reaching forward, heel down), 2 passing (legs together, body lowest), 3 contact (left leg forward), 4 airborne (both feet off the ground, body highest). Arms swing opposite to the legs.
-Row 3 – JUMP (2 frames): 1 rising: knees tucked up, arms up; 2 falling: legs reaching down, arms out for balance.
-Row 4 – ROLL (4 frames): curled into a tight ball rolling forward, the ball turned a quarter turn further in each frame. The ball is about 60% of the standing height.
-Row 5 – ATTACK (3 frames): the legs keep RUNNING in every frame (never standing still): 1 the wand raised overhead while running, small violet sparks gathering at its tip, cape flowing behind; 2 the wand thrust forward, a glowing violet twenty-sided die launching from its tip (touching it); 3 the wand lowering, a short trail of violet sparks at its tip, cape billowing.
-Row 6 – DEATH (4 frames): 1 hit: knocked backwards off the feet, body arched back, arms and legs flung out, eyes squeezed shut; 2 tumbling: curled into a ball, arms over the head; 3 tumbling: upside down, legs over the head; 4 falling limp: stretched out, arms and legs dangling. Draw each pose upright (the game spins them).
-Row 7 – SKATE (2 frames): riding stance as if standing on a skateboard, but DO NOT draw the skateboard (the game adds it): 1 knees bent, arms out for balance; 2 leaning forward, one fist pumped, big grin, clothes blown back.
+DETAIL (important): draw every frame LARGE, the character about 350–400 px tall, filling its cell. Rich shading with 3–4 tones per colour, highlights and shadows, fabric folds and seams, readable face and hands, detailed shoes, wood grain and dents on the props. Match the attached reference's level of detail exactly. Do not simplify or shrink the sprites to make them fit.
+
+LAYOUT (very important): a landscape image with 2 rows and up to 4 frames per row. Every ROW is one animation, frames read left to right. Every frame shows the SAME character at the SAME size; feet on one baseline within each row. Leave wide empty space between all frames and between the rows: nothing touches or overlaps the next frame.
+
+Row 1 – DEATH (4 frames): the kid is hit and knocked out of the game, every frame in strict side view (profile), rotating only in the picture plane: 1 hit: knocked backwards towards the LEFT, feet leaving the ground, body bent backwards in an arc, arms flung up, face in profile with eyes squeezed shut, the bat flying loose; 2 tumbling: a loose ball, knees to the chest, arms over the head, seen from the side; 3 tumbling: the same body rotated upside down in the picture plane, head at the bottom, legs pointing up; 4 falling limp: body horizontal, seen from the side, back towards the ground, arms and legs dangling down, eyes closed.
+Row 2 – SCALE (1 frame): ONE reference frame only: the character standing relaxed in profile, exactly the same size as in the other sheets (the game uses it to scale this sheet).
+
+BACKGROUND: one flat, solid, pure magenta colour (#FF00FF) everywhere behind and between the sprites. No gradient, no floor, no ground shadows, no checkerboard, no scenery.
+
+DO NOT DRAW: any text, letters, numbers, labels, row titles, arrows, grid lines, cell borders or frames around the sprites. Effects (sparks, slash lines, motion lines) must touch the body or the weapon, never float on their own. Sharp hard pixel edges, no anti-aliasing, no blur.
+```
+
+### Ranger
+
+**Idle + run → `ranger_sheet1.png`**
+
+```
+Create ONE image: a pixel-art sprite sheet. Detailed 16-bit pixel art (late SNES / arcade quality) for a 2D side-scrolling endless runner: crisp hard-edged pixels, bold saturated colours, a dark 1-pixel outline (#1a1124) around every sprite, 1980s small-town horror mood.
+
+SUBJECT: an original 12-year-old kid ranger: freckles, sandy hair under a faded green bucket hat, an olive army-surplus vest with bulging pockets over a yellow T-shirt, brown corduroy shorts, knee socks, hiking boots, a small backpack, a wooden Y-slingshot in the left hand. Match the attached reference exactly: same character, outfit, colours and proportions.
+
+CAMERA (important): strict side view, like a classic 2D platformer. The camera looks at the character from the side at body height: face in profile, one eye visible, facing RIGHT. Never a front view, never a 3/4 view, never seen from above or below. In jumping, rolling, tumbling and falling poses the body only rotates within the flat picture plane, like a paper cut-out spinning on the screen; it never turns towards or away from the camera.
+
+DETAIL (important): draw every frame LARGE, the character about 350–400 px tall, filling its cell. Rich shading with 3–4 tones per colour, highlights and shadows, fabric folds and seams, readable face and hands, detailed shoes, wood grain and dents on the props. Match the attached reference's level of detail exactly. Do not simplify or shrink the sprites to make them fit.
+
+LAYOUT (very important): a landscape image with 2 rows and up to 4 frames per row. Every ROW is one animation, frames read left to right. Every frame shows the SAME character at the SAME size; feet on one baseline within each row. Leave wide empty space between all frames and between the rows: nothing touches or overlaps the next frame.
+
+Row 1 – IDLE (2 frames): standing relaxed in profile, weapon lowered; frame 2 breathes in (chest and shoulders slightly higher).
+Row 2 – RUN (4 frames): a run cycle in profile: 1 contact (front leg reaching forward, heel down), 2 passing (legs together, body lowest), 3 contact with the other leg forward, 4 airborne (both feet off the ground, body highest). Arms swing opposite to the legs.
+
+BACKGROUND: one flat, solid, pure magenta colour (#FF00FF) everywhere behind and between the sprites. No gradient, no floor, no ground shadows, no checkerboard, no scenery.
+
+DO NOT DRAW: any text, letters, numbers, labels, row titles, arrows, grid lines, cell borders or frames around the sprites. Effects (sparks, slash lines, motion lines) must touch the body or the weapon, never float on their own. Sharp hard pixel edges, no anti-aliasing, no blur.
+```
+
+**Jump + attack → `ranger_sheet2.png`**
+
+```
+Create ONE image: a pixel-art sprite sheet. Detailed 16-bit pixel art (late SNES / arcade quality) for a 2D side-scrolling endless runner: crisp hard-edged pixels, bold saturated colours, a dark 1-pixel outline (#1a1124) around every sprite, 1980s small-town horror mood.
+
+SUBJECT: an original 12-year-old kid ranger: freckles, sandy hair under a faded green bucket hat, an olive army-surplus vest with bulging pockets over a yellow T-shirt, brown corduroy shorts, knee socks, hiking boots, a small backpack, a wooden Y-slingshot in the left hand. Match the attached reference exactly: same character, outfit, colours and proportions.
+
+CAMERA (important): strict side view, like a classic 2D platformer. The camera looks at the character from the side at body height: face in profile, one eye visible, facing RIGHT. Never a front view, never a 3/4 view, never seen from above or below. In jumping, rolling, tumbling and falling poses the body only rotates within the flat picture plane, like a paper cut-out spinning on the screen; it never turns towards or away from the camera.
+
+DETAIL (important): draw every frame LARGE, the character about 350–400 px tall, filling its cell. Rich shading with 3–4 tones per colour, highlights and shadows, fabric folds and seams, readable face and hands, detailed shoes, wood grain and dents on the props. Match the attached reference's level of detail exactly. Do not simplify or shrink the sprites to make them fit.
+
+LAYOUT (very important): a landscape image with 2 rows and up to 4 frames per row. Every ROW is one animation, frames read left to right. Every frame shows the SAME character at the SAME size; feet on one baseline within each row. Leave wide empty space between all frames and between the rows: nothing touches or overlaps the next frame.
+
+Row 1 – JUMP (2 frames): 1 rising: knees tucked up, arms up; 2 falling: legs reaching down, arms out for balance.
+Row 2 – ATTACK (3 frames): the legs keep RUNNING in every frame (never standing still): 1 pulling the slingshot band back at eye level; 2 releasing: arm straight, band snapping forward, a small blue marble just leaving the pouch (touching it); 3 slingshot arm lowering.
+
+BACKGROUND: one flat, solid, pure magenta colour (#FF00FF) everywhere behind and between the sprites. No gradient, no floor, no ground shadows, no checkerboard, no scenery.
+
+DO NOT DRAW: any text, letters, numbers, labels, row titles, arrows, grid lines, cell borders or frames around the sprites. Effects (sparks, slash lines, motion lines) must touch the body or the weapon, never float on their own. Sharp hard pixel edges, no anti-aliasing, no blur.
+```
+
+**Roll + skate → `ranger_sheet3.png`**
+
+```
+Create ONE image: a pixel-art sprite sheet. Detailed 16-bit pixel art (late SNES / arcade quality) for a 2D side-scrolling endless runner: crisp hard-edged pixels, bold saturated colours, a dark 1-pixel outline (#1a1124) around every sprite, 1980s small-town horror mood.
+
+SUBJECT: an original 12-year-old kid ranger: freckles, sandy hair under a faded green bucket hat, an olive army-surplus vest with bulging pockets over a yellow T-shirt, brown corduroy shorts, knee socks, hiking boots, a small backpack, a wooden Y-slingshot in the left hand. Match the attached reference exactly: same character, outfit, colours and proportions.
+
+CAMERA (important): strict side view, like a classic 2D platformer. The camera looks at the character from the side at body height: face in profile, one eye visible, facing RIGHT. Never a front view, never a 3/4 view, never seen from above or below. In jumping, rolling, tumbling and falling poses the body only rotates within the flat picture plane, like a paper cut-out spinning on the screen; it never turns towards or away from the camera.
+
+DETAIL (important): draw every frame LARGE, the character about 350–400 px tall, filling its cell. Rich shading with 3–4 tones per colour, highlights and shadows, fabric folds and seams, readable face and hands, detailed shoes, wood grain and dents on the props. Match the attached reference's level of detail exactly. Do not simplify or shrink the sprites to make them fit.
+
+LAYOUT (very important): a landscape image with 2 rows and up to 4 frames per row. Every ROW is one animation, frames read left to right. Every frame shows the SAME character at the SAME size; feet on one baseline within each row. Leave wide empty space between all frames and between the rows: nothing touches or overlaps the next frame.
+
+Row 1 – ROLL (4 frames): curled into a tight ball rolling forward (to the right), seen from the side; the ball turns a quarter turn further in each frame (0°, 90°, 180°, 270°). The ball is about 60% of the standing height.
+Row 2 – SKATE (2 frames): riding stance as if standing on a skateboard, but DO NOT draw the skateboard (the game adds it): 1 knees bent, arms out for balance; 2 leaning forward, one fist pumped, big grin, clothes blown back.
+
+BACKGROUND: one flat, solid, pure magenta colour (#FF00FF) everywhere behind and between the sprites. No gradient, no floor, no ground shadows, no checkerboard, no scenery.
+
+DO NOT DRAW: any text, letters, numbers, labels, row titles, arrows, grid lines, cell borders or frames around the sprites. Effects (sparks, slash lines, motion lines) must touch the body or the weapon, never float on their own. Sharp hard pixel edges, no anti-aliasing, no blur.
+```
+
+**Death → `ranger_sheet4.png`**
+
+```
+Create ONE image: a pixel-art sprite sheet. Detailed 16-bit pixel art (late SNES / arcade quality) for a 2D side-scrolling endless runner: crisp hard-edged pixels, bold saturated colours, a dark 1-pixel outline (#1a1124) around every sprite, 1980s small-town horror mood.
+
+SUBJECT: an original 12-year-old kid ranger: freckles, sandy hair under a faded green bucket hat, an olive army-surplus vest with bulging pockets over a yellow T-shirt, brown corduroy shorts, knee socks, hiking boots, a small backpack, a wooden Y-slingshot in the left hand. Match the attached reference exactly: same character, outfit, colours and proportions.
+
+CAMERA (important): strict side view, like a classic 2D platformer. The camera looks at the character from the side at body height: face in profile, one eye visible, facing RIGHT. Never a front view, never a 3/4 view, never seen from above or below. In jumping, rolling, tumbling and falling poses the body only rotates within the flat picture plane, like a paper cut-out spinning on the screen; it never turns towards or away from the camera.
+
+DETAIL (important): draw every frame LARGE, the character about 350–400 px tall, filling its cell. Rich shading with 3–4 tones per colour, highlights and shadows, fabric folds and seams, readable face and hands, detailed shoes, wood grain and dents on the props. Match the attached reference's level of detail exactly. Do not simplify or shrink the sprites to make them fit.
+
+LAYOUT (very important): a landscape image with 2 rows and up to 4 frames per row. Every ROW is one animation, frames read left to right. Every frame shows the SAME character at the SAME size; feet on one baseline within each row. Leave wide empty space between all frames and between the rows: nothing touches or overlaps the next frame.
+
+Row 1 – DEATH (4 frames): the kid is hit and knocked out of the game, every frame in strict side view (profile), rotating only in the picture plane: 1 hit: knocked backwards towards the LEFT, feet leaving the ground, body bent backwards in an arc, arms flung up, face in profile with eyes squeezed shut, the bat flying loose; 2 tumbling: a loose ball, knees to the chest, arms over the head, seen from the side; 3 tumbling: the same body rotated upside down in the picture plane, head at the bottom, legs pointing up; 4 falling limp: body horizontal, seen from the side, back towards the ground, arms and legs dangling down, eyes closed.
+Row 2 – SCALE (1 frame): ONE reference frame only: the character standing relaxed in profile, exactly the same size as in the other sheets (the game uses it to scale this sheet).
+
+BACKGROUND: one flat, solid, pure magenta colour (#FF00FF) everywhere behind and between the sprites. No gradient, no floor, no ground shadows, no checkerboard, no scenery.
+
+DO NOT DRAW: any text, letters, numbers, labels, row titles, arrows, grid lines, cell borders or frames around the sprites. Effects (sparks, slash lines, motion lines) must touch the body or the weapon, never float on their own. Sharp hard pixel edges, no anti-aliasing, no blur.
+```
+
+### Rogue
+
+**Idle + run → `rogue_sheet1.png`**
+
+```
+Create ONE image: a pixel-art sprite sheet. Detailed 16-bit pixel art (late SNES / arcade quality) for a 2D side-scrolling endless runner: crisp hard-edged pixels, bold saturated colours, a dark 1-pixel outline (#1a1124) around every sprite, 1980s small-town horror mood.
+
+SUBJECT: an original 12-year-old kid rogue: dark grey zip hoodie with the hood up, black hair poking out, a chunky 1980s walkie-talkie clipped to the chest with its antenna up, black jeans, beat-up canvas high-tops, fingerless gloves, a small metal flashlight in the right hand, sly grin. Match the attached reference exactly: same character, outfit, colours and proportions.
+
+CAMERA (important): strict side view, like a classic 2D platformer. The camera looks at the character from the side at body height: face in profile, one eye visible, facing RIGHT. Never a front view, never a 3/4 view, never seen from above or below. In jumping, rolling, tumbling and falling poses the body only rotates within the flat picture plane, like a paper cut-out spinning on the screen; it never turns towards or away from the camera.
+
+DETAIL (important): draw every frame LARGE, the character about 350–400 px tall, filling its cell. Rich shading with 3–4 tones per colour, highlights and shadows, fabric folds and seams, readable face and hands, detailed shoes, wood grain and dents on the props. Match the attached reference's level of detail exactly. Do not simplify or shrink the sprites to make them fit.
+
+LAYOUT (very important): a landscape image with 2 rows and up to 4 frames per row. Every ROW is one animation, frames read left to right. Every frame shows the SAME character at the SAME size; feet on one baseline within each row. Leave wide empty space between all frames and between the rows: nothing touches or overlaps the next frame.
+
+Row 1 – IDLE (2 frames): standing relaxed in profile, weapon lowered; frame 2 breathes in (chest and shoulders slightly higher).
+Row 2 – RUN (4 frames): a run cycle in profile: 1 contact (front leg reaching forward, heel down), 2 passing (legs together, body lowest), 3 contact with the other leg forward, 4 airborne (both feet off the ground, body highest). Arms swing opposite to the legs.
+
+BACKGROUND: one flat, solid, pure magenta colour (#FF00FF) everywhere behind and between the sprites. No gradient, no floor, no ground shadows, no checkerboard, no scenery.
+
+DO NOT DRAW: any text, letters, numbers, labels, row titles, arrows, grid lines, cell borders or frames around the sprites. Effects (sparks, slash lines, motion lines) must touch the body or the weapon, never float on their own. Sharp hard pixel edges, no anti-aliasing, no blur.
+```
+
+**Jump + attack → `rogue_sheet2.png`**
+
+```
+Create ONE image: a pixel-art sprite sheet. Detailed 16-bit pixel art (late SNES / arcade quality) for a 2D side-scrolling endless runner: crisp hard-edged pixels, bold saturated colours, a dark 1-pixel outline (#1a1124) around every sprite, 1980s small-town horror mood.
+
+SUBJECT: an original 12-year-old kid rogue: dark grey zip hoodie with the hood up, black hair poking out, a chunky 1980s walkie-talkie clipped to the chest with its antenna up, black jeans, beat-up canvas high-tops, fingerless gloves, a small metal flashlight in the right hand, sly grin. Match the attached reference exactly: same character, outfit, colours and proportions.
+
+CAMERA (important): strict side view, like a classic 2D platformer. The camera looks at the character from the side at body height: face in profile, one eye visible, facing RIGHT. Never a front view, never a 3/4 view, never seen from above or below. In jumping, rolling, tumbling and falling poses the body only rotates within the flat picture plane, like a paper cut-out spinning on the screen; it never turns towards or away from the camera.
+
+DETAIL (important): draw every frame LARGE, the character about 350–400 px tall, filling its cell. Rich shading with 3–4 tones per colour, highlights and shadows, fabric folds and seams, readable face and hands, detailed shoes, wood grain and dents on the props. Match the attached reference's level of detail exactly. Do not simplify or shrink the sprites to make them fit.
+
+LAYOUT (very important): a landscape image with 2 rows and up to 4 frames per row. Every ROW is one animation, frames read left to right. Every frame shows the SAME character at the SAME size; feet on one baseline within each row. Leave wide empty space between all frames and between the rows: nothing touches or overlaps the next frame.
+
+Row 1 – JUMP (2 frames): 1 rising: knees tucked up, arms up; 2 falling: legs reaching down, arms out for balance.
+Row 2 – ATTACK (3 frames): the legs keep RUNNING in every frame (never standing still): 1 low fast stride, the flashlight drawn back at the hip; 2 lunge, the flashlight thrust forward with a bright white strobe flash burst at its tip; 3 pulling the flashlight back, the last white sparks fading at its tip.
+
+BACKGROUND: one flat, solid, pure magenta colour (#FF00FF) everywhere behind and between the sprites. No gradient, no floor, no ground shadows, no checkerboard, no scenery.
+
+DO NOT DRAW: any text, letters, numbers, labels, row titles, arrows, grid lines, cell borders or frames around the sprites. Effects (sparks, slash lines, motion lines) must touch the body or the weapon, never float on their own. Sharp hard pixel edges, no anti-aliasing, no blur.
+```
+
+**Roll + skate → `rogue_sheet3.png`**
+
+```
+Create ONE image: a pixel-art sprite sheet. Detailed 16-bit pixel art (late SNES / arcade quality) for a 2D side-scrolling endless runner: crisp hard-edged pixels, bold saturated colours, a dark 1-pixel outline (#1a1124) around every sprite, 1980s small-town horror mood.
+
+SUBJECT: an original 12-year-old kid rogue: dark grey zip hoodie with the hood up, black hair poking out, a chunky 1980s walkie-talkie clipped to the chest with its antenna up, black jeans, beat-up canvas high-tops, fingerless gloves, a small metal flashlight in the right hand, sly grin. Match the attached reference exactly: same character, outfit, colours and proportions.
+
+CAMERA (important): strict side view, like a classic 2D platformer. The camera looks at the character from the side at body height: face in profile, one eye visible, facing RIGHT. Never a front view, never a 3/4 view, never seen from above or below. In jumping, rolling, tumbling and falling poses the body only rotates within the flat picture plane, like a paper cut-out spinning on the screen; it never turns towards or away from the camera.
+
+DETAIL (important): draw every frame LARGE, the character about 350–400 px tall, filling its cell. Rich shading with 3–4 tones per colour, highlights and shadows, fabric folds and seams, readable face and hands, detailed shoes, wood grain and dents on the props. Match the attached reference's level of detail exactly. Do not simplify or shrink the sprites to make them fit.
+
+LAYOUT (very important): a landscape image with 2 rows and up to 4 frames per row. Every ROW is one animation, frames read left to right. Every frame shows the SAME character at the SAME size; feet on one baseline within each row. Leave wide empty space between all frames and between the rows: nothing touches or overlaps the next frame.
+
+Row 1 – ROLL (4 frames): curled into a tight ball rolling forward (to the right), seen from the side; the ball turns a quarter turn further in each frame (0°, 90°, 180°, 270°). The ball is about 60% of the standing height.
+Row 2 – SKATE (2 frames): riding stance as if standing on a skateboard, but DO NOT draw the skateboard (the game adds it): 1 knees bent, arms out for balance; 2 leaning forward, one fist pumped, big grin, clothes blown back.
+
+BACKGROUND: one flat, solid, pure magenta colour (#FF00FF) everywhere behind and between the sprites. No gradient, no floor, no ground shadows, no checkerboard, no scenery.
+
+DO NOT DRAW: any text, letters, numbers, labels, row titles, arrows, grid lines, cell borders or frames around the sprites. Effects (sparks, slash lines, motion lines) must touch the body or the weapon, never float on their own. Sharp hard pixel edges, no anti-aliasing, no blur.
+```
+
+**Death → `rogue_sheet4.png`**
+
+```
+Create ONE image: a pixel-art sprite sheet. Detailed 16-bit pixel art (late SNES / arcade quality) for a 2D side-scrolling endless runner: crisp hard-edged pixels, bold saturated colours, a dark 1-pixel outline (#1a1124) around every sprite, 1980s small-town horror mood.
+
+SUBJECT: an original 12-year-old kid rogue: dark grey zip hoodie with the hood up, black hair poking out, a chunky 1980s walkie-talkie clipped to the chest with its antenna up, black jeans, beat-up canvas high-tops, fingerless gloves, a small metal flashlight in the right hand, sly grin. Match the attached reference exactly: same character, outfit, colours and proportions.
+
+CAMERA (important): strict side view, like a classic 2D platformer. The camera looks at the character from the side at body height: face in profile, one eye visible, facing RIGHT. Never a front view, never a 3/4 view, never seen from above or below. In jumping, rolling, tumbling and falling poses the body only rotates within the flat picture plane, like a paper cut-out spinning on the screen; it never turns towards or away from the camera.
+
+DETAIL (important): draw every frame LARGE, the character about 350–400 px tall, filling its cell. Rich shading with 3–4 tones per colour, highlights and shadows, fabric folds and seams, readable face and hands, detailed shoes, wood grain and dents on the props. Match the attached reference's level of detail exactly. Do not simplify or shrink the sprites to make them fit.
+
+LAYOUT (very important): a landscape image with 2 rows and up to 4 frames per row. Every ROW is one animation, frames read left to right. Every frame shows the SAME character at the SAME size; feet on one baseline within each row. Leave wide empty space between all frames and between the rows: nothing touches or overlaps the next frame.
+
+Row 1 – DEATH (4 frames): the kid is hit and knocked out of the game, every frame in strict side view (profile), rotating only in the picture plane: 1 hit: knocked backwards towards the LEFT, feet leaving the ground, body bent backwards in an arc, arms flung up, face in profile with eyes squeezed shut, the bat flying loose; 2 tumbling: a loose ball, knees to the chest, arms over the head, seen from the side; 3 tumbling: the same body rotated upside down in the picture plane, head at the bottom, legs pointing up; 4 falling limp: body horizontal, seen from the side, back towards the ground, arms and legs dangling down, eyes closed.
+Row 2 – SCALE (1 frame): ONE reference frame only: the character standing relaxed in profile, exactly the same size as in the other sheets (the game uses it to scale this sheet).
+
+BACKGROUND: one flat, solid, pure magenta colour (#FF00FF) everywhere behind and between the sprites. No gradient, no floor, no ground shadows, no checkerboard, no scenery.
+
+DO NOT DRAW: any text, letters, numbers, labels, row titles, arrows, grid lines, cell borders or frames around the sprites. Effects (sparks, slash lines, motion lines) must touch the body or the weapon, never float on their own. Sharp hard pixel edges, no anti-aliasing, no blur.
+```
+
+### Wizard
+
+**Idle + run → `wizard_sheet1.png`**
+
+```
+Create ONE image: a pixel-art sprite sheet. Detailed 16-bit pixel art (late SNES / arcade quality) for a 2D side-scrolling endless runner: crisp hard-edged pixels, bold saturated colours, a dark 1-pixel outline (#1a1124) around every sprite, 1980s small-town horror mood.
+
+SUBJECT: an original 12-year-old kid wizard: a cape made from a striped bedsheet tied at the neck, a cardboard cone hat with tinfoil stars, round glasses, curly red hair, a knitted sweater, a wand made from a painted stick, a cloth pouch of RPG dice on the belt. Match the attached reference exactly: same character, outfit, colours and proportions.
+
+CAMERA (important): strict side view, like a classic 2D platformer. The camera looks at the character from the side at body height: face in profile, one eye visible, facing RIGHT. Never a front view, never a 3/4 view, never seen from above or below. In jumping, rolling, tumbling and falling poses the body only rotates within the flat picture plane, like a paper cut-out spinning on the screen; it never turns towards or away from the camera.
+
+DETAIL (important): draw every frame LARGE, the character about 350–400 px tall, filling its cell. Rich shading with 3–4 tones per colour, highlights and shadows, fabric folds and seams, readable face and hands, detailed shoes, wood grain and dents on the props. Match the attached reference's level of detail exactly. Do not simplify or shrink the sprites to make them fit.
+
+LAYOUT (very important): a landscape image with 2 rows and up to 4 frames per row. Every ROW is one animation, frames read left to right. Every frame shows the SAME character at the SAME size; feet on one baseline within each row. Leave wide empty space between all frames and between the rows: nothing touches or overlaps the next frame.
+
+Row 1 – IDLE (2 frames): standing relaxed in profile, weapon lowered; frame 2 breathes in (chest and shoulders slightly higher).
+Row 2 – RUN (4 frames): a run cycle in profile: 1 contact (front leg reaching forward, heel down), 2 passing (legs together, body lowest), 3 contact with the other leg forward, 4 airborne (both feet off the ground, body highest). Arms swing opposite to the legs.
+
+BACKGROUND: one flat, solid, pure magenta colour (#FF00FF) everywhere behind and between the sprites. No gradient, no floor, no ground shadows, no checkerboard, no scenery.
+
+DO NOT DRAW: any text, letters, numbers, labels, row titles, arrows, grid lines, cell borders or frames around the sprites. Effects (sparks, slash lines, motion lines) must touch the body or the weapon, never float on their own. Sharp hard pixel edges, no anti-aliasing, no blur.
+```
+
+**Jump + attack → `wizard_sheet2.png`**
+
+```
+Create ONE image: a pixel-art sprite sheet. Detailed 16-bit pixel art (late SNES / arcade quality) for a 2D side-scrolling endless runner: crisp hard-edged pixels, bold saturated colours, a dark 1-pixel outline (#1a1124) around every sprite, 1980s small-town horror mood.
+
+SUBJECT: an original 12-year-old kid wizard: a cape made from a striped bedsheet tied at the neck, a cardboard cone hat with tinfoil stars, round glasses, curly red hair, a knitted sweater, a wand made from a painted stick, a cloth pouch of RPG dice on the belt. Match the attached reference exactly: same character, outfit, colours and proportions.
+
+CAMERA (important): strict side view, like a classic 2D platformer. The camera looks at the character from the side at body height: face in profile, one eye visible, facing RIGHT. Never a front view, never a 3/4 view, never seen from above or below. In jumping, rolling, tumbling and falling poses the body only rotates within the flat picture plane, like a paper cut-out spinning on the screen; it never turns towards or away from the camera.
+
+DETAIL (important): draw every frame LARGE, the character about 350–400 px tall, filling its cell. Rich shading with 3–4 tones per colour, highlights and shadows, fabric folds and seams, readable face and hands, detailed shoes, wood grain and dents on the props. Match the attached reference's level of detail exactly. Do not simplify or shrink the sprites to make them fit.
+
+LAYOUT (very important): a landscape image with 2 rows and up to 4 frames per row. Every ROW is one animation, frames read left to right. Every frame shows the SAME character at the SAME size; feet on one baseline within each row. Leave wide empty space between all frames and between the rows: nothing touches or overlaps the next frame.
+
+Row 1 – JUMP (2 frames): 1 rising: knees tucked up, arms up; 2 falling: legs reaching down, arms out for balance.
+Row 2 – ATTACK (3 frames): the legs keep RUNNING in every frame (never standing still): 1 the wand raised overhead, small violet sparks gathering at its tip, cape flowing behind; 2 the wand thrust forward, a glowing violet twenty-sided die launching from its tip (touching it); 3 the wand lowering, a short trail of violet sparks at its tip, cape billowing.
+
+BACKGROUND: one flat, solid, pure magenta colour (#FF00FF) everywhere behind and between the sprites. No gradient, no floor, no ground shadows, no checkerboard, no scenery.
+
+DO NOT DRAW: any text, letters, numbers, labels, row titles, arrows, grid lines, cell borders or frames around the sprites. Effects (sparks, slash lines, motion lines) must touch the body or the weapon, never float on their own. Sharp hard pixel edges, no anti-aliasing, no blur.
+```
+
+**Roll + skate → `wizard_sheet3.png`**
+
+```
+Create ONE image: a pixel-art sprite sheet. Detailed 16-bit pixel art (late SNES / arcade quality) for a 2D side-scrolling endless runner: crisp hard-edged pixels, bold saturated colours, a dark 1-pixel outline (#1a1124) around every sprite, 1980s small-town horror mood.
+
+SUBJECT: an original 12-year-old kid wizard: a cape made from a striped bedsheet tied at the neck, a cardboard cone hat with tinfoil stars, round glasses, curly red hair, a knitted sweater, a wand made from a painted stick, a cloth pouch of RPG dice on the belt. Match the attached reference exactly: same character, outfit, colours and proportions.
+
+CAMERA (important): strict side view, like a classic 2D platformer. The camera looks at the character from the side at body height: face in profile, one eye visible, facing RIGHT. Never a front view, never a 3/4 view, never seen from above or below. In jumping, rolling, tumbling and falling poses the body only rotates within the flat picture plane, like a paper cut-out spinning on the screen; it never turns towards or away from the camera.
+
+DETAIL (important): draw every frame LARGE, the character about 350–400 px tall, filling its cell. Rich shading with 3–4 tones per colour, highlights and shadows, fabric folds and seams, readable face and hands, detailed shoes, wood grain and dents on the props. Match the attached reference's level of detail exactly. Do not simplify or shrink the sprites to make them fit.
+
+LAYOUT (very important): a landscape image with 2 rows and up to 4 frames per row. Every ROW is one animation, frames read left to right. Every frame shows the SAME character at the SAME size; feet on one baseline within each row. Leave wide empty space between all frames and between the rows: nothing touches or overlaps the next frame.
+
+Row 1 – ROLL (4 frames): curled into a tight ball rolling forward (to the right), seen from the side; the ball turns a quarter turn further in each frame (0°, 90°, 180°, 270°). The ball is about 60% of the standing height.
+Row 2 – SKATE (2 frames): riding stance as if standing on a skateboard, but DO NOT draw the skateboard (the game adds it): 1 knees bent, arms out for balance; 2 leaning forward, one fist pumped, big grin, clothes blown back.
+
+BACKGROUND: one flat, solid, pure magenta colour (#FF00FF) everywhere behind and between the sprites. No gradient, no floor, no ground shadows, no checkerboard, no scenery.
+
+DO NOT DRAW: any text, letters, numbers, labels, row titles, arrows, grid lines, cell borders or frames around the sprites. Effects (sparks, slash lines, motion lines) must touch the body or the weapon, never float on their own. Sharp hard pixel edges, no anti-aliasing, no blur.
+```
+
+**Death → `wizard_sheet4.png`**
+
+```
+Create ONE image: a pixel-art sprite sheet. Detailed 16-bit pixel art (late SNES / arcade quality) for a 2D side-scrolling endless runner: crisp hard-edged pixels, bold saturated colours, a dark 1-pixel outline (#1a1124) around every sprite, 1980s small-town horror mood.
+
+SUBJECT: an original 12-year-old kid wizard: a cape made from a striped bedsheet tied at the neck, a cardboard cone hat with tinfoil stars, round glasses, curly red hair, a knitted sweater, a wand made from a painted stick, a cloth pouch of RPG dice on the belt. Match the attached reference exactly: same character, outfit, colours and proportions.
+
+CAMERA (important): strict side view, like a classic 2D platformer. The camera looks at the character from the side at body height: face in profile, one eye visible, facing RIGHT. Never a front view, never a 3/4 view, never seen from above or below. In jumping, rolling, tumbling and falling poses the body only rotates within the flat picture plane, like a paper cut-out spinning on the screen; it never turns towards or away from the camera.
+
+DETAIL (important): draw every frame LARGE, the character about 350–400 px tall, filling its cell. Rich shading with 3–4 tones per colour, highlights and shadows, fabric folds and seams, readable face and hands, detailed shoes, wood grain and dents on the props. Match the attached reference's level of detail exactly. Do not simplify or shrink the sprites to make them fit.
+
+LAYOUT (very important): a landscape image with 2 rows and up to 4 frames per row. Every ROW is one animation, frames read left to right. Every frame shows the SAME character at the SAME size; feet on one baseline within each row. Leave wide empty space between all frames and between the rows: nothing touches or overlaps the next frame.
+
+Row 1 – DEATH (4 frames): the kid is hit and knocked out of the game, every frame in strict side view (profile), rotating only in the picture plane: 1 hit: knocked backwards towards the LEFT, feet leaving the ground, body bent backwards in an arc, arms flung up, face in profile with eyes squeezed shut, the bat flying loose; 2 tumbling: a loose ball, knees to the chest, arms over the head, seen from the side; 3 tumbling: the same body rotated upside down in the picture plane, head at the bottom, legs pointing up; 4 falling limp: body horizontal, seen from the side, back towards the ground, arms and legs dangling down, eyes closed.
+Row 2 – SCALE (1 frame): ONE reference frame only: the character standing relaxed in profile, exactly the same size as in the other sheets (the game uses it to scale this sheet).
 
 BACKGROUND: one flat, solid, pure magenta colour (#FF00FF) everywhere behind and between the sprites. No gradient, no floor, no ground shadows, no checkerboard, no scenery.
 
@@ -122,9 +388,13 @@ DO NOT DRAW: any text, letters, numbers, labels, row titles, arrows, grid lines,
 ### Crow → `crow_sheet.png` (2 rows, 6 frames)
 
 ```
-Create ONE image: a pixel-art sprite sheet. 16-bit pixel art for a 2D side-scrolling endless runner game: crisp hard-edged pixels, bold saturated colours, a dark 1-pixel outline (#1a1124) around every sprite, 1980s small-town horror mood.
+Create ONE image: a pixel-art sprite sheet. Detailed 16-bit pixel art (late SNES / arcade quality) for a 2D side-scrolling endless runner: crisp hard-edged pixels, bold saturated colours, a dark 1-pixel outline (#1a1124) around every sprite, 1980s small-town horror mood.
 
 SUBJECT: a sickly black crow with one glowing white eye, ragged feathers, a yellow beak. Original design. Match the attached reference. Side view, facing LEFT in every frame.
+
+CAMERA: strict side view (profile), like a classic 2D platformer: the creature seen from the side at body height, facing LEFT. Never a front view, 3/4 view or top view; poses only rotate within the flat picture plane.
+
+DETAIL: draw every frame large (about 300–400 px wide), rich shading with 3–4 tones per colour, highlights, texture on skin, fur, feathers and claws. Do not simplify.
 
 LAYOUT (very important): a grid of 2 rows × 4 columns, landscape image. Every ROW is one animation, frames read left to right. If a row has fewer than 4 frames, leave the rest of that row empty. Every frame shows the SAME creature at the SAME size, proportions, colours and pixel size, feet on one baseline within each row. Leave wide empty space between all frames and between rows: nothing touches or overlaps the next frame.
 
@@ -139,9 +409,13 @@ DO NOT DRAW: any text, letters, numbers, labels, row titles, arrows, grid lines,
 ### Hound (Upside Down) → `hound_sheet.png` (3 rows, 8 frames)
 
 ```
-Create ONE image: a pixel-art sprite sheet. 16-bit pixel art for a 2D side-scrolling endless runner game: crisp hard-edged pixels, bold saturated colours, a dark 1-pixel outline (#1a1124) around every sprite, 1980s small-town horror mood.
+Create ONE image: a pixel-art sprite sheet. Detailed 16-bit pixel art (late SNES / arcade quality) for a 2D side-scrolling endless runner: crisp hard-edged pixels, bold saturated colours, a dark 1-pixel outline (#1a1124) around every sprite, 1980s small-town horror mood.
 
 SUBJECT: an original lean, hairless four-legged predator from a dark parallel world: ash-grey hide stretched over visible ribs, a bony ridge down the spine, long thin legs with hooked black claws, a whip-thin tail, a long narrow eyeless skull with a lipless snarl of needle-like teeth and two small glowing red pits on the snout. Original design, not copied from any show, film or game. Side view, facing LEFT in every frame.
+
+CAMERA: strict side view (profile), like a classic 2D platformer: the creature seen from the side at body height, facing LEFT. Never a front view, 3/4 view or top view; poses only rotate within the flat picture plane.
+
+DETAIL: draw every frame large (about 300–400 px wide), rich shading with 3–4 tones per colour, highlights, texture on skin, fur, feathers and claws. Do not simplify.
 
 LAYOUT (very important): a grid of 3 rows × 4 columns, square image. Every ROW is one animation, frames read left to right. If a row has fewer than 4 frames, leave the rest of that row empty. Every frame shows the SAME creature at the SAME size, proportions, colours and pixel size, feet on one baseline within each row. Leave wide empty space between all frames and between rows: nothing touches or overlaps the next frame.
 
@@ -157,9 +431,13 @@ DO NOT DRAW: any text, letters, numbers, labels, row titles, arrows, grid lines,
 ### Stalker (Upside Down) → `stalker_sheet.png` (2 rows, 7 frames)
 
 ```
-Create ONE image: a pixel-art sprite sheet. 16-bit pixel art for a 2D side-scrolling endless runner game: crisp hard-edged pixels, bold saturated colours, a dark 1-pixel outline (#1a1124) around every sprite, 1980s small-town horror mood.
+Create ONE image: a pixel-art sprite sheet. Detailed 16-bit pixel art (late SNES / arcade quality) for a 2D side-scrolling endless runner: crisp hard-edged pixels, bold saturated colours, a dark 1-pixel outline (#1a1124) around every sprite, 1980s small-town horror mood.
 
-SUBJECT: an original tall, gaunt, hunched humanoid creature from a dark parallel world: wrinkled pale grey-violet hide with dark crimson veins, very long arms hanging past the knees ending in long hooked claws, digitigrade legs, a small head low between the shoulders crowned with a tangle of black root-like antlers, a narrow shadowed face with two pinpoint glowing red eyes, a ragged mane of dark vines down its back. Original design, not copied from any show, film or game. Side view, facing LEFT in every frame.
+SUBJECT: an original tall, gaunt, hunched humanoid creature from a dark parallel world: wrinkled pale grey-violet hide with dark crimson veins, very long arms hanging past the knees ending in long hooked claws, digitigrade legs, a small head low between the shoulders crowned with a tangle of black root-like antlers, a narrow shadowed face with two pinpoint glowing red eyes, a ragged mane of dark vines down its back. Very tall: about TWICE the height of a 12-year-old kid. Original design, not copied from any show, film or game. Side view, facing LEFT in every frame.
+
+CAMERA: strict side view (profile), like a classic 2D platformer: the creature seen from the side at body height, facing LEFT. Never a front view, 3/4 view or top view; poses only rotate within the flat picture plane.
+
+DETAIL: draw every frame large (about 300–400 px wide), rich shading with 3–4 tones per colour, highlights, texture on skin, fur, feathers and claws. Do not simplify.
 
 LAYOUT (very important): a grid of 2 rows × 4 columns, landscape image. Every ROW is one animation, frames read left to right. If a row has fewer than 4 frames, leave the rest of that row empty. Every frame shows the SAME creature at the SAME size, proportions, colours and pixel size, feet on one baseline within each row. Leave wide empty space between all frames and between rows: nothing touches or overlaps the next frame.
 
@@ -174,9 +452,13 @@ DO NOT DRAW: any text, letters, numbers, labels, row titles, arrows, grid lines,
 ### Flyer (Upside Down) → `flyer_sheet.png` (2 rows, 6 frames)
 
 ```
-Create ONE image: a pixel-art sprite sheet. 16-bit pixel art for a 2D side-scrolling endless runner game: crisp hard-edged pixels, bold saturated colours, a dark 1-pixel outline (#1a1124) around every sprite, 1980s small-town horror mood.
+Create ONE image: a pixel-art sprite sheet. Detailed 16-bit pixel art (late SNES / arcade quality) for a 2D side-scrolling endless runner: crisp hard-edged pixels, bold saturated colours, a dark 1-pixel outline (#1a1124) around every sprite, 1980s small-town horror mood.
 
 SUBJECT: an original small flying creature from a dark parallel world: a moth-like body covered in dusky grey fuzz, two big tattered wings with dark violet membranes and glowing crimson veins, a long whip-like tail with a barb, two red eyes, a small hooked mouth. Original design, not copied from any show, film or game. Side view, facing LEFT in every frame.
+
+CAMERA: strict side view (profile), like a classic 2D platformer: the creature seen from the side at body height, facing LEFT. Never a front view, 3/4 view or top view; poses only rotate within the flat picture plane.
+
+DETAIL: draw every frame large (about 300–400 px wide), rich shading with 3–4 tones per colour, highlights, texture on skin, fur, feathers and claws. Do not simplify.
 
 LAYOUT (very important): a grid of 2 rows × 4 columns, landscape image. Every ROW is one animation, frames read left to right. If a row has fewer than 4 frames, leave the rest of that row empty. Every frame shows the SAME creature at the SAME size, proportions, colours and pixel size, feet on one baseline within each row. Leave wide empty space between all frames and between rows: nothing touches or overlaps the next frame.
 
@@ -191,9 +473,13 @@ DO NOT DRAW: any text, letters, numbers, labels, row titles, arrows, grid lines,
 ### Spore pod (Upside Down) → `pod_sheet.png` (2 rows, 4 frames)
 
 ```
-Create ONE image: a pixel-art sprite sheet. 16-bit pixel art for a 2D side-scrolling endless runner game: crisp hard-edged pixels, bold saturated colours, a dark 1-pixel outline (#1a1124) around every sprite, 1980s small-town horror mood.
+Create ONE image: a pixel-art sprite sheet. Detailed 16-bit pixel art (late SNES / arcade quality) for a 2D side-scrolling endless runner: crisp hard-edged pixels, bold saturated colours, a dark 1-pixel outline (#1a1124) around every sprite, 1980s small-town horror mood.
 
 SUBJECT: a pulsing fleshy spore pod rooted in the ground, crimson and deep red, short root tendrils at the base, two small glowing eyes. Original design. Match the attached reference. Side view, facing LEFT in every frame.
+
+CAMERA: strict side view (profile), like a classic 2D platformer: the creature seen from the side at body height, facing LEFT. Never a front view, 3/4 view or top view; poses only rotate within the flat picture plane.
+
+DETAIL: draw every frame large (about 300–400 px wide), rich shading with 3–4 tones per colour, highlights, texture on skin, fur, feathers and claws. Do not simplify.
 
 LAYOUT (very important): a grid of 2 rows × 4 columns, landscape image. Every ROW is one animation, frames read left to right. If a row has fewer than 4 frames, leave the rest of that row empty. Every frame shows the SAME creature at the SAME size, proportions, colours and pixel size, feet on one baseline within each row. Leave wide empty space between all frames and between rows: nothing touches or overlaps the next frame.
 
@@ -214,9 +500,9 @@ Each sheet: the normal version on top, its Upside Down version below. The game r
 ### Dumpster → `plat_dumpster_sheet.png`
 
 ```
-Create ONE image: a pixel-art sprite sheet. 16-bit pixel art for a 2D side-scrolling endless runner game: crisp hard-edged pixels, bold saturated colours, a dark 1-pixel outline (#1a1124) around every sprite, 1980s small-town horror mood.
+Create ONE image: a pixel-art sprite sheet. Detailed 16-bit pixel art (late SNES / arcade quality) for a 2D side-scrolling endless runner: crisp hard-edged pixels, bold saturated colours, a dark 1-pixel outline (#1a1124) around every sprite, 1980s small-town horror mood.
 
-SUBJECT: a green metal street dumpster with a closed flat lid, a bit dented, the long side facing the viewer. Flat side view, no perspective, wheels or base at the bottom of each item.
+SUBJECT: a green metal street dumpster with a closed flat lid, a bit dented, the long side facing the viewer. Flat side view, no perspective (no visible roof or top surface, no 3/4 angle), wheels or base at the bottom of each item. Rich detail: 3–4 shades per colour, chrome highlights, dents, rust, readable windows.
 
 LAYOUT (very important): 2 items stacked vertically in a landscape image. TOP: the normal version, clean and lived-in. BOTTOM: the exact same object, same size, same outline and silhouette, but rotten in a dark parallel world: dusty purple and crimson colours, black vines creeping over it, a dull red glow in the windows, rust and spores. Leave wide empty space between all items: nothing touches or overlaps another item.
 
@@ -228,9 +514,9 @@ DO NOT DRAW: any text, letters, numbers, labels, row titles, arrows, grid lines,
 ### Car → `plat_car_sheet.png`
 
 ```
-Create ONE image: a pixel-art sprite sheet. 16-bit pixel art for a 2D side-scrolling endless runner game: crisp hard-edged pixels, bold saturated colours, a dark 1-pixel outline (#1a1124) around every sprite, 1980s small-town horror mood.
+Create ONE image: a pixel-art sprite sheet. Detailed 16-bit pixel art (late SNES / arcade quality) for a 2D side-scrolling endless runner: crisp hard-edged pixels, bold saturated colours, a dark 1-pixel outline (#1a1124) around every sprite, 1980s small-town horror mood.
 
-SUBJECT: a boxy 1980s American sedan, faded red paint, chrome bumpers, the FRONT of the car on the LEFT. Flat side view, no perspective, wheels or base at the bottom of each item.
+SUBJECT: a boxy 1980s American sedan, faded red paint, chrome bumpers, the FRONT of the car on the LEFT. Flat side view, no perspective (no visible roof or top surface, no 3/4 angle), wheels or base at the bottom of each item. Rich detail: 3–4 shades per colour, chrome highlights, dents, rust, readable windows.
 
 LAYOUT (very important): 2 items stacked vertically in a landscape image. TOP: the normal version, clean and lived-in. BOTTOM: the exact same object, same size, same outline and silhouette, but rotten in a dark parallel world: dusty purple and crimson colours, black vines creeping over it, a dull red glow in the windows, rust and spores. Leave wide empty space between all items: nothing touches or overlaps another item.
 
@@ -242,9 +528,9 @@ DO NOT DRAW: any text, letters, numbers, labels, row titles, arrows, grid lines,
 ### Police car → `plat_cop_sheet.png`
 
 ```
-Create ONE image: a pixel-art sprite sheet. 16-bit pixel art for a 2D side-scrolling endless runner game: crisp hard-edged pixels, bold saturated colours, a dark 1-pixel outline (#1a1124) around every sprite, 1980s small-town horror mood.
+Create ONE image: a pixel-art sprite sheet. Detailed 16-bit pixel art (late SNES / arcade quality) for a 2D side-scrolling endless runner: crisp hard-edged pixels, bold saturated colours, a dark 1-pixel outline (#1a1124) around every sprite, 1980s small-town horror mood.
 
-SUBJECT: a 1980s small-town police car, white with a dark stripe, a light bar on the roof, the FRONT on the LEFT. Flat side view, no perspective, wheels or base at the bottom of each item.
+SUBJECT: a 1980s small-town police car, white with a dark stripe, a light bar on the roof, the FRONT on the LEFT. Flat side view, no perspective (no visible roof or top surface, no 3/4 angle), wheels or base at the bottom of each item. Rich detail: 3–4 shades per colour, chrome highlights, dents, rust, readable windows.
 
 LAYOUT (very important): 2 items stacked vertically in a landscape image. TOP: the normal version, clean and lived-in. BOTTOM: the exact same object, same size, same outline and silhouette, but rotten in a dark parallel world: dusty purple and crimson colours, black vines creeping over it, a dull red glow in the windows, rust and spores. Leave wide empty space between all items: nothing touches or overlaps another item.
 
@@ -256,9 +542,9 @@ DO NOT DRAW: any text, letters, numbers, labels, row titles, arrows, grid lines,
 ### Van → `plat_van_sheet.png`
 
 ```
-Create ONE image: a pixel-art sprite sheet. 16-bit pixel art for a 2D side-scrolling endless runner game: crisp hard-edged pixels, bold saturated colours, a dark 1-pixel outline (#1a1124) around every sprite, 1980s small-town horror mood.
+Create ONE image: a pixel-art sprite sheet. Detailed 16-bit pixel art (late SNES / arcade quality) for a 2D side-scrolling endless runner: crisp hard-edged pixels, bold saturated colours, a dark 1-pixel outline (#1a1124) around every sprite, 1980s small-town horror mood.
 
-SUBJECT: a 1980s cream-coloured passenger van with side windows, the FRONT on the LEFT. Flat side view, no perspective, wheels or base at the bottom of each item.
+SUBJECT: a 1980s cream-coloured passenger van with side windows, the FRONT on the LEFT. Flat side view, no perspective (no visible roof or top surface, no 3/4 angle), wheels or base at the bottom of each item. Rich detail: 3–4 shades per colour, chrome highlights, dents, rust, readable windows.
 
 LAYOUT (very important): 2 items stacked vertically in a landscape image. TOP: the normal version, clean and lived-in. BOTTOM: the exact same object, same size, same outline and silhouette, but rotten in a dark parallel world: dusty purple and crimson colours, black vines creeping over it, a dull red glow in the windows, rust and spores. Leave wide empty space between all items: nothing touches or overlaps another item.
 
@@ -270,9 +556,9 @@ DO NOT DRAW: any text, letters, numbers, labels, row titles, arrows, grid lines,
 ### Pickup truck → `plat_pickup_sheet.png`
 
 ```
-Create ONE image: a pixel-art sprite sheet. 16-bit pixel art for a 2D side-scrolling endless runner game: crisp hard-edged pixels, bold saturated colours, a dark 1-pixel outline (#1a1124) around every sprite, 1980s small-town horror mood.
+Create ONE image: a pixel-art sprite sheet. Detailed 16-bit pixel art (late SNES / arcade quality) for a 2D side-scrolling endless runner: crisp hard-edged pixels, bold saturated colours, a dark 1-pixel outline (#1a1124) around every sprite, 1980s small-town horror mood.
 
-SUBJECT: a 1980s blue pickup truck with an open bed at the back, the FRONT on the LEFT. Flat side view, no perspective, wheels or base at the bottom of each item.
+SUBJECT: a 1980s blue pickup truck with an open bed at the back, the FRONT on the LEFT. Flat side view, no perspective (no visible roof or top surface, no 3/4 angle), wheels or base at the bottom of each item. Rich detail: 3–4 shades per colour, chrome highlights, dents, rust, readable windows.
 
 LAYOUT (very important): 2 items stacked vertically in a landscape image. TOP: the normal version, clean and lived-in. BOTTOM: the exact same object, same size, same outline and silhouette, but rotten in a dark parallel world: dusty purple and crimson colours, black vines creeping over it, a dull red glow in the windows, rust and spores. Leave wide empty space between all items: nothing touches or overlaps another item.
 
@@ -284,9 +570,9 @@ DO NOT DRAW: any text, letters, numbers, labels, row titles, arrows, grid lines,
 ### School bus → `plat_bus_sheet.png`
 
 ```
-Create ONE image: a pixel-art sprite sheet. 16-bit pixel art for a 2D side-scrolling endless runner game: crisp hard-edged pixels, bold saturated colours, a dark 1-pixel outline (#1a1124) around every sprite, 1980s small-town horror mood.
+Create ONE image: a pixel-art sprite sheet. Detailed 16-bit pixel art (late SNES / arcade quality) for a 2D side-scrolling endless runner: crisp hard-edged pixels, bold saturated colours, a dark 1-pixel outline (#1a1124) around every sprite, 1980s small-town horror mood.
 
-SUBJECT: a long yellow 1980s school bus with a row of windows, the FRONT on the LEFT. Flat side view, no perspective, wheels or base at the bottom of each item.
+SUBJECT: a long yellow 1980s school bus with a row of windows, the FRONT on the LEFT. Flat side view, no perspective (no visible roof or top surface, no 3/4 angle), wheels or base at the bottom of each item. Rich detail: 3–4 shades per colour, chrome highlights, dents, rust, readable windows.
 
 LAYOUT (very important): 2 items stacked vertically in a landscape image. TOP: the normal version, clean and lived-in. BOTTOM: the exact same object, same size, same outline and silhouette, but rotten in a dark parallel world: dusty purple and crimson colours, black vines creeping over it, a dull red glow in the windows, rust and spores. Leave wide empty space between all items: nothing touches or overlaps another item.
 
@@ -302,7 +588,7 @@ DO NOT DRAW: any text, letters, numbers, labels, row titles, arrows, grid lines,
 ### Pickups → `pickups_sheet.png` (5 items)
 
 ```
-Create ONE image: a pixel-art sprite sheet. 16-bit pixel art for a 2D side-scrolling endless runner game: crisp hard-edged pixels, bold saturated colours, a dark 1-pixel outline (#1a1124) around every sprite, 1980s small-town horror mood.
+Create ONE image: a pixel-art sprite sheet. Detailed 16-bit pixel art (late SNES / arcade quality) for a 2D side-scrolling endless runner: crisp hard-edged pixels, bold saturated colours, a dark 1-pixel outline (#1a1124) around every sprite, 1980s small-town horror mood.
 
 SUBJECTS, front/side view, all drawn at a similar small scale:
 
@@ -316,7 +602,7 @@ DO NOT DRAW: any text, letters, numbers, labels, row titles, arrows, grid lines,
 ### Christmas lights → `bulbs_sheet.png` (7 items)
 
 ```
-Create ONE image: a pixel-art sprite sheet. 16-bit pixel art for a 2D side-scrolling endless runner game: crisp hard-edged pixels, bold saturated colours, a dark 1-pixel outline (#1a1124) around every sprite, 1980s small-town horror mood.
+Create ONE image: a pixel-art sprite sheet. Detailed 16-bit pixel art (late SNES / arcade quality) for a 2D side-scrolling endless runner: crisp hard-edged pixels, bold saturated colours, a dark 1-pixel outline (#1a1124) around every sprite, 1980s small-town horror mood.
 
 SUBJECT: old-fashioned 1980s Christmas tree light bulbs (C7 shape), each with a small dark socket on top, glowing, seen from the side. All the same size and shape, only the colour differs.
 
@@ -330,7 +616,7 @@ DO NOT DRAW: any text, letters, numbers, labels, row titles, arrows, grid lines,
 ### Projectiles → `projectiles_sheet.png` (3 items)
 
 ```
-Create ONE image: a pixel-art sprite sheet. 16-bit pixel art for a 2D side-scrolling endless runner game: crisp hard-edged pixels, bold saturated colours, a dark 1-pixel outline (#1a1124) around every sprite, 1980s small-town horror mood.
+Create ONE image: a pixel-art sprite sheet. Detailed 16-bit pixel art (late SNES / arcade quality) for a 2D side-scrolling endless runner: crisp hard-edged pixels, bold saturated colours, a dark 1-pixel outline (#1a1124) around every sprite, 1980s small-town horror mood.
 
 SUBJECTS: tiny, simple, bold projectiles, each with a short trail to the LEFT that touches it.
 
@@ -348,7 +634,7 @@ DO NOT DRAW: any text, letters, numbers, labels, row titles, arrows, grid lines,
 ### The Watcher → `watcher_sheet.png` (2 items)
 
 ```
-Create ONE image: a pixel-art sprite sheet. 16-bit pixel art for a 2D side-scrolling endless runner game: crisp hard-edged pixels, bold saturated colours, a dark 1-pixel outline (#1a1124) around every sprite, 1980s small-town horror mood.
+Create ONE image: a pixel-art sprite sheet. Detailed 16-bit pixel art (late SNES / arcade quality) for a 2D side-scrolling endless runner: crisp hard-edged pixels, bold saturated colours, a dark 1-pixel outline (#1a1124) around every sprite, 1980s small-town horror mood.
 
 SUBJECT: an original colossal creature from a dark parallel world, seen from far away as a towering silhouette, front view. Almost black (#14060c) with a thin dull-crimson rim light, very little detail, smoky edges made of pixel clusters. Original design, not copied from any show, film or game.
 
@@ -368,7 +654,7 @@ Flat front view for everything in this section. The UI uses dark violet (#160d22
 ### In-game HUD → `hud_sheet.png` (7 items)
 
 ```
-Create ONE image: a pixel-art sprite sheet. 16-bit pixel art for a 2D side-scrolling endless runner game: crisp hard-edged pixels, bold saturated colours, a dark 1-pixel outline (#1a1124) around every sprite, 1980s small-town horror mood.
+Create ONE image: a pixel-art sprite sheet. Detailed 16-bit pixel art (late SNES / arcade quality) for a 2D side-scrolling endless runner: crisp hard-edged pixels, bold saturated colours, a dark 1-pixel outline (#1a1124) around every sprite, 1980s small-town horror mood.
 
 SUBJECTS: small in-game HUD icons and a bar, pixel-art UI, flat front view.
 
@@ -382,7 +668,7 @@ DO NOT DRAW: any text, letters, numbers, labels, row titles, arrows, grid lines,
 ### Upgrade icons → `upgrade_icons_sheet.png` (8 icons)
 
 ```
-Create ONE image: a pixel-art sprite sheet. 16-bit pixel art for a 2D side-scrolling endless runner game: crisp hard-edged pixels, bold saturated colours, a dark 1-pixel outline (#1a1124) around every sprite, 1980s small-town horror mood.
+Create ONE image: a pixel-art sprite sheet. Detailed 16-bit pixel art (late SNES / arcade quality) for a 2D side-scrolling endless runner: crisp hard-edged pixels, bold saturated colours, a dark 1-pixel outline (#1a1124) around every sprite, 1980s small-town horror mood.
 
 SUBJECTS: 8 square shop icons for upgrades, each a symbol on a dark violet rounded tile with a thin gold edge, all tiles the same size.
 
@@ -396,7 +682,7 @@ DO NOT DRAW: any text, letters, numbers, labels, row titles, arrows, grid lines,
 ### Class icons → `class_icons_sheet.png` (6 icons)
 
 ```
-Create ONE image: a pixel-art sprite sheet. 16-bit pixel art for a 2D side-scrolling endless runner game: crisp hard-edged pixels, bold saturated colours, a dark 1-pixel outline (#1a1124) around every sprite, 1980s small-town horror mood.
+Create ONE image: a pixel-art sprite sheet. Detailed 16-bit pixel art (late SNES / arcade quality) for a 2D side-scrolling endless runner: crisp hard-edged pixels, bold saturated colours, a dark 1-pixel outline (#1a1124) around every sprite, 1980s small-town horror mood.
 
 SUBJECTS: square emblem icons on dark violet rounded tiles with a thin gold edge, all tiles the same size.
 
@@ -410,7 +696,7 @@ DO NOT DRAW: any text, letters, numbers, labels, row titles, arrows, grid lines,
 ### Ability icons → `stat_icons_sheet.png` (6 icons)
 
 ```
-Create ONE image: a pixel-art sprite sheet. 16-bit pixel art for a 2D side-scrolling endless runner game: crisp hard-edged pixels, bold saturated colours, a dark 1-pixel outline (#1a1124) around every sprite, 1980s small-town horror mood.
+Create ONE image: a pixel-art sprite sheet. Detailed 16-bit pixel art (late SNES / arcade quality) for a 2D side-scrolling endless runner: crisp hard-edged pixels, bold saturated colours, a dark 1-pixel outline (#1a1124) around every sprite, 1980s small-town horror mood.
 
 SUBJECTS: 6 small square ability icons for a D&D-style character sheet, simple bold symbols in gold and cream on dark violet rounded tiles, all the same size.
 
@@ -424,7 +710,7 @@ DO NOT DRAW: any text, letters, numbers, labels, row titles, arrows, grid lines,
 ### Touch buttons → `touch_buttons_sheet.png` (4 buttons)
 
 ```
-Create ONE image: a pixel-art sprite sheet. 16-bit pixel art for a 2D side-scrolling endless runner game: crisp hard-edged pixels, bold saturated colours, a dark 1-pixel outline (#1a1124) around every sprite, 1980s small-town horror mood.
+Create ONE image: a pixel-art sprite sheet. Detailed 16-bit pixel art (late SNES / arcade quality) for a 2D side-scrolling endless runner: crisp hard-edged pixels, bold saturated colours, a dark 1-pixel outline (#1a1124) around every sprite, 1980s small-town horror mood.
 
 SUBJECTS: 4 round on-screen buttons for a phone game: dark violet circles with a thick gold rim and a cream symbol, all the same size.
 
@@ -438,7 +724,7 @@ DO NOT DRAW: any text, letters, numbers, labels, row titles, arrows, grid lines,
 ### Leaderboard medals → `medals_sheet.png` (3 medals)
 
 ```
-Create ONE image: a pixel-art sprite sheet. 16-bit pixel art for a 2D side-scrolling endless runner game: crisp hard-edged pixels, bold saturated colours, a dark 1-pixel outline (#1a1124) around every sprite, 1980s small-town horror mood.
+Create ONE image: a pixel-art sprite sheet. Detailed 16-bit pixel art (late SNES / arcade quality) for a 2D side-scrolling endless runner: crisp hard-edged pixels, bold saturated colours, a dark 1-pixel outline (#1a1124) around every sprite, 1980s small-town horror mood.
 
 SUBJECTS: 3 round medals hanging from short ribbons, each with a twenty-sided die embossed in the centre.
 
@@ -454,7 +740,7 @@ DO NOT DRAW: any text, letters, numbers, labels, row titles, arrows, grid lines,
 These stretch to fit any size, so each one needs an even border all round and a plain, flat centre.
 
 ```
-Create ONE image: a pixel-art sprite sheet. 16-bit pixel art for a 2D side-scrolling endless runner game: crisp hard-edged pixels, bold saturated colours, a dark 1-pixel outline (#1a1124) around every sprite, 1980s small-town horror mood.
+Create ONE image: a pixel-art sprite sheet. Detailed 16-bit pixel art (late SNES / arcade quality) for a 2D side-scrolling endless runner: crisp hard-edged pixels, bold saturated colours, a dark 1-pixel outline (#1a1124) around every sprite, 1980s small-town horror mood.
 
 SUBJECTS: pixel-art menu frames for a 1980s D&D-club themed game menu. Each is a rectangle with a decorative border of even thickness all the way round and a plain flat-colour centre (no pattern, no text in the centre).
 
@@ -471,12 +757,12 @@ DO NOT DRAW: any text, letters, numbers, labels, row titles, arrows, grid lines,
 
 | Sheet | Frames / items |
 |---|---|
-| `fighter_sheet`, `ranger_sheet`, `rogue_sheet`, `wizard_sheet` | 4 × 20 |
+| `<class>_sheet1` … `_sheet4` for fighter, ranger, rogue, wizard | 4 × 20 |
 | `crow_sheet` 6 · `hound_sheet` 8 · `stalker_sheet` 7 · `flyer_sheet` 6 · `pod_sheet` 4 | 31 |
 | `plat_dumpster_sheet`, `plat_car_sheet`, `plat_cop_sheet`, `plat_van_sheet`, `plat_pickup_sheet`, `plat_bus_sheet` | 6 × 2 |
 | `pickups_sheet` 5 · `bulbs_sheet` 7 · `projectiles_sheet` 3 | 15 |
 | `watcher_sheet` | 2 |
 | `hud_sheet` 7 · `upgrade_icons_sheet` 8 · `class_icons_sheet` 6 · `stat_icons_sheet` 6 · `touch_buttons_sheet` 4 · `medals_sheet` 3 · `ui_frames_sheet` 6 | 40 |
-| **26 prompts** | **180** |
+| **38 prompts** | **180** |
 
 Your logo, the scenery, the backdrops and the floor aren't here: you already have them.

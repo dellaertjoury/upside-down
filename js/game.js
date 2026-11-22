@@ -114,12 +114,13 @@
     if (INPUT.listening) return;                       // Settings is waiting for a key
     const a = INPUT.keyAction(e.code);
     if (a === "pause" && (G.mode === "play" || G.mode === "pause")) {
-      G.mode === "play" ? G.pause() : G.resume(); e.preventDefault(); return;
+      e.preventDefault(); if (G.subMenu) return;   // Settings / report open over the pause menu: Esc goes back there
+      G.mode === "play" ? G.pause() : G.resume(); return;
     }
     if (a && G.mode === "play") { e.preventDefault(); if (!e.repeat) G.press(flipVertical(a)); }
   });
   INPUT.onAction = a => { // controller during a run
-    if (a === "pause" && (G.mode === "play" || G.mode === "pause")) { G.mode === "play" ? G.pause() : G.resume(); return true; }
+    if (a === "pause" && (G.mode === "play" || G.mode === "pause")) { if (!G.subMenu) G.mode === "play" ? G.pause() : G.resume(); return true; }
     if (G.mode === "play") { G.press(flipVertical(a)); return true; }
     return false;
   };

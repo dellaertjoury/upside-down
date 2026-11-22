@@ -324,6 +324,33 @@ def sheet_player(cls, rows):
     if len(rows) != len(PLAYER_ROWS): print(f"  note: {cls}: expected {len(PLAYER_ROWS)} rows, found {len(rows)}")
     return keys
 
+# Player sheets in 4 parts (more pixels per frame = more detail). Each part is
+# scaled by one of its own rows; the heights were measured on a full sheet,
+# relative to a 22 px run frame, so all parts line up.
+PLAYER_PARTS = {
+    1: ([("idle", 2), ("run", 4)], "run", 22),
+    2: ([("jump", 2), ("attack", 3)], "attack", 20.5),
+    3: ([("roll", 4), ("skate", 2)], "skate", 20),
+    4: ([("die", 4), ("scale", 1)], "scale", 23.3),   # row 2 = one standing frame, only used for the scale
+}
+PART_RE = re.compile(r"^(%s)[_-]?(?:sprite)?sheet[_-]?([1-4])$" % "|".join(CLASSES))
+def sheet_player_part(cls, part, rows):
+    layout, anchor, ah = PLAYER_PARTS[part]
+    names = [st for st, _ in layout]
+    if len(rows) != len(layout): print(f"  note: {cls} sheet {part}: expected {len(layout)} rows, found {len(rows)}")
+    ref = rows[names.index(anchor)] if names.index(anchor) < len(rows) else rows[0]
+    s = ah / sorted(f.height for f in ref)[len(ref) // 2]
+    keys = []
+    for (state, n), row in zip(layout, rows):
+        if state == "scale": continue
+        if len(row) != n: print(f"  note: {cls} {state}: expected {n} frames, found {len(row)}")
+        for i, f in enumerate(row):
+            key = f"{cls}_{state}{i + 1}"; w, h = q(f.width * s), q(f.height * s)
+            write(key, f, w, h, DARK)
+            manifest[key] = [w, h, 0, 0] if state == "roll" else [w, h, q(6 - body_x(f) * s), 0]
+            keys.append(key)
+    return keys
+
 def sheet_enemy(name, rows): return sheet_enemy_rows(name, rows, ENEMY_ROWS[name])
 def sheet_enemy_rows(name, rows, layout):
     by, v, hw, hh, ground, line = ENEMY[ENEMY2[name]]
@@ -373,6 +400,11 @@ for full, f in files:
         for i, (x0, x1) in enumerate(runs[:3]):
             part = im.crop((x0, 0, x1, im.height)); part = part.crop(part.getbbox())
             fit_box(f"ui_medal_{i + 1}", part, 32, 32); manifest[f"ui_medal_{i + 1}"] = True; done.append(f"ui_medal_{i + 1}")
+        continue
+    mp = PART_RE.match(key)
+    if mp:
+        try: done += sheet_player_part(mp.group(1), int(mp.group(2)), slice_sheet(path, 0.3))
+        except Exception as e: skipped.append(f"{f} ({e})")
         continue
     ms = STRIP_RE.match(key)
     if ms and (ms.group(1) in CLASSES or ms.group(1) in ENEMY_ROWS):
