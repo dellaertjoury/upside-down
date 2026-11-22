@@ -21,12 +21,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  deploy:
+  build: # collect the site and upload it
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
       - name: Collect the site
@@ -43,5 +40,13 @@ jobs:
       - uses: actions/upload-pages-artifact@v4
         with:
           path: _site
+  deploy: # separate job, as GitHub recommends: the upload is registered by the time it runs
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
       - id: deployment
         uses: actions/deploy-pages@v4
