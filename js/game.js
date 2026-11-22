@@ -1072,7 +1072,9 @@
 
   function drawDeath() {
     const d = P.die; if (d.y > H + 30) return;
-    const key = cyc(pframes("die"), G.t, 8);
+    // die frames: 1 = hit, the middle ones tumble, the last one falls limp (once it drops fast)
+    const f = pframes("die"), n = f.length, el = 1.3 - G.overT;
+    const key = n < 3 ? cyc(f, G.t, 8) : el < 0.15 ? f[0] : n >= 4 && d.vy > 260 ? f[n - 1] : f[1 + Math.floor(el * 8) % (n >= 4 ? n - 2 : n - 1)];
     ctx.save(); ctx.translate(Math.round(d.x), Math.round(d.y)); ctx.rotate(d.rot); ctx.scale(1, d.mir);
     draw(ctx, key, -6, 9);
     ctx.restore();

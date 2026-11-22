@@ -202,14 +202,20 @@ Upside Down mirrors the same street, rotten. Tune it in `js/scenery.js`
 The game uses the painted pixel art in `assets/`. Anything without art falls
 back to a built-in placeholder drawn in `js/sprites.js`.
 
-New art goes through **[ART_PROMPTS.md](ART_PROMPTS.md)**, the complete list
-of 137 images. Generate an image, name the file after its key, then run
+New art goes through **[ART_PROMPTS.md](ART_PROMPTS.md)**: 26 sprite-sheet
+prompts (one per character, creature, vehicle or UI set, 180 frames in all).
+Save each sheet as `<name>_sheet.png` (e.g. `fighter_sheet.png`), then run
 
 ```
 python3 tools/process_art.py <folder with raw PNGs> assets/
 ```
 
-The script crops, scales and outlines each image and rewrites
+One animation per image also works (`fighter_run_strip.png`), and so do single
+frames (`fighter_run3.png`, see `ART_PROMPTS_frames.md`).
+
+The script removes the background (flat magenta, black, white or a fake
+checkerboard), cuts each sheet into frames on the empty gaps, scales a whole
+sheet with one factor (so a roll stays smaller than a run frame) and rewrites
 `assets/manifest.json`. The canvas renders at 3× (1200 × 675), so art keeps its
 detail while gameplay runs on a 400 × 225 grid.
 

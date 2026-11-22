@@ -2,6 +2,10 @@
 
 Usage:  python3 tools/process_art.py <folder with raw PNGs> assets/
 
+Sprite sheets (recommended): fighter_sheet.png, hound_sheet.png, plat_car_sheet.png,
+hud_sheet.png ... one image per set, laid out as ART_PROMPTS.md describes. The
+frames are cut out on the empty gaps and saved under their own keys.
+
 Every raw file is named after its key (see ART_PROMPTS.md), e.g.
 `run1.png`, `ranger_attack.png`, `set_school_dark.png`, `ui_button.png`.
 The script crops each image to its visible pixels, scales it to its in-game
@@ -55,11 +59,39 @@ def key_out_black(im, limit=16):
     a[seen, 3] = 0
     return Image.fromarray(a)
 
-def load(path):
+def key_out_flat(im, tol=70):
+    """A flat background colour (magenta #FF00FF is what the sheet prompts ask
+    for): flood-fill everything connected to the border that is close to the
+    border's colour, then drop the pink fringe that anti-aliasing leaves."""
+    a = np.array(im.convert("RGBA")); rgb = a[:, :, :3].astype(int)
+    border = np.concatenate([rgb[0], rgb[-1], rgb[:, 0], rgb[:, -1]])
+    bg = np.median(border, axis=0)
+    if (np.abs(border - bg).sum(axis=1) < tol).mean() < 0.8: return None   # not one flat colour
+    if bg.max() <= 16 or (bg.min() >= 150 and bg.max() - bg.min() <= 18): return None  # black / white: old path
+    near = np.abs(rgb - bg).sum(axis=2) < tol
+    h, w = near.shape; seen = np.zeros_like(near)
+    dq = deque([(y, x) for x in range(w) for y in (0, h - 1) if near[y, x]] + [(y, x) for y in range(h) for x in (0, w - 1) if near[y, x]])
+    for y, x in dq: seen[y, x] = True
+    while dq:
+        y, x = dq.popleft()
+        for ny, nx in ((y + 1, x), (y - 1, x), (y, x + 1), (y, x - 1)):
+            if 0 <= ny < h and 0 <= nx < w and near[ny, nx] and not seen[ny, nx]: seen[ny, nx] = True; dq.append((ny, nx))
+    seen |= np.abs(rgb - bg).sum(axis=2) < 45   # background trapped between legs / under an arm
+    a[seen, 3] = 0
+    # fringe: half-blended background pixels hugging the cut-out edge
+    edge = np.array(Image.fromarray((seen * 255).astype(np.uint8)).filter(ImageFilter.MaxFilter(5))) > 0
+    fr = edge & ~seen & (np.abs(rgb - bg).sum(axis=2) < tol * 2.2)
+    if bg[0] > 180 and bg[2] > 180 and bg[1] < 90:  # magenta: also anything strongly magenta-tinted on the edge
+        fr |= edge & ~seen & (rgb[:, :, 0] > 150) & (rgb[:, :, 2] > 150) & (rgb[:, :, 1] < np.minimum(rgb[:, :, 0], rgb[:, :, 2]) * 0.55)
+    a[fr, 3] = 0
+    return Image.fromarray(a)
+
+def load(path, crop=True):
     raw = Image.open(path)
     im = raw.convert("RGBA")
     if "A" not in raw.getbands() or im.split()[3].getextrema()[0] == 255:
-        im = key_out_black(im)
+        im = key_out_flat(im) or key_out_black(im)
+    if not crop: return im
     a = im.split()[3].point(lambda v: 255 if v > 40 else 0)
     box = a.getbbox() or (0, 0, im.width, im.height)
     return im.crop(box)
@@ -177,6 +209,151 @@ UI_FIT = {  # icons: fit inside a box, keep aspect
 }
 ICON32 = re.compile(r"^ui_(class_\w+|touch_\w+|stat_\w+|up_\w+|lock|light|medal_[123])$")
 
+def handle(key, get, path):
+    """Process one image as <key>; get() returns the cropped sprite. False = unknown key."""
+    frame_key = re.sub(r"^(%s)_" % "|".join(CLASSES), "", key)
+    if re.match(r"^(idle|run|jump|attack|block|roll|skate|die)\d?$", frame_key) and (frame_key != key or key in ("idle", "run1", "run2", "jump", "attack", "roll")):
+        player(key, get())
+    elif re.match(r"^(crow|hound|flyer|pod|stalker)_(idle|fly|run|walk|jump|attack)\d$", key): enemy2(key, get())
+    elif re.match(r"^plat_(dumpster|car|cop|van|pickup|bus)(_dark)?$", key):  # street objects to jump on
+        im = get(); kind = key.split("_")[1]
+        w, h = by_h(im, {"dumpster": 18, "car": 21, "cop": 24, "van": 27, "pickup": 23, "bus": 33}[kind])
+        write(key, im, w, h, DARK if not key.endswith("_dark") else RIM); manifest[key] = [w, h]
+    elif key == "pickup_dice":
+        fit_box(key, get(), 12, 12); manifest[key] = True
+    elif key in ("pickup_skate", "skate_board"):
+        fit_box(key, get(), *((18, 10) if key == "pickup_skate" else (16, 5))); manifest[key] = True
+    elif key in ("watcher_body", "watcher_head"):
+        im = get(); w, h = by_h(im, 72 if key == "watcher_body" else 34)
+        write(key, im, w, h); manifest[key] = [w, h]
+    elif re.match(r"^(crow|crawl|wisp|pod|stalker)[12]$", key): enemy(key, get())
+    elif key in OBST: obstacle(key, get())
+    elif re.match(r"^bulb_(red|green|blue|yellow|orange|pink|gold)$", key):
+        fit_box(key, get(), 6, 9); manifest[key] = True
+    elif key.replace("_dark", "") in SET_H: scenery(key, get())
+    elif key in ("club", "club_dark"): club(key, get())
+    elif key == "backdrop_top": opaque(key, path, 105)
+    elif key == "backdrop_bottom": opaque(key, path, 104)
+    elif key == "floor": opaque(key, path, 16, crop_black=True)
+    elif key in UI_EXACT: fit_box(key, get(), *UI_EXACT[key], stretch=True); manifest[key] = True
+    elif key in UI_FIT: fit_box(key, get(), *UI_FIT[key]); manifest[key] = True
+    elif ICON32.match(key): fit_box(key, get(), 32, 32); manifest[key] = True
+    else: return False
+    return True
+
+# ---------------- sprite sheets ----------------
+# One image per character / creature / object set, as described in ART_PROMPTS.md:
+# every row is one animation (or a row of items), frames left to right, with
+# empty space between them. Frames are found by those gaps, not by a fixed grid.
+def _runs(mask, gap, minlen=1):
+    out, i, n = [], 0, len(mask)
+    while i < n:
+        if mask[i]:
+            j = i
+            while j < n and mask[j]: j += 1
+            out.append([i, j]); i = j
+        else: i += 1
+    merged = []
+    for r in out:   # bridge small gaps (a detached bat tip, a raised hand)
+        if merged and r[0] - merged[-1][1] < gap: merged[-1][1] = r[1]
+        else: merged.append(r)
+    return [r for r in merged if r[1] - r[0] >= minlen]
+
+def slice_sheet(path, drop_short=0.35):
+    im = load(path, crop=False); A = np.array(im)[:, :, 3] > 40
+    H, W = A.shape
+    rows = _runs(A.any(axis=1), max(4, int(H * 0.012)), max(3, int(H * 0.01)))
+    if rows:  # stray text lines / specks are much shorter than real rows
+        med = sorted(r[1] - r[0] for r in rows)[len(rows) // 2]
+        rows = [r for r in rows if r[1] - r[0] >= med * drop_short]
+    out = []
+    for y0, y1 in rows:
+        band = A[y0:y1]
+        cols = _runs(band.any(axis=0), max(4, int(W * 0.01)), 2)
+        if len(cols) > 1:  # fold slivers (motion lines, dust) into their nearest neighbour
+            med = sorted(c[1] - c[0] for c in cols)[len(cols) // 2]
+            i = 0
+            while i < len(cols) and len(cols) > 1:
+                if cols[i][1] - cols[i][0] < med * 0.25:  # a sliver: part of a frame if it's close, a stray speck if not
+                    gl = cols[i][0] - cols[i - 1][1] if i > 0 else 1e9
+                    gr = cols[i + 1][0] - cols[i][1] if i < len(cols) - 1 else 1e9
+                    if min(gl, gr) <= med * 0.3:
+                        if gl <= gr: cols[i - 1][1] = cols[i][1]
+                        else: cols[i + 1][0] = cols[i][0]
+                    cols.pop(i)
+                else: i += 1
+        row = []
+        for x0, x1 in cols:
+            part = im.crop((x0, y0, x1, y1)); bb = part.split()[3].point(lambda v: 255 if v > 40 else 0).getbbox()
+            if bb: row.append(part.crop(bb))
+        if row: out.append(row)
+    return out
+
+PLAYER_ROWS = [("idle", 2), ("run", 4), ("jump", 2), ("roll", 4), ("attack", 3), ("die", 4), ("skate", 2)]
+ENEMY_ROWS = {"crow": [("fly", 4), ("attack", 2)], "hound": [("run", 4), ("jump", 2), ("attack", 2)],
+              "stalker": [("walk", 4), ("attack", 3)], "flyer": [("fly", 4), ("attack", 2)], "pod": [("idle", 2), ("attack", 2)]}
+ITEM_SHEETS = {  # sheet name -> keys in reading order (left to right, top to bottom)
+    **{"plat_" + k: ["plat_" + k, "plat_" + k + "_dark"] for k in ("dumpster", "car", "cop", "van", "pickup", "bus")},
+    "watcher": ["watcher_body", "watcher_head"],
+    "projectiles": ["shot_spore", "ranger_shot", "wizard_d20"],
+    "pickups": ["crate", "crate_dark", "pickup_dice", "pickup_skate", "skate_board"],
+    "bulbs": ["bulb_red", "bulb_green", "bulb_blue", "bulb_yellow", "bulb_orange", "bulb_pink", "bulb_gold"],
+    "hud": ["hud_heart_full", "hud_heart_empty", "hud_light", "hud_revive", "hud_warning", "hud_dread_frame", "hud_dread_fill"],
+    "upgrade_icons": ["ui_up_" + k for k in ("heart", "reach", "battery", "magnet", "greed", "skate", "djump", "revive")],
+    "class_icons": ["ui_class_fighter", "ui_class_ranger", "ui_class_rogue", "ui_class_wizard", "ui_lock", "ui_d20"],
+    "stat_icons": ["ui_stat_" + k for k in ("str", "dex", "con", "int", "wis", "cha")],
+    "touch_buttons": ["ui_touch_roll", "ui_touch_jump", "ui_touch_attack", "ui_touch_flip"],
+    "medals": ["ui_medal_1", "ui_medal_2", "ui_medal_3"],
+    "ui_frames": ["ui_button", "ui_button_primary", "ui_row", "ui_panel", "ui_sheet", "ui_box"],
+}
+SHEET_RE = re.compile(r"^(.+?)[_-]?(sprite)?sheet$")
+
+def sheet_player(cls, rows):
+    """One scale for the whole sheet (the run row is 22 game px tall), so a
+    crouched jump or a roll keeps its real size next to the run frames."""
+    run = rows[1] if len(rows) > 1 else rows[0]
+    s = 22 / sorted(f.height for f in run)[len(run) // 2]
+    keys = []
+    for (state, n), row in zip(PLAYER_ROWS, rows):
+        if len(row) != n: print(f"  note: {cls} {state}: expected {n} frames, found {len(row)}")
+        for i, f in enumerate(row):
+            key = f"{cls}_{state}{i + 1}"; w, h = q(f.width * s), q(f.height * s)
+            write(key, f, w, h, DARK)
+            manifest[key] = [w, h, 0, 0] if state == "roll" else [w, h, q(6 - body_x(f) * s), 0]
+            keys.append(key)
+    if len(rows) != len(PLAYER_ROWS): print(f"  note: {cls}: expected {len(PLAYER_ROWS)} rows, found {len(rows)}")
+    return keys
+
+def sheet_enemy(name, rows): return sheet_enemy_rows(name, rows, ENEMY_ROWS[name])
+def sheet_enemy_rows(name, rows, layout):
+    by, v, hw, hh, ground, line = ENEMY[ENEMY2[name]]
+    first = rows[0]; mid = sorted(first, key=lambda f: f.width * f.height)[len(first) // 2]
+    s = v / (mid.height if by == "h" else mid.width)
+    keys = []
+    for (state, n), row in zip(layout, rows):
+        if len(row) != n: print(f"  note: {name} {state}: expected {n} frames, found {len(row)}")
+        for i, f in enumerate(row):
+            key = f"{name}_{state}{i + 1}"; w, h = q(f.width * s), q(f.height * s)
+            write(key, f, w, h, line)
+            manifest[key] = [w, h, q(hw / 2 - body_x(f) * s), 0 if ground else q((h - hh) / 2)]
+            keys.append(key)
+    return keys
+
+STRIP_RE = re.compile(r"^([a-z]+)_([a-z]+)[_-]strip$")
+STRIP_H = {"roll": 14, "jump": 21, "die": 20}   # median frame height (game px) for a player strip
+def strip(name, state, path):
+    """Fallback: one animation per image (e.g. fighter_run_strip.png), frames left to right."""
+    frames = [f for row in slice_sheet(path, 0.3) for f in row]
+    med = sorted(f.height for f in frames)[len(frames) // 2]
+    if name in CLASSES:
+        s = STRIP_H.get(state, 22) / med; keys = []
+        for i, f in enumerate(frames):
+            key = f"{name}_{state}{i + 1}"; w, h = q(f.width * s), q(f.height * s)
+            write(key, f, w, h, DARK); manifest[key] = [w, h, 0, 0] if state == "roll" else [w, h, q(6 - body_x(f) * s), 0]
+            keys.append(key)
+        return keys
+    return sheet_enemy_rows(name, [frames], [(state, len(frames))])
+
 done, skipped = [], []
 files = sorted((os.path.join(r, f), f) for r, _, fs in os.walk(SRC) for f in fs)
 for full, f in files:
@@ -197,36 +374,32 @@ for full, f in files:
             part = im.crop((x0, 0, x1, im.height)); part = part.crop(part.getbbox())
             fit_box(f"ui_medal_{i + 1}", part, 32, 32); manifest[f"ui_medal_{i + 1}"] = True; done.append(f"ui_medal_{i + 1}")
         continue
-    frame_key = re.sub(r"^(%s)_" % "|".join(CLASSES), "", key)
+    ms = STRIP_RE.match(key)
+    if ms and (ms.group(1) in CLASSES or ms.group(1) in ENEMY_ROWS):
+        try: done += strip(ms.group(1), ms.group(2), path)
+        except Exception as e: skipped.append(f"{f} ({e})")
+        continue
+    m = SHEET_RE.match(key)
+    if m and (m.group(1) in CLASSES or m.group(1) in ENEMY_ROWS or m.group(1) in ITEM_SHEETS):
+        name = m.group(1)
+        try:
+            if name in CLASSES:
+                rows = slice_sheet(path, 0.3); done += sheet_player(name, rows)
+            elif name in ENEMY_ROWS:
+                rows = slice_sheet(path); done += sheet_enemy(name, rows)
+            elif name in ITEM_SHEETS:
+                items = [f for row in slice_sheet(path, 0.12) for f in row]; want = ITEM_SHEETS[name]
+                if len(items) != len(want): print(f"  note: {name}: expected {len(want)} items, found {len(items)}")
+                for k, f in zip(want, items):
+                    if handle(k, lambda f=f: f, None): done.append(k)
+                    else: skipped.append(f"{f} -> {k}")
+            else: skipped.append(f); continue
+        except Exception as e:
+            skipped.append(f"{f} ({e})")
+        continue
     try:
-        if re.match(r"^(idle|run|jump|attack|block|roll|skate|die)\d?$", frame_key) and (frame_key != key or key in ("idle", "run1", "run2", "jump", "attack", "roll")):
-            player(key, load(path))
-        elif re.match(r"^(crow|hound|flyer|pod|stalker)_(idle|fly|run|walk|jump|attack)\d$", key): enemy2(key, load(path))
-        elif re.match(r"^plat_(dumpster|car|cop|van|pickup|bus)(_dark)?$", key):  # street objects to jump on
-            im = load(path); kind = key.split("_")[1]
-            w, h = by_h(im, {"dumpster": 18, "car": 21, "cop": 24, "van": 27, "pickup": 23, "bus": 33}[kind])
-            write(key, im, w, h, DARK if not key.endswith("_dark") else RIM); manifest[key] = [w, h]
-        elif key == "pickup_dice":
-            fit_box(key, load(path), 12, 12); manifest[key] = True
-        elif key in ("pickup_skate", "skate_board"):
-            fit_box(key, load(path), *((18, 10) if key == "pickup_skate" else (16, 5))); manifest[key] = True
-        elif key in ("watcher_body", "watcher_head"):
-            im = load(path); w, h = by_h(im, 72 if key == "watcher_body" else 34)
-            write(key, im, w, h); manifest[key] = [w, h]
-        elif re.match(r"^(crow|crawl|wisp|pod|stalker)[12]$", key): enemy(key, load(path))
-        elif key in OBST: obstacle(key, load(path))
-        elif re.match(r"^bulb_(red|green|blue|yellow|orange|pink|gold)$", key):
-            fit_box(key, load(path), 6, 9); manifest[key] = True
-        elif key.replace("_dark", "") in SET_H: scenery(key, load(path))
-        elif key in ("club", "club_dark"): club(key, load(path))
-        elif key == "backdrop_top": opaque(key, path, 105)
-        elif key == "backdrop_bottom": opaque(key, path, 104)
-        elif key == "floor": opaque(key, path, 16, crop_black=True)
-        elif key in UI_EXACT: fit_box(key, load(path), *UI_EXACT[key], stretch=True); manifest[key] = True
-        elif key in UI_FIT: fit_box(key, load(path), *UI_FIT[key]); manifest[key] = True
-        elif ICON32.match(key): fit_box(key, load(path), 32, 32); manifest[key] = True
-        else: skipped.append(f); continue
-        done.append(key)
+        if handle(key, lambda: load(path), path): done.append(key)
+        else: skipped.append(f)
     except Exception as e:
         skipped.append(f"{f} ({e})")
 
