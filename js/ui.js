@@ -2,7 +2,7 @@
 // leaderboard, settings (sound, language, display, keybinds), pause, game over.
 (function () {
   const $ = s => document.querySelector(s);
-  const panels = ["menu", "sheet", "upgrades", "leaderboard", "settings", "pause", "over"];
+  const panels = ["menu", "sheet", "upgrades", "leaderboard", "settings", "pause", "over", "report"];
   const st = SAVE.state, S = INPUT.S;
   const sign = n => (n >= 0 ? "+" : "") + n;
   const esc = v => String(v).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
@@ -76,6 +76,7 @@
     const b = e.target.closest("[data-go]"); if (!b) return;
     SFX.click();
     const go = b.dataset.go;
+    if (go === "report") return openReport(current);
     if (go === "play") return startRun();
     if (go === "resume") { hideAll(); GAME.resume(); return; }
     if (go === "quit" || (go === "menu" && GAME.mode !== "attract" && GAME.mode !== "pause")) GAME.toHub();
@@ -117,7 +118,15 @@
   // Space / Enter at the hub or after a run = start
   window.addEventListener("keydown", e => {
     if (INPUT.listening) return;
+    if (e.target.tagName === "TEXTAREA") return;     // typing a report
     if (e.target.tagName === "INPUT" && e.target.type !== "range") { if (e.key === "Enter") e.target.blur(); return; }
+    if (e.code === "F8" && (GAME.mode === "play" || GAME.mode === "pause" || current === "menu" || current === "over")) { // quick report with a screenshot
+      e.preventDefault(); if (current === "report") return;
+      const shot = REPORT.capture(), ctx = REPORT.context();
+      if (GAME.mode === "play") GAME.pause();
+      return openReport(current || "pause", shot, ctx);
+    }
+    if (e.code === "Escape" && current === "report") { e.preventDefault(); return closeReport(); }
     const hubOpen = current === "menu" || current === "over";
     if (current === "over" && e.code === "Space" && (st.dice > 0 || rolling)) { e.preventDefault(); rollDice(); return; } // open Dice Crates first
     if (hubOpen && e.code === "Space" && (GAME.mode === "attract" || GAME.mode === "over")) { e.preventDefault(); startRun(); }
@@ -341,6 +350,68 @@
     } catch (e) { msg.textContent = t("lb.fail"); }
   };
 
+  // ---- bug / idea reports ----
+  let repFrom = null, repShot = null, repCtx = null, repKind = "bug", clearArmed = false;
+  function toast(msg) {
+    const el = $("#toast"); el.textContent = msg; el.classList.add("on");
+    clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove("on"), 2200);
+  }
+  function openReport(from, shot, ctx) {
+    repFrom = from || "menu";
+    repShot = shot || REPORT.capture(); repCtx = ctx || REPORT.context();
+    repKind = "bug"; clearArmed = false;
+    show("report");
+    $("#rep-shot").src = repShot || ""; $("#rep-text").value = ""; $("#rep-msg").textContent = "";
+    $("#rep-clear").textContent = t("rep.clear");
+    document.querySelectorAll("[data-kind]").forEach(b => b.classList.toggle("on", b.dataset.kind === repKind));
+    renderReports();
+    $("#rep-text").focus({ preventScroll: true });
+  }
+  function closeReport() { show(repFrom === "report" ? "menu" : repFrom || "menu"); }
+  async function renderReports() {
+    const list = await REPORT.list();
+    $("#rep-count").textContent = t("rep.list", { n: list.length });
+    $("#rep-list").innerHTML = list.length ? list.slice().reverse().map(r => `<div class="rep-item">
+        ${r.shot ? `<img src="${r.shot}" alt="">` : "<span></span>"}
+        <span><b class="${r.kind === "idea" ? "idea" : ""}">${esc(t(r.kind === "idea" ? "rep.idea" : "rep.bug"))}</b> ${esc(r.comment.slice(0, 140))}${r.comment.length > 140 ? "…" : ""}
+          <small>${esc(new Date(r.created).toLocaleString())}${r.ctx && r.ctx.state ? " · " + esc(r.ctx.state.dist) + " m" : ""}</small></span>
+        <button class="x" data-del="${r.id}" aria-label="${esc(t("rep.del"))}" title="${esc(t("rep.del"))}">✕</button></div>`).join("")
+      : `<p class="muted">${esc(t("rep.none"))}</p>`;
+    ["#rep-export", "#rep-copy", "#rep-clear"].forEach(id => $(id).disabled = !list.length);
+  }
+  async function saveReport() {
+    const comment = $("#rep-text").value.trim();
+    if (!comment) { $("#rep-msg").textContent = t("rep.empty"); $("#rep-text").focus(); return; }
+    await REPORT.add({ kind: repKind, comment, shot: repShot, ctx: repCtx });
+    const n = (await REPORT.list()).length;
+    SFX.buy(); closeReport(); toast(t("rep.saved", { n }));
+  }
+  $("#p-report").addEventListener("click", async e => {
+    const k = e.target.closest("[data-kind]");
+    if (k) { repKind = k.dataset.kind; document.querySelectorAll("[data-kind]").forEach(b => b.classList.toggle("on", b === k)); SFX.click(); return; }
+    const d = e.target.closest("[data-del]");
+    if (d) { await REPORT.del(+d.dataset.del); renderReports(); return; }
+  });
+  $("#rep-save").addEventListener("click", saveReport);
+  $("#rep-back").addEventListener("click", () => { SFX.click(); closeReport(); });
+  $("#rep-text").addEventListener("keydown", e => {
+    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); saveReport(); }
+    if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); closeReport(); }
+  });
+  $("#rep-export").addEventListener("click", async () => {
+    try { const n = await REPORT.exportFile(); $("#rep-msg").textContent = t("rep.exported", { n }); }
+    catch (e) { $("#rep-msg").textContent = t("rep.exportFail"); }
+  });
+  $("#rep-copy").addEventListener("click", async () => {
+    const txt = await REPORT.asText();
+    try { await navigator.clipboard.writeText(txt); $("#rep-msg").textContent = t("rep.copied"); }
+    catch (e) { console.log(txt); $("#rep-msg").textContent = t("rep.copyFail"); }
+  });
+  $("#rep-clear").addEventListener("click", async () => {
+    if (!clearArmed) { clearArmed = true; $("#rep-clear").textContent = t("rep.sure"); return; }
+    clearArmed = false; await REPORT.clear(); $("#rep-clear").textContent = t("rep.clear"); renderReports();
+  });
+
   // ---- controller in the menus: D-pad / stick moves focus, A selects, B goes back ----
   INPUT.onMenu = cmd => {
     if (!current) return;
@@ -357,6 +428,7 @@
     if (cmd === "down" || cmd === "right") (items[at + 1] || items[0]).focus();
     if (cmd === "ok" && el && items.includes(el)) el.click();
     if (cmd === "back") {
+      if (current === "report") return closeReport();
       if (current === "pause") { hideAll(); GAME.resume(); }
       else if (current !== "menu") { const back = panel.querySelector('[data-go="menu"]'); if (back) back.click(); }
     }

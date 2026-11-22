@@ -27,7 +27,8 @@
           <button class="btn" data-go="sheet" data-i18n="menu.sheet"></button>
           <button class="btn" data-go="upgrades" data-i18n="menu.upgrades"></button>
           <button class="btn" data-go="leaderboard" data-i18n="menu.leaderboard"></button>
-          <button class="btn wide" data-go="settings" data-i18n="menu.settings"></button>
+          <button class="btn" data-go="settings" data-i18n="menu.settings"></button>
+          <button class="btn" data-go="report" data-i18n="menu.report"></button>
         </div>
         <div class="menu-foot">
           <span class="bank"><i class="bulb"></i> <span data-i18n="lights"></span> <b id="bank">0</b></span>
@@ -115,7 +116,36 @@
       <div class="menu-grid">
         <button class="btn primary" data-go="resume" data-i18n="pause.resume"></button>
         <button class="btn" data-go="quit" data-i18n="pause.quit"></button>
+        <button class="btn wide" data-go="report" data-i18n="menu.report"></button>
       </div>
+    </section>
+
+    <!-- BUG / IDEA REPORTS -->
+    <section class="panel hidden" id="p-report">
+      <header class="ph"><h2 data-i18n="rep.title"></h2></header>
+      <div class="rep-grid">
+        <div class="rep-new">
+          <img id="rep-shot" alt="">
+          <div class="rep-kind">
+            <button class="btn tiny on" data-kind="bug" data-i18n="rep.bug"></button>
+            <button class="btn tiny" data-kind="idea" data-i18n="rep.idea"></button>
+          </div>
+          <textarea id="rep-text" rows="4" maxlength="2000" spellcheck="true" data-i18n-attr="placeholder:rep.ph"></textarea>
+          <button class="btn primary" id="rep-save" data-i18n="rep.save"></button>
+          <p class="muted rep-msg" id="rep-msg"></p>
+        </div>
+        <div class="rep-side">
+          <h3 id="rep-count"></h3>
+          <div class="rep-list" id="rep-list"></div>
+          <div class="rep-actions">
+            <button class="btn" id="rep-export" data-i18n="rep.export"></button>
+            <button class="btn" id="rep-copy" data-i18n="rep.copy"></button>
+            <button class="btn" id="rep-clear" data-i18n="rep.clear"></button>
+          </div>
+          <p class="muted rep-hint" data-i18n="rep.hint"></p>
+        </div>
+      </div>
+      <button class="btn back" id="rep-back" data-i18n="back"></button>
     </section>
 
     <!-- GAME OVER -->
@@ -135,10 +165,12 @@
       <div class="menu-grid">
         <button class="btn primary" data-go="play" data-i18n="over.again"></button>
         <button class="btn" data-go="upgrades" data-i18n="menu.upgrades"></button>
-        <button class="btn wide" data-go="menu" data-i18n="pause.quit"></button>
+        <button class="btn" data-go="report" data-i18n="menu.report"></button>
+        <button class="btn" data-go="menu" data-i18n="pause.quit"></button>
       </div>
     </section>
   </div>
+  <div class="toast" id="toast"></div>
 
   <div class="touch" id="touch">
     <div class="tg"><button data-k="roll" data-i18n="touch.roll"></button><button data-k="jump" data-i18n="touch.jump"></button></div>
@@ -155,6 +187,7 @@
 <script src="js/leaderboard.js"></script>
 <script src="js/scenery.js"></script>
 <script src="js/game.js"></script>
+<script src="js/report.js"></script>
 <script src="js/ui.js"></script>
 <script src="js/debug.js"></script>
 </body>

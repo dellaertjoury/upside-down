@@ -98,10 +98,12 @@ the menu.
 ## Rules
 
 - You run automatically, starting slow and speeding up gradually.
-- **Obstacles:** crows at head height (roll under, jump over or hit them),
-  stumps you jump, hanging vines you roll under, and Upside Down creatures you
-  hit or avoid. The tall **stalker** takes two hits. Hounds sometimes pounce.
-  Spore pods shoot along the ground every few seconds: jump them, flip away,
+- **Enemies, by height:** bats and crows fly at head height: **roll under**
+  them. Hounds run on the ground: **jump over** them. Walkers are twice your
+  height and can't be cleared: **attack** them (2 hits) or flip away. Hounds
+  and walkers also cross over to the street later in a run (120 m / 350 m).
+- **Obstacles:** stumps you jump, hanging vines you roll under. Hounds
+  sometimes lunge forward (still on the ground). Spore pods shoot along the ground every few seconds: jump them, flip away,
   or hit the shot back.
 - **The Upside Down: Heat and the haul.** Everything you earn down there
   (distance, kills, lights) goes into a **haul**, multiplied by **Heat**:
@@ -196,6 +198,22 @@ police station, store, arcade, diner, gas station). The next 3 frames are
 always generated ahead of the screen, so buildings slide in smoothly. The
 Upside Down mirrors the same street, rotten. Tune it in `js/scenery.js`
 (`MIN_BLANKS`, `MAX_BLANKS`, `PARALLAX`).
+
+## Reporting bugs and ideas
+
+**Report bug / idea** in the hub, pause or game-over menu, or press **F8** in
+the middle of a run: the game pauses and takes a screenshot of that exact frame.
+Pick Bug or Idea, write what happened, and save (Ctrl+Enter). Each report also
+stores the game state at that moment (build, distance, speed, side, player
+state, what was on screen, recent errors).
+
+Reports stay in your browser. **Export file** downloads them all as one
+`.json` file (screenshots included) to send to Claude; **Copy as text** copies
+the comments without screenshots. To read an export yourself:
+
+```
+python3 tools/unpack_reports.py upside-down-reports-<date>.json
+```
 
 ## Art
 

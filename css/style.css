@@ -195,3 +195,31 @@ body.touch-never .touch{display:none!important}
 .dice-res b{display:block;font-size:clamp(11px,1.3vw,15px)}
 .dice-res small{color:var(--muted)}
 body.has-ui-d20 .d20{background:var(--ui-d20) center/contain no-repeat;clip-path:none;box-shadow:none;image-rendering:pixelated;text-shadow:0 2px 0 #1a1124}
+
+/* Bug / idea reports */
+#p-report{max-width:min(1100px,96%)}
+.rep-grid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:18px;text-align:left;width:100%}
+.rep-new{display:flex;flex-direction:column;gap:8px}
+#rep-shot{width:100%;aspect-ratio:16/9;object-fit:cover;image-rendering:pixelated;box-shadow:0 0 0 3px #2b1a3d;background:#0b0610}
+.rep-kind{display:flex;gap:8px}
+.rep-kind .btn.on{box-shadow:0 0 0 3px var(--gold)}
+#rep-text{font:inherit;font-size:clamp(10px,1.1vw,13px);line-height:1.6;background:#160d22;color:var(--ink);border:0;box-shadow:0 0 0 3px #2b1a3d;padding:8px;resize:vertical;min-height:5em}
+#rep-text:focus{outline:none;box-shadow:0 0 0 3px var(--gold)}
+.rep-msg{min-height:1.4em;margin:0;font-size:clamp(9px,1vw,12px)}
+.rep-side h3{margin:0 0 8px;font-size:clamp(11px,1.3vw,15px);color:var(--gold)}
+.rep-list{display:flex;flex-direction:column;gap:6px;max-height:min(40vh,320px);overflow:auto;padding-right:4px}
+.rep-item{display:grid;grid-template-columns:72px 1fr auto;gap:8px;align-items:center;background:#160d22;box-shadow:0 0 0 2px #2b1a3d;padding:5px;font-size:clamp(8px,.95vw,11px);line-height:1.5}
+.rep-item img{width:72px;aspect-ratio:16/9;object-fit:cover;image-rendering:pixelated}
+.rep-item b{color:var(--red)}
+.rep-item b.idea{color:var(--teal)}
+.rep-item small{color:var(--muted);display:block}
+.rep-item .x{background:none;border:0;color:var(--muted);font:inherit;cursor:pointer;padding:4px 6px}
+.rep-item .x:hover,.rep-item .x:focus{color:var(--red)}
+.rep-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.rep-hint{font-size:clamp(8px,.9vw,11px);line-height:1.6}
+@media (max-width:760px){.rep-grid{grid-template-columns:1fr}}
+.toast{position:absolute;left:50%;top:14px;transform:translate(-50%,-20px);background:#160d22;color:var(--ink);box-shadow:0 0 0 3px var(--gold);padding:8px 14px;
+  font-size:clamp(10px,1.1vw,13px);opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:50}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+#p-report{background:rgba(14,8,24,.94);box-shadow:0 0 0 3px #2b1a3d,0 10px 40px rgba(0,0,0,.6);padding:16px 20px}
+body.has-ui-panel #p-report{border:24px solid transparent;border-image:var(--ui-panel) 24 fill / 24px stretch;image-rendering:pixelated;box-shadow:none;background:none}

@@ -52,14 +52,16 @@
   // h0..h1 = vertical extent measured AWAY from the floor surface.
   const TYPES = {
     // normal world
-    crow:      { side: 0, w: 12, h0: 9,  h1: 17, enemy: true, vx: -45, after: 250 }, // head height: roll under, jump over or hit
+    // heights: bats/crows fly at head height (ROLL under: a roll is 9 tall, standing 15), hounds run on the
+    // ground (JUMP over), walkers are twice your height and can't be cleared: ATTACK them (or flip away)
+    crow:      { side: 0, w: 12, h0: 12, h1: 20, enemy: true, vx: -45, after: 250 },
     // upside down
     stump:     { side: 1, w: 12, h0: 0,  h1: 12 },
     tendril:   { side: 1, w: 14, h0: 12, h1: 107, after: 500 },
     crawler:   { side: 1, w: 16, h0: 0,  h1: 10, enemy: true, vx: -60, after: 250 },
-    wisp:      { side: 1, w: 10, h0: 14, h1: 21, enemy: true, vx: -25, bob: true, after: 700 },
+    wisp:      { side: 1, w: 10, h0: 15, h1: 22, enemy: true, vx: -25, bob: true, after: 700 }, // bobs 12..18: always over a roll
     pod:       { side: 1, w: 12, h0: 0,  h1: 12, enemy: true, shooter: true, after: 600 },
-    stalker:   { side: 1, w: 14, h0: 0,  h1: 24, enemy: true, hp: 2, vx: -25, after: 1500 }, // tall, takes 2 hits
+    stalker:   { side: 1, w: 16, h0: 0,  h1: 120, enemy: true, hp: 2, vx: -25, after: 1500 }, // drawn 44 tall; the hitbox goes above any jump
     // light crates: smash with a hit to spill Christmas lights
     crate:      { side: 0, w: 14, h0: 0, h1: 14, crate: true },
     crate_dark: { side: 1, w: 14, h0: 0, h1: 14, crate: true },
@@ -67,7 +69,7 @@
   // Christmas-light colours (the run currency). Gold is rare and worth 5.
   const BULBS = [["red", "#ff3d57"], ["green", "#5fd068"], ["blue", "#4da3ff"], ["yellow", "#ffd866"], ["orange", "#ff9a3d"], ["pink", "#ff6bd0"]];
   const POOL = [
-    ["crow"],
+    ["crow", "crawler", "stalker"],               // hounds and walkers cross over to the street later in a run
     ["stump", "tendril", "crawler", "wisp", "pod", "stalker"],
   ];
 
@@ -108,7 +110,7 @@
   };
   // Keys and controller buttons are rebindable (Settings); see js/input.js.
   window.addEventListener("keydown", e => {
-    if (e.target && e.target.tagName === "INPUT") return;
+    if (e.target && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA")) return;
     if (INPUT.listening) return;                       // Settings is waiting for a key
     const a = INPUT.keyAction(e.code);
     if (a === "pause" && (G.mode === "play" || G.mode === "pause")) {
@@ -136,9 +138,10 @@
   });
 
   // ---------------- Spawning ----------------
-  function addOb(type, x) {
-    const T = TYPES[type];
-    G.obs.push(Object.assign({ type, x, t: Math.random() * 6, cd: 1.0, dead: false }, T));
+  const TOP_AFTER = { crawler: 1200, stalker: 3500 }; // first appear on the street at 120 m / 350 m
+  function addOb(type, x, side) {
+    const T = TYPES[type]; if (!T) return;
+    G.obs.push(Object.assign({ type, x, t: Math.random() * 6, cd: 1.0, dead: false }, T, side == null ? {} : { side }));
   }
   let groupId = 0;
   function bulb(side, x, h, group, idx) {
@@ -159,9 +162,9 @@
     }
   }
   function typeFor(side, d) {
-    const pool = POOL[side].filter(t => (TYPES[t].after || 0) <= G.dist);
+    const pool = POOL[side].filter(t => ((side === 0 && TOP_AFTER[t]) || TYPES[t].after || 0) <= G.dist);
     const enemies = pool.filter(t => TYPES[t].enemy), rest = pool.filter(t => !TYPES[t].enemy);
-    if (enemies.length && Math.random() < 0.25 + d * 0.25) return pick(enemies);
+    if (enemies.length && (!rest.length || Math.random() < 0.5 + d * 0.3)) return pick(enemies);
     return pick(rest);
   }
   // ---------------- Street objects you can jump on ----------------
@@ -248,7 +251,7 @@
   function spawnChunk() {
     const d = Math.min(1, G.dist / 9000);
     const X = W + 16, r = Math.random();
-    const gap = G.speed * rand(0.95, 1.6) * (1 - d * 0.2) + 50;
+    const gap = G.speed * rand(0.8, 1.35) * (1 - d * 0.2) + 45; // denser than before: something every ~1 s
     if (G.stats.skate && G.skateT <= 0) { // a skateboard power-up on your side
       G.skateT = rand(BAL.skate.every[0], BAL.skate.every[1]);
       G.picks.push({ kind: "skate", side: P.side, x: X + 30, h: 12, taken: false, ph: 0, col: "#ff3d57" });
@@ -267,13 +270,13 @@
     }
     if (r < 0.5) {
       const s = Math.random() < 0.5 ? 0 : 1;
-      addOb(typeFor(s, d), X);
+      addOb(typeFor(s, d), X, s);
       if (Math.random() < 0.35) addLightArc(Math.random() < BAL.lightsDown ? 1 : 0, X + rand(30, 70), pick([1, 2, 3]));
       return gap;
     }
     if (r < 0.78) {
-      addOb(typeFor(0, d), X);
-      addOb(typeFor(1, d), X + rand(60, 110));
+      addOb(typeFor(0, d), X, 0);
+      addOb(typeFor(1, d), X + rand(60, 110), 1);
       return gap + 60;
     }
     const s = Math.random() < 0.5 ? 0 : 1;
@@ -288,7 +291,7 @@
       c.tier = c.heart ? 5 : (c.tier || 3);
       if (c.tier >= 5) { c.w = c.tier >= 10 ? 18 : 16; c.h1 = c.w; } // bigger crate, bigger haul
     } else addLightArc(Math.random() < BAL.lightsDown ? 1 : 0, X, pick([2, 3]));
-    if (G.dist > 400) addOb(typeFor(1 - s, d), X + 50);
+    if (G.dist > 400) addOb(typeFor(1 - s, d), X + 50, 1 - s);
     return gap;
   }
 
@@ -420,7 +423,7 @@
     if (how === "melee" && atk.crit && Math.random() < atk.crit) { amount *= 2; pop(T_("pop.crit"), "#ffd866", at[0], at[1] - 22); }
     o.hp = (o.hp || 1) - amount;
     if (o.hp > 0.001) {
-      o.hitCd = 0.3; o.flash = 0.15; o.x += 14; SFX.thud(); G.shake = 2;
+      o.hitCd = 0.3; o.flash = 0.15; o.x += 14 + G.speed * 0.4; SFX.thud(); G.shake = 2; // room for the 2nd hit at any speed
       burst(at[0], at[1], "#ffffff", 8, 60); pop(T_("pop.tough"), "#ff9fb4", at[0], at[1] - 14);
       return true;
     }
@@ -568,9 +571,9 @@
     for (const o of G.obs) {
       o.t += dt; if (o.hitCd > 0) o.hitCd -= dt; if (o.flash > 0) o.flash -= dt;
       o.x -= dx - (o.vx && !o.dead && playing ? o.vx * dt : 0);
-      if (o.bob) { o.h0 = TYPES[o.type].h0 + Math.sin(o.t * 4) * 6; o.h1 = o.h0 + 7; }
+      if (o.bob) { o.h0 = TYPES[o.type].h0 + Math.sin(o.t * 4) * 3; o.h1 = o.h0 + 7; }
       if (o.type === "crawler" && playing && !o.dead) { // hounds sometimes pounce: roll under or hit them
-        if (!o.leapt && o.x - PX < 78 && o.x > PX + 24) { o.leapt = true; if (Math.random() < 0.5) { o.vh = 175; SFX.spit(); } }
+        if (!o.leapt && o.x - PX < 78 && o.x > PX + 24) { o.leapt = true; if (Math.random() < 0.5) { o.vx *= 1.8; SFX.spit(); } } // a sudden lunge, always on the ground
         if (o.vh || o.h0 > 0) {
           o.h0 = Math.max(0, o.h0 + o.vh * dt); o.vh -= 720 * dt;
           if (o.h0 === 0 && o.vh < 0) o.vh = 0;
@@ -859,13 +862,14 @@
       case "stalker": {
         const f = Math.floor(t * 4) % 2;
         const sk = enemyKey(o, "stalker", "walk", SPR.ART.stalker1 ? ["stalker1", "stalker2"] : null);
-        if (sk) { draw(ctx, sk, x, 0); break; }
+        if (sk) { const sz = SPR.SIZE[sk], k = sz ? 44 / sz[1] : 1; ctx.save(); ctx.translate(x, 0); ctx.scale(k, k); draw(ctx, sk, 0, 0); ctx.restore(); break; }
+        ctx.save(); ctx.translate(x + 7, 0); ctx.scale(1.57, 1.57); ctx.translate(-x - 7, 0); // placeholder: 28 -> 44 px tall
         // placeholder: a tall hunched shape with long arms and red eyes
         R("#0b0610", x + 2, -25, 11, 19); R("#4a3a52", x + 3, -24, 9, 17);          // body
         R("#0b0610", x, -28, 8, 6); R("#5b4a62", x + 1, -27, 6, 4); R("#ff3b3b", x + 1, -26, 1, 1); R("#ff3b3b", x + 4, -26, 1, 1);
         R("#4a3a52", x - 2, -20 + f, 2, 12); R("#4a3a52", x + 12, -20 - f, 2, 12);  // arms
         R("#2f2236", x + 3, -7, 3, 7 - f); R("#2f2236", x + 9, -7, 3, 7 + f - 1);   // legs
-        break; }
+        ctx.restore(); break; }
       case "wisp": draw(ctx, enemyKey(o, "flyer", "fly", ["wisp1", "wisp2"]), x, -o.h0); break;
       case "pod": draw(ctx, enemyKey(o, "pod", "idle", o.t < 0.3 ? ["pod2"] : ["pod1"]), x, 0); break;
       case "crate": case "crate_dark": { // 14 px = 3 lights, 16 px = 5, 18 px (gold glow) = 10

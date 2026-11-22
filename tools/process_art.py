@@ -146,7 +146,7 @@ def player(key, im):
 ENEMY = {  # base: (size by 'h' or 'w', value, hit_w, hit_h, on_ground, outline)
     "crow": ("h", 18, 12, 7, False, LIGHT), "crawl": ("w", 26, 16, 10, True, RIM),
     "wisp": ("h", 18, 10, 7, False, RIM), "pod": ("h", 18, 12, 12, True, RIM),
-    "stalker": ("h", 30, 14, 24, True, RIM),
+    "stalker": ("h", 44, 16, 44, True, RIM),   # twice the player's height
 }
 # new-style enemy frames: <enemy>_<state><n>, e.g. hound_run3, stalker_attack2
 ENEMY2 = {"crow": "crow", "hound": "crawl", "flyer": "wisp", "pod": "pod", "stalker": "stalker"}

@@ -108,5 +108,5 @@
     $("#dbg-err").textContent = errors.map(e => `${e.t} ${e.msg}`).join("\n");
   }
   setInterval(render, 250);
-  window.DEBUG = { log, snapshot, toggle };
+  window.DEBUG = { log, snapshot, toggle, errors };
 })();
