@@ -1,7 +1,7 @@
 # The Upside Down — complete art list (v2)
 
 Everything the game can show, in one list, so you can redo it all and deliver
-it in one go. **135 images: 131 used in the game + 4 reference sheets.**
+it in one go. **128 images: 124 used in the game + 4 reference sheets.**
 Anything you skip keeps its built-in placeholder, so you can also deliver in parts.
 
 ## How to deliver
@@ -52,7 +52,7 @@ Paste the matching block at the start of every prompt.
 
 ---
 
-## 1. Characters (4 classes × 7 frames + 4 reference sheets + 2 projectiles)
+## 1. Characters (4 classes × 6 frames + 4 reference sheets + 2 projectiles)
 
 All four kids must be the **same height and pixel scale**. Upload the
 Fighter's `run1` too when making the other classes' frames.
@@ -66,9 +66,9 @@ Fighter's `run1` too when making the other classes' frames.
 | `rogue_ref` ★ | Same scale as the attached Fighter. Original 12-year-old kid rogue, side view facing right: dark grey zip hoodie with the hood up, black hair poking out, a chunky 1980s walkie-talkie clipped to the chest with its antenna up, black jeans, beat-up canvas high-tops, fingerless gloves, a small flashlight. Sly grin. Three poses: standing, running, striking. |
 | `wizard_ref` ★ | Same scale as the attached Fighter. Original 12-year-old kid wizard, side view facing right: a cape made from a striped bedsheet tied at the neck, a cardboard cone hat with tinfoil stars, round glasses, curly red hair, a knitted sweater, a wand made from a painted stick, a cloth pouch of RPG dice on the belt. Proud expression. Three poses: standing, running, casting. |
 
-### Frames: make these 7 for each class
+### Frames: make these 6 for each class
 
-Replace `<class>` with `fighter`, `ranger`, `rogue` or `wizard` (28 files).
+Replace `<class>` with `fighter`, `ranger`, `rogue` or `wizard` (24 files).
 Start each prompt with: *[SPRITE] Use the attached reference. Same character,
 same palette, same pixel scale. Facing right.*
 
@@ -80,14 +80,13 @@ same palette, same pixel scale. Facing right.*
 | `<class>_jump` | Mid-jump, knees tucked up, one arm raised. |
 | `<class>_roll` | Curled into a tight ball mid-somersault, round silhouette that still reads when rotated. Square image. |
 | `<class>_attack` | See the class line below. |
-| `<class>_block` | See the class line below. |
 
-| Class | `_attack` | `_block` |
-|---|---|---|
-| Fighter | Swinging the baseball bat forward at chest height, bat fully extended to the right, white motion-line pixels. | Holding the trash-can lid up in front of the chest like a shield, knees bent, feet planted. |
-| Ranger | Aiming the slingshot to the right, band pulled back to the cheek. | Crouched behind the skateboard deck held up like a shield. |
-| Rogue | Quick lunge, flashlight thrust forward with a bright white strobe flash at the tip. | Dodging back in a crouch, walkie-talkie raised, crackle of yellow static sparks in front. |
-| Wizard | Wand thrust forward, a glowing violet twenty-sided die flying from its tip. | Bedsheet cape swept in front of the body, a glowing violet rune circle in front of it. |
+| Class | `_attack` |
+|---|---|
+| Fighter | Swinging the baseball bat forward at chest height, bat fully extended to the right, white motion-line pixels. |
+| Ranger | Aiming the slingshot to the right, band pulled back to the cheek. |
+| Rogue | Quick lunge, flashlight thrust forward with a bright white strobe flash at the tip. |
+| Wizard | Wand thrust forward, a glowing violet twenty-sided die flying from its tip. |
 
 ### Projectiles
 
@@ -116,18 +115,15 @@ Enemies face **left**, toward the player. Two frames each; frame 2 uses frame 1 
 
 ---
 
-## 3. Obstacles (6)
+## 3. Obstacles (3)
 
 Upside Down obstacles are drawn **upright**, standing on the ground. The game flips them under the floor.
 
 | Key | Prompt ([SPRITE]) |
 |---|---|
 | `trash` | A dented metal garbage can, lid slightly askew. |
-| `fence` | A short section of white picket fence, 4 pickets, weathered. |
-| `billboard` | A tall narrow image: a red-and-white "LOW CLEARANCE" board hanging at the bottom from two chains that go up out of frame. |
 | `stump` | A rotten tree stump wrapped in dark crimson veins with glowing red cracks. |
 | `tendril` | A very tall, narrow bundle of dark organic vines hanging from above, pulsing crimson tips at the bottom. Tall thin image (about 1:5). |
-| `rift` | A very tall, narrow wall of black stone split by a glowing red crack of energy, red sparks drifting off. Tall thin image (about 1:6). |
 
 ---
 
@@ -150,7 +146,7 @@ Smash a crate with a hit to spill the lights.
 
 ---
 
-## 5. Environment (33)
+## 5. Environment (35)
 
 **Why this fixes the busy background:** the backdrop is now just sky and a
 soft distant silhouette. The street is built from separate pieces that the
@@ -172,7 +168,7 @@ stretches. Every piece uses the **[SCENERY]** block (muted, low contrast).
 | `club` ★ | A small two-storey red-brick 1980s building where a tabletop gaming club meets at night. **Open double door exactly in the centre**, spilling warm light onto stone steps, a red awning over it. Warm-lit windows, one with kids around a table. A sign above the door reads "HELLFIRE CLUB" in plain blocky red neon letters, no logo. A small paper poster of a twenty-sided die by the door. Ground line at the bottom edge. |
 | `club_dark` | The exact building as attached, same size and outline, rotten in a dark mirror dimension: dark purple and crimson bricks, dull red windows, black vines from the roof, dead cracked sign. |
 
-### Buildings (16): one every few blank stretches
+### Buildings (18): one every few blank stretches
 
 Make the normal version first (★), then the `_dark` twin with *"use the
 attached reference: the exact same building, same size and outline, rotten
@@ -190,6 +186,7 @@ background, no street, no sidewalk, no neighbours, ground line at the bottom edg
 | `set_arcade` ★ / `set_arcade_dark` | A small 1980s video arcade with a neon sign reading "ARCADE", glass front with the glow of arcade cabinets inside. |
 | `set_diner` ★ / `set_diner_dark` | A low chrome roadside diner with a strip of windows and a plain sign reading "DINER". Wide image. |
 | `set_gas` ★ / `set_gas_dark` | A small gas station: a flat canopy on two pillars over two old pumps, a tall sign pole reading "GAS". |
+| `set_camper` ★ / `set_camper_dark` | A small 1970s camper trailer on blocks, with a couple of bikes leaning against it. Wide image. |
 
 ### Props (12): dotted along the blank stretches
 
@@ -206,7 +203,7 @@ Same rules as the buildings: normal version ★ first, then `_dark` with the sam
 
 ---
 
-## 6. Menu UI (36)
+## 6. Menu UI (34)
 
 **Frames stretch with 9-slice scaling:** the corners stay sharp and the
 middle stretches. So every frame needs **evenly thick borders and a
@@ -240,13 +237,11 @@ completely flat, empty centre.** The exact ratios matter:
 | `ui_up_battery` | Upgrade icon: a flashlight battery with a lightning bolt. Same style. |
 | `ui_up_magnet` | Upgrade icon: a horseshoe magnet pulling a Christmas-light bulb. Same style. |
 | `ui_up_greed` | Upgrade icon: a red-glowing bulb with dark vines. Same style. |
-| `ui_up_lid` | Upgrade icon: a reinforced trash-can lid shield. Same style. |
 | `ui_up_djump` | Upgrade icon: a sneaker with two upward arrows. Same style. |
 | `ui_up_revive` | Upgrade icon: a heart with angel wings. Same style. |
 | `ui_touch_jump` | Phone button icon: a chunky up arrow, white with gold outline. |
 | `ui_touch_roll` | Phone button icon: a curved arrow circling a ball. Same style. |
 | `ui_touch_attack` | Phone button icon: a bat mid-swing with motion lines. Same style. |
-| `ui_touch_block` | Phone button icon: a trash-can lid shield. Same style. |
 | `ui_touch_flip` | Phone button icon: two curved arrows, gold above a line and red below it. Same style. |
 
 ---
@@ -272,14 +267,14 @@ Drawn very small, so keep shapes **bold and simple**: strong outline, 3–4 colo
 
 | Section | Files |
 |---|---|
-| 1. Characters | 4 reference sheets + 28 frames + 2 projectiles |
+| 1. Characters | 4 reference sheets + 24 frames + 2 projectiles |
 | 2. Enemies | 9 |
-| 3. Obstacles | 6 |
+| 3. Obstacles | 3 |
 | 4. Christmas lights | 9 |
-| 5. Environment | 3 + 2 + 16 + 12 = 33 |
-| 6. Menu UI | 36 |
+| 5. Environment | 3 + 2 + 18 + 12 = 35 |
+| 6. Menu UI | 34 |
 | 7. HUD | 8 |
-| **Total** | **135 (131 in the game)** |
+| **Total** | **128 (124 in the game)** |
 
 Ranger, Rogue and Wizard are still locked in the game. Their art goes in now
 and shows on the character sheet as soon as each class is unlocked.

@@ -7,7 +7,7 @@
   const SCALE = 3;         // canvas = 3 device pixels per game pixel (crisp art)
   const PX = 64;           // player's fixed screen x
   // Run speed: starts gentle and builds up slowly (game px per second)
-  const SPEED_START = 95, SPEED_GAIN = 1.8, SPEED_MAX = 360;
+  const SPEED_START = 70, SPEED_GAIN = 1.2, SPEED_MAX = 320;
   const GRAV = 980, FLIP_T = 0.26, STAND_H = 15, ROLL_H = 9;
   const CLUB_X = 10;       // Hellfire Club building: left edge at run start
 
@@ -24,10 +24,7 @@
   // h0..h1 = vertical extent measured AWAY from the floor surface.
   const TYPES = {
     // normal world
-    cone:      { side: 0, w: 9,  h0: 0,  h1: 11 },
     trash:     { side: 0, w: 11, h0: 0,  h1: 16 },
-    fence:     { side: 0, w: 18, h0: 0,  h1: 19, after: 400 },
-    billboard: { side: 0, w: 22, h0: 12, h1: 108, after: 500 },
     crow:      { side: 0, w: 12, h0: 15, h1: 22, enemy: true, vx: -45, after: 250 },
     // upside down
     stump:     { side: 1, w: 12, h0: 0,  h1: 12 },
@@ -35,7 +32,6 @@
     crawler:   { side: 1, w: 16, h0: 0,  h1: 10, enemy: true, vx: -60, after: 250 },
     wisp:      { side: 1, w: 10, h0: 14, h1: 21, enemy: true, vx: -25, bob: true, after: 700 },
     pod:       { side: 1, w: 12, h0: 0,  h1: 12, enemy: true, shooter: true, after: 600 },
-    rift:      { side: 1, w: 14, h0: 0,  h1: 107, wall: true },
     // light crates: smash with a hit to spill Christmas lights
     crate:      { side: 0, w: 14, h0: 0, h1: 14, crate: true },
     crate_dark: { side: 1, w: 14, h0: 0, h1: 14, crate: true },
@@ -43,7 +39,7 @@
   // Christmas-light colours (the run currency). Gold is rare and worth 5.
   const BULBS = [["red", "#ff3d57"], ["green", "#5fd068"], ["blue", "#4da3ff"], ["yellow", "#ffd866"], ["orange", "#ff9a3d"], ["pink", "#ff6bd0"]];
   const POOL = [
-    ["trash", "fence", "billboard", "crow"],
+    ["trash", "crow"],
     ["stump", "tendril", "crawler", "wisp", "pod"],
   ];
 
@@ -76,19 +72,18 @@
   const DUST = Array.from({ length: 14 }, () => ({ x: rand(0, W), y: rand(10, FT - 4), v: rand(2, 6) }));
 
   // ---------------- Input ----------------
-  const ACT = { jump: "bufJump", flip: "bufFlip", roll: "bufRoll", attack: "bufAtk", block: "bufBlk" };
+  const ACT = { jump: "bufJump", flip: "bufFlip", roll: "bufRoll", attack: "bufAtk" };
   G.press = function (a) {
     SFX.unlock();
     if (G.mode !== "play" || P.dead) return;
     if (ACT[a]) P[ACT[a]] = a === "flip" ? 0.3 : 0.15;
   };
-  // Arrows + Space (WASD as alternates)
+  // ↑ jump, ↓ roll, Space attack, F flip (W/S work as ↑/↓)
   const KEYS = {
     ArrowUp: "jump", KeyW: "jump",
     ArrowDown: "roll", KeyS: "roll",
-    ArrowRight: "attack", KeyD: "attack",
-    ArrowLeft: "block", KeyA: "block",
-    Space: "flip",
+    Space: "attack",
+    KeyF: "flip",
   };
   window.addEventListener("keydown", e => {
     if (e.target && e.target.tagName === "INPUT") return;
@@ -104,7 +99,7 @@
     if (P.side !== 1) return a;
     return a === "jump" ? "roll" : a === "roll" ? "jump" : a;
   }
-  // swipes on the canvas: up=jump, down=roll, left=block, right=attack, tap=flip
+  // swipes on the canvas: up=jump, down=roll, sideways=attack, tap=flip
   let sw = null;
   cv.addEventListener("pointerdown", e => { sw = { x: e.clientX, y: e.clientY }; });
   cv.addEventListener("pointerup", e => {
@@ -112,13 +107,13 @@
     const dx = e.clientX - sw.x, dy = e.clientY - sw.y; sw = null;
     if (Math.hypot(dx, dy) < 24) return G.press("flip");
     if (Math.abs(dy) > Math.abs(dx)) G.press(flipVertical(dy < 0 ? "jump" : "roll"));
-    else G.press(dx < 0 ? "block" : "attack");
+    else G.press("attack");
   });
 
   // ---------------- Spawning ----------------
   function addOb(type, x) {
     const T = TYPES[type];
-    G.obs.push(Object.assign({ type, x, t: Math.random() * 6, cd: 0.4, dead: false }, T));
+    G.obs.push(Object.assign({ type, x, t: Math.random() * 6, cd: 1.0, dead: false }, T));
   }
   let groupId = 0;
   function bulb(side, x, h, group, idx) {
@@ -126,14 +121,8 @@
     const [name, col] = gold ? ["gold", "#fff3b0"] : BULBS[Math.floor(Math.random() * BULBS.length)];
     return { side, x, h, kind: "bulb", name, col, gold, group, idx, taken: false, fly: false, vx: 0, vh: 0, ph: Math.random() * 6 };
   }
-  // a short string of lights hanging in a gentle curve
-  function addLights(side, x, n) {
-    const g = ++groupId;
-    for (let i = 0; i < n; i++) {
-      const k = n > 1 ? i / (n - 1) : 0.5;
-      G.picks.push(bulb(side, x + i * 12, 10 + Math.sin(k * Math.PI) * 14 + (i % 2) * 2, g, i));
-    }
-  }
+  // one Christmas light floating at a reachable height
+  function addLight(side, x) { G.picks.push(bulb(side, x, rand(6, 24), null, 0)); }
   function typeFor(side, d) {
     const pool = POOL[side].filter(t => (TYPES[t].after || 0) <= G.dist);
     const enemies = pool.filter(t => TYPES[t].enemy), rest = pool.filter(t => !TYPES[t].enemy);
@@ -144,16 +133,10 @@
     const d = Math.min(1, G.dist / 9000);
     const X = W + 16, r = Math.random();
     const gap = G.speed * rand(0.95, 1.6) * (1 - d * 0.2) + 50;
-    if (G.dist > 900 && r < 0.12 + d * 0.12) {   // wall: flip to get past
-      const s = 1; // walls only appear in the Upside Down
-      addOb("rift", X + 90);
-      if (Math.random() < 0.5) addLights(1 - s, X + 60, 5);
-      return gap + 140;
-    }
     if (r < 0.5) {
       const s = Math.random() < 0.5 ? 0 : 1;
       addOb(typeFor(s, d), X);
-      if (Math.random() < 0.22) addLights(Math.random() < 0.5 ? s : 1 - s, X - 6, 3 + Math.floor(Math.random() * 3));
+      if (Math.random() < 0.35) addLight(Math.random() < 0.5 ? s : 1 - s, X + rand(-40, 40));
       return gap;
     }
     if (r < 0.78) {
@@ -162,8 +145,10 @@
       return gap + 60;
     }
     const s = Math.random() < 0.5 ? 0 : 1;
-    if (Math.random() < 0.45) addOb(s ? "crate_dark" : "crate", X);      // crate full of lights
-    else addLights(s, X, 4 + Math.floor(Math.random() * 3));
+    if (Math.random() < 0.55) { // a crate: lights inside, or now and then a heart
+      addOb(s ? "crate_dark" : "crate", X);
+      G.obs[G.obs.length - 1].heart = Math.random() < 0.25;
+    } else addLight(s, X);
     if (G.dist > 400) addOb(typeFor(1 - s, d), X + 50);
     return gap;
   }
@@ -236,12 +221,17 @@
     burst(o.x + 7, sy(o.side, 7), "#a8743a", 14, 70);
     if (!smashed) { SFX.thud(); return; }
     SFX.crate(); G.crates = (G.crates || 0) + 1;
-    const n = 6 + Math.floor(Math.random() * 4), g = ++groupId;
-    for (let i = 0; i < n; i++) {
-      const b = bulb(o.side, o.x + 7, 8, null, i);
-      b.fly = true; b.vx = rand(50, 150); b.vh = rand(120, 200);
-      G.picks.push(b);
+    const max = G.stats.hearts;
+    if (o.heart && G.hearts < max) { // heal
+      G.hearts++; SFX.revive(); pop("+1 HEART", "#ff3d57", o.x + 7, sy(o.side, 26));
+      G.onLight && G.onLight("#ff3d57");
+      return;
     }
+    // lights go straight into your count (a heart crate at full health gives lights too)
+    const n = (o.heart ? 5 : 4 + Math.floor(Math.random() * 4)) * (o.side ? 2 : 1);
+    G.shards += n; G.score += 10 * n * G.fate.f.score; SFX.gold();
+    pop("+" + n + " LIGHTS", "#ffd866", o.x + 7, sy(o.side, 26));
+    G.onLight && G.onLight("#ffd866");
   }
   function parry(o, viaShot) {
     o.dead = true; G.parries++;
@@ -256,7 +246,7 @@
   function updatePlayer(dt) {
     const st = G.stats || SAVE.runStats();
     ["bufJump", "bufFlip", "bufRoll", "bufAtk", "bufBlk", "inv", "atkCd", "blkCd", "flipCd", "flipLock"].forEach(k => P[k] = Math.max(0, P[k] - dt));
-    P.runT += dt * Math.max(G.speed, 0) / 150;
+    P.runT += dt; // run cycle at a steady pace, whatever the speed
 
     if (P.flip > 0) {
       P.flip -= dt;
@@ -288,7 +278,6 @@
         G.pshots.push({ side: P.side, x: PX + 16, h: P.h + 11, dead: false });
       } else { P.atk = 0.2; P.atkCd = 0.32; SFX.swing(); }
     }
-    if (P.bufBlk > 0 && P.blkCd <= 0 && P.atk <= 0) { P.blk = st.block; P.blkAge = 0; P.blkCd = st.block + 0.25; P.roll = 0; P.bufBlk = 0; SFX.lid(); }
     P.atk = Math.max(0, P.atk - dt);
     P.roll = Math.max(0, P.roll - dt);
     P.blk = Math.max(0, P.blk - dt); P.blkAge += dt;
@@ -339,7 +328,7 @@
       if (o.shooter) {
         o.cd -= dt;
         if (o.cd <= 0 && o.x < W - 10 && o.x > PX + 50) {
-          o.cd = 1.7; o.t = 0;
+          o.cd = 3.2; o.t = 0; // seconds between spore shots
           G.shots.push({ side: o.side, x: o.x - 3, h: 5, ref: false, dead: false });
           SFX.spit();
         }
@@ -358,8 +347,7 @@
         continue;
       }
       if (o.x < px1 && o.x + o.w > px0 && o.h0 < ph1 && o.h1 > ph0) {
-        if (o.enemy && P.blk > 0) parry(o, false);
-        else hurt();
+        hurt();
       }
     }
     G.obs = G.obs.filter(o => o.x + o.w > -30 && !o.dead);
@@ -374,16 +362,19 @@
         }
       } else s.x -= dx + 120 * dt;
       if (!playing || s.ref || s.dead || s.side !== P.side || P.flip > 0) continue;
-      if (s.x < px1 + 2 && s.x + 4 > px0 && s.h < ph1 && s.h + 4 > ph0) {
-        if (P.blk > 0) { s.ref = true; G.parries++; SFX.block(); pop("REFLECT", "#5fd0c8"); }
-        else { s.dead = true; hurt(); }
+      // a bat swing knocks spore shots back
+      if (P.atk > 0 && !ranged() && s.x < PX + 9 + st.reach && s.x + 4 > PX + 6 && s.h < P.h + 24) {
+        s.ref = true; G.parries++; SFX.block(); pop("REFLECT", "#5fd0c8"); continue;
       }
+      if (s.x < px1 + 2 && s.x + 4 > px0 && s.h < ph1 && s.h + 4 > ph0) { s.dead = true; hurt(); }
     }
     G.shots = G.shots.filter(s => !s.dead && s.x > -10 && s.x < W + 20);
 
     // the Ranger's marbles: first enemy or crate on that side gets hit
     for (const m of G.pshots) {
       m.x += 330 * dt;
+      for (const s2 of G.shots) if (!s2.ref && !s2.dead && s2.side === m.side && Math.abs(s2.x - m.x) < 6) { s2.dead = true; m.dead = true; burst(m.x, sy(m.side, s2.h + 2), "#ff6bd0", 8, 50); }
+      if (m.dead) continue;
       for (const o of G.obs) {
         if (o.dead || o.side !== m.side || !(o.enemy || o.crate)) continue;
         if (m.x + 6 > o.x && m.x < o.x + o.w && o.h0 < m.h + 10 && o.h1 > m.h - 12) { // same lane as the runner
@@ -417,6 +408,7 @@
         const val = (k.gold ? 5 : 1) * (k.side ? 2 : 1) + (k.side ? st.sporeBonus : 0);
         G.shards += val; G.score += 10 * val * G.fate.f.score;
         (k.gold ? SFX.gold : SFX.light)();
+        G.onLight && G.onLight(k.col);
         burst(k.x, sy(k.side, k.h), k.col, 6, 40);
         if (val > 1) pop("+" + val, k.col, k.x, sy(k.side, k.h + 10));
       }
@@ -591,8 +583,8 @@
         R("#1a1124", x - 1, -15, 16, 15); R(dk ? "#4a2a3a" : "#a8743a", x, -14, 14, 14);
         R(dk ? "#2f1a26" : "#7a5228", x, -10, 14, 1); R(dk ? "#2f1a26" : "#7a5228", x, -5, 14, 1);
         R(dk ? "#2f1a26" : "#7a5228", x + 3, -14, 1, 14); R(dk ? "#2f1a26" : "#7a5228", x + 10, -14, 1, 14);
-        const c = BULBS[Math.floor(t * 2) % BULBS.length][1];
-        R(c, x + 5, -9, 2, 2); R(BULBS[(Math.floor(t * 2) + 3) % BULBS.length][1], x + 7, -4, 2, 2);
+        if (!o.heart) { const c = BULBS[Math.floor(t * 2) % BULBS.length][1];
+          R(c, x + 5, -9, 2, 2); R(BULBS[(Math.floor(t * 2) + 3) % BULBS.length][1], x + 7, -4, 2, 2); }
         break; }
       case "rift": {
         const p = 0.6 + Math.sin(t * 10) * 0.4;
@@ -673,7 +665,7 @@
         R("#7d7f8c", PX + 13, -h - 12, 1, 7); R("#1a1124", PX + 15, -h - 10, 1, 3);
       }
     } else {
-      const fr = P.atk > 0 ? "attack" : idle ? (SPR.ART[pk("idle")] ? "idle" : "run2") : !P.grounded && P.flip <= 0 ? "jump" : Math.floor(P.runT * 10) % 2 ? "run1" : "run2";
+      const fr = P.atk > 0 ? "attack" : idle ? (SPR.ART[pk("idle")] ? "idle" : "run2") : !P.grounded && P.flip <= 0 ? "jump" : Math.floor(P.runT * 8) % 2 ? "run1" : "run2";
       const key = pk(fr);
       draw(ctx, key, PX, -h - (idle && fr !== "idle" && Math.floor(G.t * 2) % 2 ? 1 : 0));
       if (P.atk > 0 && !ranged() && !SPR.ART[pk("attack")]) {
@@ -757,7 +749,14 @@
       drawClub(side === 1);
       drawWires(side);
       for (const k of G.picks) if (k.side === side) drawPick(k);
-      for (const o of G.obs) if (o.side === side && !o.dead) drawOb(o);
+      for (const o of G.obs) if (o.side === side && !o.dead) {
+        drawOb(o);
+        if (o.heart) { // heart crate: a beating heart on the front, always upright
+          ctx.save(); ctx.translate(o.x + 7, -7); if (side) ctx.scale(1, -1);
+          ctx.globalAlpha = 0.3 + Math.sin(G.t * 6) * 0.15; R("#ff3d57", -6, -6, 12, 11); ctx.globalAlpha = 1;
+          heart(-4.5, -4, true); ctx.restore();
+        }
+      }
       for (const s of G.shots) if (s.side === side) drawShot(s);
       for (const m of G.pshots) if (m.side === side) {
         const img = ART("ranger_shot"), y = -m.h - 3;

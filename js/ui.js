@@ -83,7 +83,14 @@
   }
   $("#fs").addEventListener("click", toggleFull);
   ["fullscreenchange", "webkitfullscreenchange"].forEach(ev => document.addEventListener(ev, () => { $("#fs").textContent = fsEl() ? "Exit full screen" : "Full screen"; }));
-  addEventListener("keydown", e => { if (e.code === "KeyF" && e.target.tagName !== "INPUT") toggleFull(); });
+  // (F is the flip key now; full screen is the menu button)
+
+  // ---- the game's border glows in the colour of each light you collect ----
+  const frame = $("#frame");
+  GAME.onLight = col => {
+    frame.style.setProperty("--glow", col);
+    frame.classList.remove("glow"); void frame.offsetWidth; frame.classList.add("glow");
+  };
 
   // Space at the hub or after a run = start
   window.addEventListener("keydown", e => {
@@ -136,7 +143,7 @@
     const r = SAVE.runStats(s);
     const rows = [
       ["Hearts", r.hearts], SAVE.CLASSES.find(c => c.id === s.cls).ranged ? ["Slingshot", "full screen"] : ["Bat reach", r.reach + " px"], ["Jump", Math.round(r.jumpV / 3.2) + "%"],
-      ["Block", r.block.toFixed(2) + " s"], ["Dread time", r.battery.toFixed(1) + " s"],
+      ["Dread time", r.battery.toFixed(1) + " s"],
       ["Magnet", r.magnet + " px"], ["Light bonus", "1 per " + r.bonusDiv + " pts"],
     ];
     $("#derived").innerHTML = rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("");

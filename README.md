@@ -24,31 +24,28 @@ Plain HTML + JavaScript. No build step, no dependencies.
 |---|---|---|
 | Jump (double jump with upgrade) | ↑ | Jump button or swipe up |
 | Roll (duck under things) | ↓ | Roll button or swipe down |
-| Melee hit (bat) | → | Hit button or swipe right |
-| Block (trash-can lid) | ← | Block button or swipe left |
-| Flip to the other side | Space | Flip button or tap |
+| Attack (bat, or the Ranger's slingshot) | Space | Hit button or swipe sideways |
+| Flip to the other side | F | Flip button or tap |
 | Pause | P / Esc | |
-| Full screen | F | Full screen button on the menu |
 
 In the Upside Down you hang under the floor, so ↑ and ↓ swap: ↓ jumps (away
 from the floor) and ↑ rolls. Swipes swap the same way; the touch buttons don't.
-W/A/S/D work as alternates for the arrows. In the air, Roll and Flip do a
-fast-fall first, then trigger on landing.
+W/S work as alternates for ↑/↓. In the air, Roll and Flip do a fast-fall
+first, then trigger on landing. Space also starts a run from the menu. Full
+screen is a button on the menu.
 
-**Block:** blocking an enemy as it touches you parries it (+25 points). Block in
-the first instant and it's a **PERFECT** parry (+50). Blocking a spore shot
-reflects it back, killing whatever it hits. Blocking doesn't stop obstacles.
+A bat swing (or a slingshot marble) also knocks spore shots away.
 
 ## Character sheet (D&D style)
 
 Roll **4d6, drop the lowest** for each ability. You get 3 free rerolls, then
-each reroll costs 10 lights. Pick a class (Fighter for now: STR +2, CON +1;
-Ranger, Rogue and Wizard are placeholders) and a hair and jacket colour.
+each reroll costs 10 lights. Pick a class: Fighter (bat, STR +2, CON +1) or
+Ranger (slingshot, DEX +2, WIS +1). Rogue and Wizard are still locked.
 
 | Ability | In game |
 |---|---|
 | STR | Bat reach |
-| DEX | Jump height and block window |
+| DEX | Jump height |
 | CON | Extra hearts (+1 per +2 modifier) |
 | INT | Bigger light bonus after each run |
 | WIS | Longer in the Upside Down before the Dread throws you out |
@@ -70,16 +67,18 @@ the menu.
 
 - You run automatically, starting slow and speeding up gradually (tune
   `SPEED_START`, `SPEED_GAIN`, `SPEED_MAX` at the top of `js/game.js`).
-- **Obstacles:** low ones you jump, hanging ones you roll under, enemies you
-  hit or parry, spore pods shoot along the ground (block to reflect), and
-  **rifts** block the whole Upside Down, so you have to flip back up.
+- **Obstacles:** low ones you jump (trash cans, stumps), hanging vines you roll
+  under, enemies you hit or avoid. Spore pods shoot along the ground every few
+  seconds: jump them, flip away, or hit the shot back.
 - **The Upside Down** scores at ×2 (more with upgrades) and its lights count
   double. But the **Dread** meter fills while you're down there. When
   it's full you get thrown back up and can't flip again for a moment.
-- **Christmas lights** are the currency. They hang in short strings now and
-  then, or come packed in **crates**: hit a crate to spill its lights (just
-  running into it kicks it over for nothing). Upside Down lights count double,
-  and the rare gold bulb is worth 5. Lights are banked at the end of every run
+- **Christmas lights** are the currency: single bulbs in random colours now
+  and then, and **crates**. Hit a crate and its lights go straight into your
+  count; a crate with a heart on it gives back a heart (or lights if you're at
+  full health). Running into a crate just kicks it over for nothing. Every
+  pickup makes the game's border glow in that light's colour. Upside Down
+  lights count double, and the rare gold bulb is worth 5. Lights are banked at the end of every run
   (plus a bonus of 1 per 250 score, or better with high INT). Spend them on permanent upgrades between runs. That's the roguelike loop.
 
 ## Upgrades
@@ -91,7 +90,6 @@ the menu.
 | Flashlight battery | 4 | +2 s in the Upside Down |
 | Light magnet | 3 | Bigger pickup radius |
 | Dark greed | 3 | +0.5× Upside Down multiplier, +1 per Upside Down light |
-| Sturdier lid | 2 | Block lasts longer |
 | Double jump | 1 | Jump again in mid-air |
 | Second wind | 1 | Survive one fatal hit per run |
 

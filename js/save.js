@@ -4,7 +4,7 @@
   const ABIL = ["STR", "DEX", "CON", "INT", "WIS", "CHA"];
   const ABIL_INFO = {
     STR: "Bat reach",
-    DEX: "Jump height & block window",
+    DEX: "Jump height",
     CON: "Extra hearts",
     INT: "Bigger light bonus after a run",
     WIS: "Longer in the Upside Down",
@@ -37,7 +37,6 @@
     { id: "battery", name: "Flashlight battery", desc: "Stay in the Upside Down 2s longer.",                 costs: [25, 60, 140, 300] },
     { id: "magnet",  name: "Light magnet",       desc: "Pull Christmas lights in from further away.",                  costs: [35, 90, 200] },
     { id: "greed",   name: "Dark greed",         desc: "+0.5x score while upside down, +1 per Upside Down light.", costs: [60, 150, 350] },
-    { id: "lid",     name: "Sturdier lid",       desc: "Hold your block longer.",                            costs: [40, 110] },
     { id: "djump",   name: "Double jump",        desc: "Jump again in mid-air.",                             costs: [150] },
     { id: "revive",  name: "Second wind",        desc: "Once per run, survive a fatal hit.",                 costs: [400] },
   ];
@@ -50,6 +49,8 @@
     catch (e) { return fresh(); }
   }
   const state = load();
+  // block was removed: refund the old "Sturdier lid" upgrade
+  if (state.up.lid) { state.shards += [40, 110].slice(0, state.up.lid).reduce((a, b) => a + b, 0); delete state.up.lid; }
   function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
 
   const lvl = id => state.up[id] || 0;
