@@ -44,9 +44,8 @@
     { id: "battery", name: "Flashlight battery", desc: "Stay in the Upside Down 2s longer.",                 costs: [25, 60, 140, 300] },
     { id: "magnet",  name: "Light magnet",       desc: "Pull Christmas lights in from further away.",                  costs: [35, 90, 200] },
     { id: "greed",   name: "Dark greed",         desc: "+0.5x score while upside down, +1 per Upside Down light.", costs: [60, 150, 350] },
-    { id: "skate",   name: "Skateboard",         desc: "Skateboards show up in runs: ride through everything, invincible.", costs: [80, 180, 350] },
+    { id: "skate",   name: "Better board",       desc: "Skateboard rides last longer: 6 / 8 / 10 s.", costs: [80, 180, 350] },
     { id: "djump",   name: "Double jump",        desc: "Jump again in mid-air.",                             costs: [150] },
-    { id: "revive",  name: "Second wind",        desc: "Once per run, survive a fatal hit.",                 costs: [400] },
   ];
 
   // Abilities are no longer rolled: everyone starts at 10 (+ class bonus) and
@@ -85,7 +84,12 @@
     return out;
   }
 
-  const fresh = () => ({ shards: 0, best: 0, runs: 0, dice: 0, muted: false, music: true, up: {}, sheet: null });
+  // Items: bought in the shop for the next run, one of each at a time, used up when used
+  const ITEMS = [
+    { id: "revive", cost: 60 },   // Second wind: survive one fatal hit
+    { id: "board",  cost: 30 },   // Skateboard: ride on a key press, breaks afterwards
+  ];
+  const fresh = () => ({ shards: 0, best: 0, runs: 0, dice: 0, muted: false, music: true, up: {}, items: {}, sheet: null });
   function load() {
     try { return Object.assign(fresh(), JSON.parse(localStorage.getItem(KEY) || "{}")); }
     catch (e) { return fresh(); }
@@ -93,6 +97,9 @@
   const state = load();
   // block was removed: refund the old "Sturdier lid" upgrade
   if (state.up.lid) { state.shards += [40, 110].slice(0, state.up.lid).reduce((a, b) => a + b, 0); delete state.up.lid; }
+  if (!state.items) state.items = {};
+  // Second wind used to be an upgrade: refund it and hand out one free Second wind item
+  if (state.up.revive) { state.shards += 400; delete state.up.revive; state.items.revive = 1; }
   function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
 
   const lvl = id => state.up[id] || 0;
@@ -124,8 +131,8 @@
       heatMax: 4 + lvl("greed") * 0.5,          // top Heat multiplier in the Upside Down
       sporeBonus: lvl("greed"),
       djump: lvl("djump") > 0,
-      skate: lvl("skate") ? 2 + lvl("skate") * 2 : 0,   // seconds of skateboard: 4 / 6 / 8
-      revive: lvl("revive") > 0,
+      skate: 4 + lvl("skate") * 2,                       // seconds per skateboard ride: 4 / 6 / 8 / 10
+      revive: (state.items.revive || 0) > 0,
     };
   }
 
@@ -137,6 +144,13 @@
     state.shards -= cost; state.up[id] = l + 1; save(); return true;
   }
 
-  window.SAVE = { state, save, lvl, buy, runStats, mod, score, newSheet, fromUpgrades, ABIL_UP,
+  function buyItem(id) {
+    const it = ITEMS.find(x => x.id === id);
+    if (!it || (state.items[id] || 0) >= 1 || state.shards < it.cost) return false;
+    state.shards -= it.cost; state.items[id] = 1; save(); return true;
+  }
+  function useItem(id) { if ((state.items[id] || 0) > 0) { state.items[id] = 0; save(); return true; } return false; }
+
+  window.SAVE = { ITEMS, buyItem, useItem, state, save, lvl, buy, runStats, mod, score, newSheet, fromUpgrades, ABIL_UP,
     openDice, diceOdds, LOOT, UPGRADES, CLASSES, LOOKS, ABIL, ABIL_INFO };
 })();

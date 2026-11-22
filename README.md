@@ -30,6 +30,7 @@ a controller). Defaults:
 | Roll | ↓ | B | Roll button or swipe down |
 | Attack (bat or slingshot) | Space | X | Hit button or swipe sideways |
 | Flip to the other side | F | Y | Flip button or tap |
+| Ride your skateboard (if you bought one) | E | RB | Board button |
 | Pause | Esc | Start | |
 | Report a bug or idea | F8 | | |
 
@@ -59,7 +60,7 @@ its ability by 2, so the sheet levels up as you buy upgrades:
 | Ability | Grows with |
 |---|---|
 | STR | Longer bat |
-| DEX | Double jump, Skateboard |
+| DEX | Double jump, Better board |
 | CON | Extra heart |
 | INT | Dark greed |
 | WIS | Flashlight battery |
@@ -154,13 +155,25 @@ The high score is one number made of three parts, shown after each run:
 - **Crates** about every 20 seconds: small (3 lights), medium (5) or big with
   a gold glow (10); big crates get more common the further you run. One in
   four crates holds a heart instead (lights if you're at full health). Hit
-  a crate to open it; running into it wastes it.
+  a crate to open it; running into it does nothing (it just slides past).
 - **Kills** pay in points only: enemies never drop lights.
 - **Milestones:** every 500 m gives +10 lights.
 - At the end of a run you bank the lights plus a score bonus, and spend them
   on permanent upgrades. That's the roguelike loop.
 
 All of these numbers live in the `BAL` block at the top of `js/game.js`.
+
+## Items (bought before a run)
+
+One of each at a time, in the shop above the upgrades. An item stays until
+you use it.
+
+| Item | Cost | What it does |
+|---|---|---|
+| Second wind | 60 | Survive one fatal hit, used up when it saves you |
+| Skateboard | 30 | Press E (RB) in a run: ride through everything, invincible and faster, for 4 s (more with Better board). Smashes enemies, obstacles and crates; Dread pauses. The board breaks at the end and the kid rolls off |
+
+The game pauses by itself when you switch tabs or windows.
 
 ## Upgrades
 
@@ -171,9 +184,8 @@ All of these numbers live in the `BAL` block at the top of `js/game.js`.
 | Flashlight battery | 4 | +2 s in the Upside Down |
 | Light magnet | 3 | Bigger pickup radius |
 | Dark greed | 3 | +0.5 maximum Heat, +1 per Upside Down light |
-| Skateboard | 3 | Skateboards show up in runs (every 35–60 s): grab one to ride through everything, invincible and faster, for 4 / 6 / 8 s. Smashes enemies, obstacles and crates; Dread pauses |
+| Better board | 3 | Skateboard rides last 6 / 8 / 10 s instead of 4 |
 | Double jump | 1 | Jump again in mid-air |
-| Second wind | 1 | Survive one fatal hit per run |
 
 Tune costs and effects in `js/save.js` (`UPGRADES`, `runStats`).
 

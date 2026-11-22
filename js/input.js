@@ -1,11 +1,11 @@
 // Input: rebindable keyboard + controller (Gamepad API, standard layout).
 // Bindings live in SAVE.state.settings.keys / .pad and are edited in Settings.
 (function () {
-  const ACTIONS = ["jump", "roll", "attack", "flip", "pause"];
+  const ACTIONS = ["jump", "roll", "attack", "flip", "board", "pause"];
   // one key and one button per action; pause is fixed to Esc / Start (also "back" in menus)
-  const DEFAULT_KEYS = { jump: ["ArrowUp"], roll: ["ArrowDown"], attack: ["Space"], flip: ["KeyF"], pause: ["Escape"] };
+  const DEFAULT_KEYS = { jump: ["ArrowUp"], roll: ["ArrowDown"], attack: ["Space"], flip: ["KeyF"], board: ["KeyE"], pause: ["Escape"] };
   // standard gamepad: 0 A, 1 B, 2 X, 3 Y, 4 LB, 5 RB, 6 LT, 7 RT, 8 Back, 9 Start, 12-15 D-pad
-  const DEFAULT_PAD = { jump: [0], roll: [1], attack: [2], flip: [3], pause: [9] };
+  const DEFAULT_PAD = { jump: [0], roll: [1], attack: [2], flip: [3], board: [5], pause: [9] };
   const FIXED = ["pause"];
   const PAD_NAMES = ["A", "B", "X", "Y", "LB", "RB", "LT", "RT", "Back", "Start", "L-stick", "R-stick", "D-pad ↑", "D-pad ↓", "D-pad ←", "D-pad →", "Home"];
   const KEY_NAMES = { ArrowUp: "↑", ArrowDown: "↓", ArrowLeft: "←", ArrowRight: "→", Space: "Space", Escape: "Esc",

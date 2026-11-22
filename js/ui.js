@@ -235,6 +235,12 @@
   // ---- upgrades ----
   function renderUpgrades() {
     document.querySelectorAll(".bank-n").forEach(n => n.textContent = st.shards);
+    $("#item-list").innerHTML = SAVE.ITEMS.map(it => {
+      const have = (st.items[it.id] || 0) > 0, uic = SPR.ART["ui_up_" + (it.id === "board" ? "skate" : it.id)];
+      const d = t("item." + it.id + ".d", { key: INPUT.label("board"), s: SAVE.runStats().skate });
+      return `<div class="row${uic ? " has-ic" : ""}">${uic ? `<img class="uic" src="${uic.src}" alt="">` : ""}<div><h3>${esc(t("item." + it.id))}</h3><p>${esc(d)}</p></div>
+        <button class="btn tiny${have ? "" : " primary"}" data-item="${it.id}" ${have || st.shards < it.cost ? "disabled" : ""}>${have ? esc(t("item.ready")) : it.cost + ' <i class="bulb"></i>'}</button></div>`;
+    }).join("");
     $("#up-list").innerHTML = SAVE.UPGRADES.map(u => {
       const l = SAVE.lvl(u.id), max = u.costs.length, done = l >= max, cost = u.costs[l];
       const pips = u.costs.map((_, i) => `<i class="${i < l ? "on" : ""}"></i>`).join("");
@@ -243,6 +249,10 @@
         <button class="btn tiny${done ? "" : " primary"}" data-buy="${u.id}" ${done || st.shards < cost ? "disabled" : ""}>${done ? esc(t("up.maxed")) : cost + ' <i class="bulb"></i>'}</button></div>`;
     }).join("");
   }
+  $("#item-list").addEventListener("click", e => {
+    const b = e.target.closest("[data-item]"); if (!b) return;
+    if (SAVE.buyItem(b.dataset.item)) { SFX.buy(); renderUpgrades(); }
+  });
   $("#up-list").addEventListener("click", e => {
     const b = e.target.closest("[data-buy]"); if (!b) return;
     if (SAVE.buy(b.dataset.buy)) { SFX.buy(); renderUpgrades(); }

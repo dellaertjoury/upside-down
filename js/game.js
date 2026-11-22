@@ -94,7 +94,7 @@
   function resetPlayer() {
     Object.assign(P, { side: 0, h: 0, vh: 0, grounded: true, jumps: 0, roll: 0, atk: 0, atkCd: 0,
       blk: 0, blkCd: 0, blkAge: 0, flip: 0, switched: false, flipCd: 0, flipLock: 0, inv: 0, runT: 0,
-      bufJump: 0, bufFlip: 0, bufRoll: 0, bufAtk: 0, bufBlk: 0, dead: false, die: null });
+      bufJump: 0, bufFlip: 0, bufRoll: 0, bufAtk: 0, bufBlk: 0, bufBoard: 0, dead: false, die: null });
   }
   resetPlayer();
 
@@ -102,7 +102,7 @@
   const DUST = Array.from({ length: 14 }, () => ({ x: rand(0, W), y: rand(10, FT - 4), v: rand(2, 6) }));
 
   // ---------------- Input ----------------
-  const ACT = { jump: "bufJump", flip: "bufFlip", roll: "bufRoll", attack: "bufAtk" };
+  const ACT = { jump: "bufJump", flip: "bufFlip", roll: "bufRoll", attack: "bufAtk", board: "bufBoard" };
   G.press = function (a) {
     SFX.unlock();
     if (G.mode !== "play" || P.dead) return;
@@ -253,7 +253,7 @@
     const d = Math.min(1, G.dist / 9000);
     const X = W + 16, r = Math.random();
     const gap = G.speed * rand(0.8, 1.35) * (1 - d * 0.2) + 45; // denser than before: something every ~1 s
-    if (G.stats.skate && G.skateT <= 0) { // a skateboard power-up on your side
+    if (false && G.stats.skate && G.skateT <= 0) { // (old) skateboard pickups: the board is now a bought item
       G.skateT = rand(BAL.skate.every[0], BAL.skate.every[1]);
       G.picks.push({ kind: "skate", side: P.side, x: X + 30, h: 12, taken: false, ph: 0, col: "#ff3d57" });
     }
@@ -305,13 +305,16 @@
       sc: { dist: 0, combat: 0, lights: 0 }, crateT: rand(8, 12), platT: rand(6, 10), nextMile: BAL.milestoneEvery,
       haul: { dist: 0, combat: 0, lights: 0, n: 0 }, dice: 0, diceT: rand(BAL.dice.first[0], BAL.dice.first[1]), udT: 0, heat: 1, banked: 0, bestHaul: 0, shieldT: 0, skateT: rand(8, 12),   // first skateboard early, so you meet it in every run
       obs: [], picks: [], parts: [], shots: [], pshots: [], pops: [], shake: 0, flash: 0,
-      hearts: G.stats.hearts + f.hearts, reviveLeft: G.stats.revive, dread: 0, overT: 0,
+      hearts: G.stats.hearts + f.hearts, reviveLeft: G.stats.revive, board: (SAVE.state.items.board || 0) > 0, dread: 0, overT: 0,
       fate: { roll: 0, f, t: 99 } });
     G.scroll0 = G.scroll; SCN.reset(); G.crateHint = false;
     SFX.music.setMode("play");
     resetPlayer();
   };
   G.pause = () => { if (G.mode === "play") { G.mode = "pause"; SFX.music.setMode("pause"); G.onPause && G.onPause(); } };
+  // tabbed out / window lost focus: pause
+  document.addEventListener("visibilitychange", () => { if (document.hidden) G.pause(); });
+  window.addEventListener("blur", () => G.pause());
   G.resume = () => { if (G.mode === "pause") { G.mode = "play"; SFX.music.setMode(P.side ? "down" : "play"); last = performance.now(); G.onResume && G.onResume(); } }; // the UI closes its menus
   G.toHub = () => { if (SFX.music.mode !== "off") SFX.music.setMode("hub"); G.scroll0 = G.scroll; SCN.reset(); G.mode = "attract"; G.obs = []; G.picks = []; G.shots = []; G.pshots = []; G.pops = []; G.dist = 0; G.speed = 0; G.fate = null; resetPlayer(); };
 
@@ -349,7 +352,7 @@
     burst(PX + 6, sy(P.side, P.h + 8), "#ff3d57", 14);
     if (G.hearts <= 0) {
       if (G.reviveLeft) {
-        G.reviveLeft = false; G.hearts = 1; P.inv = 2.2; SFX.revive(); G.flash = 0.5; G.flashCol = "#5fd0c8";
+        G.reviveLeft = false; SAVE.useItem("revive"); G.hearts = 1; P.inv = 2.2; SFX.revive(); G.flash = 0.5; G.flashCol = "#5fd0c8";
         G.obs = G.obs.filter(o => o.x > PX + 140); G.shots = [];
         pop(T_("pop.wind"), "#5fd0c8");
       } else return gameOver();
@@ -474,6 +477,13 @@
       if (P.grounded) { if (P.roll <= 0) SFX.roll(); P.roll = 0.5; P.blk = 0; P.bufRoll = 0; }
       else P.vh = Math.min(P.vh, -480);
     }
+    if (P.bufBoard > 0) { // ride the skateboard you bought
+      P.bufBoard = 0;
+      if (G.board && !(P.skate > 0) && G.mode === "play") {
+        G.board = false; SAVE.useItem("board");
+        P.skate = st.skate; P.roll = 0; SFX.power(); pop(T_("pop.skate"), "#ffd866"); G.flash = 0.2; G.flashCol = "#ffffff";
+      }
+    }
     if (P.bufAtk > 0 && P.atkCd <= 0) {
       P.blk = 0; P.bufAtk = 0;
       const atk = attackCfg();
@@ -555,7 +565,11 @@
         P.skate -= dt;
         if (Math.random() < 0.5) G.parts.push({ x: PX - 2, y: sy(P.side, P.h + rand(2, 14)), vx: -rand(40, 90), vy: rand(-10, 10), life: 0.35, col: BULBS[Math.floor(Math.random() * 6)][1], s: 1 });
         if (Math.floor(G.t * 8) !== Math.floor((G.t - dt) * 8)) G.onLight && G.onLight(BULBS[Math.floor(G.t * 8) % 6][1]);
-        if (P.skate <= 0) { P.skate = 0; P.inv = 1; }
+        if (P.skate <= 0) { // the board snaps: bits fly, the kid rolls off
+          P.skate = 0; P.inv = 1; P.roll = 0.5; P.atk = 0; SFX.crate(); G.shake = 3;
+          burst(PX + 4, sy(P.side, P.h + 2), "#ff3d57", 10, 90); burst(PX + 8, sy(P.side, P.h + 2), "#ffd866", 6, 70);
+          pop(T_("pop.boardBroke"), "#ff9fb4");
+        }
       }
       if (G.dist / 10 >= G.nextMile) { // distance milestone(s): a handful of lights
         let m = 0; while (G.dist / 10 >= G.nextMile) { G.nextMile += BAL.milestoneEvery; m++; }
@@ -600,8 +614,7 @@
       }
       if (o.crate) { // smash with a hit for lights; running into it just kicks it over
         if (P.atk > 0 && !ranged() && o.x < PX + 9 + st.reach && o.x + o.w > PX + 6 && Math.abs(P.h - o.h0) < 18) { breakCrate(o, true); continue; }
-        if (o.x < px1 && o.x + o.w > px0 && o.h1 > ph0 && o.h0 < ph1) breakCrate(o, false);
-        else if (!G.crateHint && o.x < PX + 70) { G.crateHint = true; pop(T_("pop.crate"), "#ffd866", PX + 70, sy(o.side, 30)); }
+        if (!G.crateHint && o.x < PX + 70 && o.x > px1) { G.crateHint = true; pop(T_("pop.crate"), "#ffd866", PX + 70, sy(o.side, 30)); }
         continue;
       }
       // bat hit
@@ -1152,6 +1165,10 @@
       const ok = G.shieldT <= 0;
       R("#1a1124", hx, 6, 9, 9); R(ok ? "#c9d1dc" : "#4c4e5a", hx + 1, 7, 7, 7); R(ok ? "#9a9caa" : "#3b3446", hx + 3, 9, 3, 3);
       if (!ok) R("#5fd0c8", hx, 16, Math.round(9 * (1 - G.shieldT / perk().shield)), 1);
+    }
+    if (perk().shield) hx += 13;
+    if (G.board && !(P.skate > 0)) { // the skateboard you bought, with its key
+      drawBoard(hx, 9, 12); text(INPUT.label("board"), hx + 15, 6, "#ffd866");
     }
     text(String(Math.floor(G.score)).padStart(6, "0"), W - 6, 6, "#ffd866", "right");
     text(T_("hud.hi") + " " + String(Math.max(SAVE.state.best, Math.floor(G.score))).padStart(6, "0"), W - 64, 6, "#f3e9dc", "right");

@@ -311,3 +311,8 @@ body.has-ui-panel .rep-wrap{border:24px solid transparent;border-image:var(--ui-
 .rep-wrap .ph{width:100%}
 .bind-fixed{display:block;text-align:center;padding:6px;color:var(--muted);font-size:clamp(9px,.95vw,13px)}
 .binds{max-width:620px}
+
+.shop-h{margin:4px 0 -4px;width:min(96%,1100px);text-align:left;color:var(--gold);font-size:clamp(11px,1.2vw,15px)}
+#p-upgrades .list.items{max-height:none;overflow:visible}
+#p-upgrades .list:not(.items){max-height:48%}
+.tg button[data-k=board]{font-size:.8em}
