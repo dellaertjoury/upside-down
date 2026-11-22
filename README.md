@@ -20,16 +20,20 @@ Plain HTML + JavaScript. No build step, no dependencies.
 
 ## Controls
 
-Every key and controller button can be changed in **Settings → Controls**
-(two keyboard keys and two controller buttons per action). Defaults:
+Jump, roll, attack and flip each have one key and one controller button, and
+you can change them in **Settings → Controls**. Pause is always Esc (Start on
+a controller). Defaults:
 
 | Action | Keyboard | Controller | Touch |
 |---|---|---|---|
-| Jump | ↑ / W | A / D-pad ↑ | Jump button or swipe up |
-| Roll | ↓ / S | B / D-pad ↓ | Roll button or swipe down |
-| Attack (bat or slingshot) | Space | X / RT | Hit button or swipe sideways |
-| Flip to the other side | F | Y / RB | Flip button or tap |
-| Pause | P / Esc | Start | |
+| Jump | ↑ | A | Jump button or swipe up |
+| Roll | ↓ | B | Roll button or swipe down |
+| Attack (bat or slingshot) | Space | X | Hit button or swipe sideways |
+| Flip to the other side | F | Y | Flip button or tap |
+| Pause | Esc | Start | |
+| Report a bug or idea | F8 | | |
+
+The mouse only works in the menus, not in the game.
 
 The controls are the same in the Upside Down: ↑ jumps away from the floor,
 ↓ rolls. In the air, roll and flip do a fast-fall first.

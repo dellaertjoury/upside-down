@@ -308,3 +308,5 @@ body.has-ui-panel #p-report{border:24px solid transparent;border-image:var(--ui-
   background:rgba(14,8,24,.96);box-shadow:0 0 0 3px #2b1a3d,0 10px 40px rgba(0,0,0,.6);padding:16px 20px}
 body.has-ui-panel .rep-wrap{border:24px solid transparent;border-image:var(--ui-panel) 24 fill / 24px stretch;image-rendering:pixelated;box-shadow:none;background:none}
 .rep-wrap .ph{width:100%}
+.bind-fixed{display:block;text-align:center;padding:6px;color:var(--muted);font-size:clamp(9px,.95vw,13px)}
+.binds{max-width:620px}

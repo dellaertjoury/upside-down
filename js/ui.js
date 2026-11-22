@@ -87,6 +87,7 @@
     show(go === "quit" ? "menu" : go);
   });
   GAME.onPause = () => show("pause");
+  GAME.onResume = () => { if (current) hideAll(); };
 
   // browsers only allow sound after the first click or key press: start the hub music then
   const wake = () => {
@@ -300,11 +301,13 @@
       const L = listening && listening.kind === kind && listening.action === a && listening.slot === i;
       const v = kind === "key" ? S.keys[a][i] : S.pad[a][i];
       const label = L ? t(kind === "key" ? "set.press" : "set.pressPad") : v == null ? "—" : kind === "key" ? INPUT.keyName(v) : INPUT.padName(v);
+      if (INPUT.FIXED.includes(a)) return `<td><span class="bind-fixed">${esc(label)}</span></td>`; // Esc / Start: not rebindable
       return `<td><button class="btn tiny bind${L ? " on" : ""}" data-bind="${kind}" data-act="${a}" data-slot="${i}">${esc(label)}</button></td>`;
     };
     document.querySelectorAll("#p-settings [data-tab]").forEach(b => { const on = b.dataset.tab === bindTab; b.classList.toggle("on", on); b.setAttribute("aria-selected", on); });
     $("#s-binds").innerHTML = INPUT.ACTIONS.map(a =>
-      `<tr><th>${esc(t("act." + a))}</th>${slot(bindTab, a, 0)}${slot(bindTab, a, 1)}</tr>`).join("");
+      `<tr><th>${esc(t("act." + a))}</th>${slot(bindTab, a, 0)}</tr>`).join("");
+    $("#bind-col").textContent = t(bindTab === "key" ? "set.key" : "set.button");
     $("#s-pad").textContent = bindTab === "key" ? t("set.bindHint") : INPUT.padName_ ? t("set.padFound", { n: INPUT.padName_ }) : t("set.padNone");
   }
   setInterval(() => { if (current === "settings" && !listening && bindTab === "pad") { const el = $("#s-pad"), want = INPUT.padName_ ? t("set.padFound", { n: INPUT.padName_ }) : t("set.padNone"); if (el.textContent !== want) el.textContent = want; } }, 1000);
@@ -333,8 +336,7 @@
     if (!listening || listening.kind !== "key") return;
     e.preventDefault(); e.stopImmediatePropagation();
     const L = listening; listening = null; INPUT.listening = null;
-    if (e.code === "Backspace" || e.code === "Delete") INPUT.clear("key", L.action, L.slot);
-    else if (e.code !== "Escape") { INPUT.bindKey(L.action, L.slot, e.code); SFX.buy(); }
+    if (e.code !== "Escape" && INPUT.bindKey(L.action, 0, e.code)) SFX.buy(); // Esc cancels
     renderBinds();
   }, true);
 
