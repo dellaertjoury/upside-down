@@ -1,0 +1,138 @@
+// Translations. Add a language by copying the "en" block.
+// HTML: <el data-i18n="key">  (text)  or  data-i18n-attr="placeholder:key".
+// JS:   I18N.t("key", { n: 3 })  ->  "{n}" placeholders are filled in.
+(function () {
+  const STR = {
+    en: {
+      "lang.name": "English",
+      "tag": "Hellfire Club · tonight's campaign starts at the door",
+      "menu.play": "Start run", "menu.sheet": "Character sheet", "menu.upgrades": "Upgrades",
+      "menu.leaderboard": "Leaderboard", "menu.settings": "Settings",
+      "lights": "Lights", "best": "Best",
+      "keys.hint": "{jump} jump · {roll} roll · {attack} hit · {flip} flip · {pause} pause",
+      "sheet.title": "Character sheet", "sheet.name": "Name", "sheet.class": "Class", "sheet.hair": "Hair",
+      "sheet.jacket": "Jacket", "sheet.reroll": "Reroll ({n} free)", "sheet.rerollCost": "Reroll · {n}",
+      "sheet.rollNote": "4d6, drop the lowest", "sheet.saveRun": "Save & start run", "sheet.saveBack": "Save & back",
+      "sheet.placeholder": "ADVENTURER", "sheet.soon": "soon",
+      "d.hearts": "Hearts", "d.reach": "Bat reach", "d.sling": "Slingshot", "d.fullscreen": "full screen",
+      "d.jump": "Jump", "d.dread": "Dread time", "d.magnet": "Magnet", "d.bonus": "Light bonus", "d.bonusVal": "1 per {n} pts",
+      "ab.STR": "Bat reach", "ab.DEX": "Jump height", "ab.CON": "Extra hearts", "ab.INT": "Bigger light bonus after a run",
+      "ab.WIS": "Longer in the Upside Down", "ab.CHA": "Light magnet range", "ab.class": "+{n} class",
+      "cls.fighter": "Fighter", "cls.fighter.d": "Swings a dented bat, carries a trash-can lid.",
+      "cls.ranger": "Ranger", "cls.ranger.d": "Fires slingshot marbles across the screen.",
+      "cls.rogue": "Rogue", "cls.rogue.d": "Faster rolls, sneaky crits.",
+      "cls.wizard": "Wizard", "cls.wizard.d": "Bends the Dread meter.",
+      "up.title": "Upgrades", "up.maxed": "Maxed",
+      "up.heart": "Extra heart", "up.heart.d": "Take one more hit per run.",
+      "up.reach": "Longer bat", "up.reach.d": "Your melee hit reaches further.",
+      "up.battery": "Flashlight battery", "up.battery.d": "Stay in the Upside Down 2s longer.",
+      "up.magnet": "Light magnet", "up.magnet.d": "Pull Christmas lights in from further away.",
+      "up.greed": "Dark greed", "up.greed.d": "+0.5x score while upside down, +1 per Upside Down light.",
+      "up.djump": "Double jump", "up.djump.d": "Jump again in mid-air.",
+      "up.revive": "Second wind", "up.revive.d": "Once per run, survive a fatal hit.",
+      "lb.title": "Leaderboard", "lb.loading": "Loading…", "lb.empty": "No scores yet. Be the first.",
+      "lb.down": "Leaderboard unreachable right now.", "lb.claude": "Global · shared with friends",
+      "lb.supabase": "Global · online", "lb.local": "This device only",
+      "lb.posting": "Posting score…", "lb.savedLocal": "Saved on this device.", "lb.posted": "Score posted to the leaderboard.",
+      "lb.kept": "Your best stays {n}.", "lb.fail": "Couldn't post the score.",
+      "pause.title": "Paused", "pause.resume": "Resume", "pause.quit": "Back to the club",
+      "over.title": "Run over", "over.again": "Run again", "over.score": "Score", "over.best": "NEW BEST",
+      "over.dist": "Distance", "over.kills": "Kills", "over.fate": "D20 fate", "over.found": "Lights found",
+      "over.bonus": "Score bonus", "over.banked": "Banked", "over.total": "total {n}",
+      "back": "Back",
+      "set.title": "Settings", "set.sound": "Sound", "set.music": "Music", "set.sfx": "Sound effects",
+      "set.volume": "Volume", "set.on": "On", "set.off": "Off", "set.language": "Language",
+      "set.display": "Display", "set.fullscreen": "Full screen", "set.touch": "Touch buttons",
+      "set.auto": "Auto", "set.always": "Always", "set.never": "Never",
+      "set.keys": "Controls", "set.action": "Action", "set.keyboard": "Keyboard", "set.controller": "Controller",
+      "set.press": "Press a key…", "set.pressPad": "Press a button…", "set.reset": "Reset controls",
+      "set.swap": "Jump and roll swap automatically while you hang upside down.",
+      "set.padNone": "No controller found. Connect one and press any button.",
+      "set.padFound": "Controller: {n}", "set.clear": "Clear",
+      "act.jump": "Jump", "act.roll": "Roll", "act.attack": "Attack", "act.flip": "Flip", "act.pause": "Pause",
+      "hud.dread": "DREAD", "hud.locked": "LOCKED", "hud.fate": "D20 FATE", "hud.hi": "HI",
+      "fate.20": "NAT 20! +1 HEART", "fate.15": "BLESSED +20% SCORE", "fate.6": "FATE IS QUIET",
+      "fate.2": "UNEASY: DREAD +15%", "fate.1": "CRIT FAIL: DREAD +30%",
+      "pop.crate": "HIT THE CRATE!", "pop.heart": "+1 HEART", "pop.lights": "+{n} LIGHTS", "pop.tough": "TOUGH!",
+      "pop.reflect": "REFLECT", "pop.wind": "SECOND WIND", "pop.dread": "THE DREAD!",
+      "touch.roll": "Roll", "touch.jump": "Jump", "touch.attack": "Hit", "touch.flip": "Flip",
+    },
+    nl: {
+      "lang.name": "Nederlands",
+      "tag": "Hellfire Club · de campagne van vanavond begint aan de deur",
+      "menu.play": "Start run", "menu.sheet": "Personagekaart", "menu.upgrades": "Upgrades",
+      "menu.leaderboard": "Ranglijst", "menu.settings": "Instellingen",
+      "lights": "Lichtjes", "best": "Record",
+      "keys.hint": "{jump} springen · {roll} rollen · {attack} slaan · {flip} omdraaien · {pause} pauze",
+      "sheet.title": "Personagekaart", "sheet.name": "Naam", "sheet.class": "Klasse", "sheet.hair": "Haar",
+      "sheet.jacket": "Jas", "sheet.reroll": "Opnieuw gooien ({n} gratis)", "sheet.rerollCost": "Opnieuw gooien · {n}",
+      "sheet.rollNote": "4d6, laagste valt weg", "sheet.saveRun": "Opslaan & starten", "sheet.saveBack": "Opslaan & terug",
+      "sheet.placeholder": "AVONTURIER", "sheet.soon": "binnenkort",
+      "d.hearts": "Harten", "d.reach": "Bereik knuppel", "d.sling": "Katapult", "d.fullscreen": "heel scherm",
+      "d.jump": "Sprong", "d.dread": "Angsttijd", "d.magnet": "Magneet", "d.bonus": "Lichtbonus", "d.bonusVal": "1 per {n} ptn",
+      "ab.STR": "Bereik knuppel", "ab.DEX": "Spronghoogte", "ab.CON": "Extra harten", "ab.INT": "Grotere lichtbonus na een run",
+      "ab.WIS": "Langer in de Upside Down", "ab.CHA": "Bereik lichtmagneet", "ab.class": "+{n} klasse",
+      "cls.fighter": "Vechter", "cls.fighter.d": "Slaat met een gedeukte knuppel, draagt een vuilbakdeksel.",
+      "cls.ranger": "Ranger", "cls.ranger.d": "Schiet knikkers met een katapult over het scherm.",
+      "cls.rogue": "Schurk", "cls.rogue.d": "Snellere rollen, stiekeme voltreffers.",
+      "cls.wizard": "Tovenaar", "cls.wizard.d": "Buigt de angstmeter.",
+      "up.title": "Upgrades", "up.maxed": "Maximum",
+      "up.heart": "Extra hart", "up.heart.d": "Eén klap meer per run.",
+      "up.reach": "Langere knuppel", "up.reach.d": "Je slag reikt verder.",
+      "up.battery": "Zaklampbatterij", "up.battery.d": "2s langer in de Upside Down.",
+      "up.magnet": "Lichtmagneet", "up.magnet.d": "Trekt kerstlichtjes van verder aan.",
+      "up.greed": "Donkere hebzucht", "up.greed.d": "+0,5x score in de Upside Down, +1 per lichtje daar.",
+      "up.djump": "Dubbele sprong", "up.djump.d": "Spring nog eens in de lucht.",
+      "up.revive": "Tweede adem", "up.revive.d": "Overleef één dodelijke klap per run.",
+      "lb.title": "Ranglijst", "lb.loading": "Laden…", "lb.empty": "Nog geen scores. Wees de eerste.",
+      "lb.down": "Ranglijst nu niet bereikbaar.", "lb.claude": "Wereldwijd · gedeeld met vrienden",
+      "lb.supabase": "Wereldwijd · online", "lb.local": "Alleen dit toestel",
+      "lb.posting": "Score versturen…", "lb.savedLocal": "Bewaard op dit toestel.", "lb.posted": "Score op de ranglijst gezet.",
+      "lb.kept": "Je record blijft {n}.", "lb.fail": "Score versturen lukte niet.",
+      "pause.title": "Pauze", "pause.resume": "Verder", "pause.quit": "Terug naar de club",
+      "over.title": "Run voorbij", "over.again": "Nog eens", "over.score": "Score", "over.best": "NIEUW RECORD",
+      "over.dist": "Afstand", "over.kills": "Verslagen", "over.fate": "D20-lot", "over.found": "Lichtjes gevonden",
+      "over.bonus": "Scorebonus", "over.banked": "Opgespaard", "over.total": "totaal {n}",
+      "back": "Terug",
+      "set.title": "Instellingen", "set.sound": "Geluid", "set.music": "Muziek", "set.sfx": "Geluidseffecten",
+      "set.volume": "Volume", "set.on": "Aan", "set.off": "Uit", "set.language": "Taal",
+      "set.display": "Beeld", "set.fullscreen": "Volledig scherm", "set.touch": "Aanraakknoppen",
+      "set.auto": "Automatisch", "set.always": "Altijd", "set.never": "Nooit",
+      "set.keys": "Besturing", "set.action": "Actie", "set.keyboard": "Toetsenbord", "set.controller": "Controller",
+      "set.press": "Druk een toets…", "set.pressPad": "Druk een knop…", "set.reset": "Besturing herstellen",
+      "set.swap": "Springen en rollen wisselen vanzelf om als je ondersteboven hangt.",
+      "set.padNone": "Geen controller gevonden. Sluit er een aan en druk op een knop.",
+      "set.padFound": "Controller: {n}", "set.clear": "Wissen",
+      "act.jump": "Springen", "act.roll": "Rollen", "act.attack": "Aanvallen", "act.flip": "Omdraaien", "act.pause": "Pauze",
+      "hud.dread": "ANGST", "hud.locked": "GEBLOKKEERD", "hud.fate": "D20-LOT", "hud.hi": "TOP",
+      "fate.20": "NAT 20! +1 HART", "fate.15": "GEZEGEND +20% SCORE", "fate.6": "HET LOT ZWIJGT",
+      "fate.2": "ONRUSTIG: ANGST +15%", "fate.1": "MISLUKT: ANGST +30%",
+      "pop.crate": "SLA DE KIST!", "pop.heart": "+1 HART", "pop.lights": "+{n} LICHTJES", "pop.tough": "TAAI!",
+      "pop.reflect": "TERUG!", "pop.wind": "TWEEDE ADEM", "pop.dread": "DE ANGST!",
+      "touch.roll": "Rol", "touch.jump": "Spring", "touch.attack": "Sla", "touch.flip": "Draai",
+    },
+  };
+  const I18N = {
+    langs: Object.keys(STR),
+    lang: "en",
+    t(key, vars) {
+      let s = (STR[this.lang] && STR[this.lang][key]) ?? STR.en[key] ?? key;
+      if (vars) for (const k in vars) s = s.split("{" + k + "}").join(vars[k]);
+      return s;
+    },
+    name(l) { return STR[l]["lang.name"]; },
+    apply(root = document) {
+      root.querySelectorAll("[data-i18n]").forEach(el => { el.textContent = this.t(el.dataset.i18n); });
+      root.querySelectorAll("[data-i18n-attr]").forEach(el => {
+        el.dataset.i18nAttr.split(";").forEach(p => { const [attr, key] = p.split(":"); el.setAttribute(attr, this.t(key)); });
+      });
+      document.documentElement.lang = this.lang;
+    },
+    set(l) { if (STR[l]) { this.lang = l; this.apply(); } },
+  };
+  // first visit: follow the browser language when we have it
+  const nav = (navigator.language || "en").slice(0, 2);
+  if (STR[nav]) I18N.lang = nav;
+  window.I18N = I18N;
+  window.t = (k, v) => I18N.t(k, v);
+})();

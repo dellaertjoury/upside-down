@@ -1,11 +1,11 @@
 // Tiny chiptune sound effects with WebAudio (no files needed).
 (function () {
-  let ac = null, muted = false, master = null;
+  let ac = null, muted = false, master = null, sfxVol = 0.8, musicVol = 0.8;
   function ctx() {
     if (!ac) {
       try {
         ac = new (window.AudioContext || window.webkitAudioContext)();
-        master = ac.createGain(); master.gain.value = 0.18; master.connect(ac.destination);
+        master = ac.createGain(); master.gain.value = 0.22 * sfxVol; master.connect(ac.destination);
       } catch (e) { return null; }
     }
     if (ac.state === "suspended") ac.resume().catch(() => {});
@@ -53,6 +53,11 @@
     sling: () => { tone("triangle", 220, 880, 0.08, 0.5); noise(0.04, 0.25); },
     click: () => tone("square", 440, 440, 0.04, 0.3),
     setMuted(m) { muted = m; MUSIC.refresh(); },
+    setVolumes(music, sfx) {
+      musicVol = music; sfxVol = sfx;
+      if (master) master.gain.setTargetAtTime(0.22 * sfxVol, ac.currentTime, 0.05);
+      MUSIC.refresh();
+    },
     get muted() { return muted; },
   };
 
@@ -89,7 +94,10 @@
       this.bus.connect(a.destination);
       return a;
     },
-    level() { return muted || !this.on || this.mode === "off" ? 0 : this.mode === "over" ? 0.05 : this.mode === "pause" ? 0.03 : this.mode === "hub" ? 0.12 : 0.08; },
+    level() {
+      if (muted || !this.on || this.mode === "off") return 0;
+      return musicVol * 1.25 * (this.mode === "over" ? 0.05 : this.mode === "pause" ? 0.03 : this.mode === "hub" ? 0.12 : 0.08);
+    },
     refresh() {
       if (!this.bus) return;
       const a = ac, t = a.currentTime;

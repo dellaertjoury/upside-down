@@ -18,6 +18,7 @@
   const { S, BG, draw } = window.SPR;
 
   const rand = (a, b) => a + Math.random() * (b - a);
+  const T_ = (k, v) => I18N.t(k, v);
   const pick = arr => arr[Math.floor(Math.random() * arr.length)];
 
   // ---------------- Obstacle catalogue ----------------
@@ -45,11 +46,11 @@
 
   // d20 fate roll at the start of every run
   const FATE = [
-    { min: 20, label: "NAT 20! +1 HEART", col: "#5fd0c8", hearts: 1, score: 1, dread: 1 },
-    { min: 15, label: "BLESSED +20% SCORE", col: "#ffd866", hearts: 0, score: 1.2, dread: 1 },
-    { min: 6,  label: "FATE IS QUIET", col: "#f3e9dc", hearts: 0, score: 1, dread: 1 },
-    { min: 2,  label: "UNEASY: DREAD +15%", col: "#ff9fb4", hearts: 0, score: 1, dread: 1.15 },
-    { min: 1,  label: "CRIT FAIL: DREAD +30%", col: "#ff3d57", hearts: 0, score: 1, dread: 1.3 },
+    { min: 20, label: "fate.20", col: "#5fd0c8", hearts: 1, score: 1, dread: 1 },
+    { min: 15, label: "fate.15", col: "#ffd866", hearts: 0, score: 1.2, dread: 1 },
+    { min: 6,  label: "fate.6", col: "#f3e9dc", hearts: 0, score: 1, dread: 1 },
+    { min: 2,  label: "fate.2", col: "#ff9fb4", hearts: 0, score: 1, dread: 1.15 },
+    { min: 1,  label: "fate.1", col: "#ff3d57", hearts: 0, score: 1, dread: 1.3 },
   ];
 
   // ---------------- State ----------------
@@ -78,21 +79,21 @@
     if (G.mode !== "play" || P.dead) return;
     if (ACT[a]) P[ACT[a]] = a === "flip" ? 0.3 : 0.15;
   };
-  // ↑ jump, ↓ roll, Space attack, F flip (W/S work as ↑/↓)
-  const KEYS = {
-    ArrowUp: "jump", KeyW: "jump",
-    ArrowDown: "roll", KeyS: "roll",
-    Space: "attack",
-    KeyF: "flip",
-  };
+  // Keys and controller buttons are rebindable (Settings); see js/input.js.
   window.addEventListener("keydown", e => {
     if (e.target && e.target.tagName === "INPUT") return;
-    if ((e.code === "KeyP" || e.code === "Escape") && (G.mode === "play" || G.mode === "pause")) {
+    if (INPUT.listening) return;                       // Settings is waiting for a key
+    const a = INPUT.keyAction(e.code);
+    if (a === "pause" && (G.mode === "play" || G.mode === "pause")) {
       G.mode === "play" ? G.pause() : G.resume(); e.preventDefault(); return;
     }
-    const a = KEYS[e.code];
     if (a && G.mode === "play") { e.preventDefault(); if (!e.repeat) G.press(flipVertical(a)); }
   });
+  INPUT.onAction = a => { // controller during a run
+    if (a === "pause" && (G.mode === "play" || G.mode === "pause")) { G.mode === "play" ? G.pause() : G.resume(); return true; }
+    if (G.mode === "play") { G.press(flipVertical(a)); return true; }
+    return false;
+  };
   // Upside down, "away from the floor" is down on screen: swap up/down so the
   // arrow you press matches the direction you move.
   function flipVertical(a) {
@@ -193,7 +194,7 @@
       if (G.reviveLeft) {
         G.reviveLeft = false; G.hearts = 1; P.inv = 2.2; SFX.revive(); G.flash = 0.5; G.flashCol = "#5fd0c8";
         G.obs = G.obs.filter(o => o.x > PX + 140); G.shots = [];
-        pop("SECOND WIND", "#5fd0c8");
+        pop(T_("pop.wind"), "#5fd0c8");
       } else return gameOver();
     }
     P.inv = 1.3;
@@ -214,7 +215,7 @@
     P.flip = FLIP_T; P.switched = false; P.roll = 0; P.blk = 0; P.bufFlip = 0; P.h = 0; P.vh = 0;
     if (G.mode === "play") (P.side === 0 ? SFX.flip : SFX.flipUp)();
     burst(PX + 6, FT + 5, P.side === 0 ? "#b0305a" : "#ffd866", 16, 80);
-    if (forced) { P.flipLock = 1.4; SFX.dread(); pop("THE DREAD!", "#ff3d57", PX + 6, FB + 30); }
+    if (forced) { P.flipLock = 1.4; SFX.dread(); pop(T_("pop.dread"), "#ff3d57", PX + 6, FB + 30); }
   }
   function breakCrate(o, smashed) {
     o.dead = true; G.shake = smashed ? 3 : 1;
@@ -223,14 +224,14 @@
     SFX.crate(); G.crates = (G.crates || 0) + 1;
     const max = G.stats.hearts;
     if (o.heart && G.hearts < max) { // heal
-      G.hearts++; SFX.revive(); pop("+1 HEART", "#ff3d57", o.x + 7, sy(o.side, 26));
+      G.hearts++; SFX.revive(); pop(T_("pop.heart"), "#ff3d57", o.x + 7, sy(o.side, 26));
       G.onLight && G.onLight("#ff3d57");
       return;
     }
     // lights go straight into your count (a heart crate at full health gives lights too)
     const n = (o.heart ? 5 : 4 + Math.floor(Math.random() * 4)) * (o.side ? 2 : 1);
     G.shards += n; G.score += 10 * n * G.fate.f.score; SFX.gold();
-    pop("+" + n + " LIGHTS", "#ffd866", o.x + 7, sy(o.side, 26));
+    pop(T_("pop.lights", { n }), "#ffd866", o.x + 7, sy(o.side, 26));
     G.onLight && G.onLight("#ffd866");
   }
   // Hit an enemy. Most die at once; tough ones (hp > 1) flinch and get
@@ -241,7 +242,7 @@
     o.hp = (o.hp || 1) - 1;
     if (o.hp > 0) {
       o.hitCd = 0.3; o.flash = 0.15; o.x += 14; SFX.thud(); G.shake = 2;
-      burst(at[0], at[1], "#ffffff", 8, 60); pop("TOUGH!", "#ff9fb4", at[0], at[1] - 14);
+      burst(at[0], at[1], "#ffffff", 8, 60); pop(T_("pop.tough"), "#ff9fb4", at[0], at[1] - 14);
       return true;
     }
     o.dead = true; G.kills++;
@@ -341,6 +342,14 @@
       o.t += dt; if (o.hitCd > 0) o.hitCd -= dt; if (o.flash > 0) o.flash -= dt;
       o.x -= dx - (o.vx && !o.dead && playing ? o.vx * dt : 0);
       if (o.bob) { o.h0 = TYPES[o.type].h0 + Math.sin(o.t * 4) * 6; o.h1 = o.h0 + 7; }
+      if (o.type === "crawler" && playing && !o.dead) { // hounds sometimes pounce: roll under or hit them
+        if (!o.leapt && o.x - PX < 78 && o.x > PX + 24) { o.leapt = true; if (Math.random() < 0.5) { o.vh = 175; SFX.spit(); } }
+        if (o.vh || o.h0 > 0) {
+          o.h0 = Math.max(0, o.h0 + o.vh * dt); o.vh -= 720 * dt;
+          if (o.h0 === 0 && o.vh < 0) o.vh = 0;
+          o.h1 = o.h0 + 10;
+        }
+      }
       if (o.dead || !playing) continue;
       if (o.shooter) {
         o.cd -= dt;
@@ -354,7 +363,7 @@
       if (o.crate) { // smash with a hit for lights; running into it just kicks it over
         if (P.atk > 0 && !ranged() && o.x < PX + 9 + st.reach && o.x + o.w > PX + 6 && P.h < 18) { breakCrate(o, true); continue; }
         if (o.x < px1 && o.x + o.w > px0 && o.h1 > ph0) breakCrate(o, false);
-        else if (!G.crateHint && o.x < PX + 70) { G.crateHint = true; pop("HIT THE CRATE!", "#ffd866", PX + 70, sy(o.side, 30)); }
+        else if (!G.crateHint && o.x < PX + 70) { G.crateHint = true; pop(T_("pop.crate"), "#ffd866", PX + 70, sy(o.side, 30)); }
         continue;
       }
       // bat hit
@@ -379,7 +388,7 @@
       if (!playing || s.ref || s.dead || s.side !== P.side || P.flip > 0) continue;
       // a bat swing knocks spore shots back
       if (P.atk > 0 && !ranged() && s.x < PX + 9 + st.reach && s.x + 4 > PX + 6 && s.h < P.h + 24) {
-        s.ref = true; G.parries++; SFX.block(); pop("REFLECT", "#5fd0c8"); continue;
+        s.ref = true; G.parries++; SFX.block(); pop(T_("pop.reflect"), "#5fd0c8"); continue;
       }
       if (s.x < px1 + 2 && s.x + 4 > px0 && s.h < ph1 && s.h + 4 > ph0) { s.dead = true; hurt(); }
     }
@@ -435,8 +444,9 @@
     for (const a of DUST) { a.x -= dx * 0.5 + a.v * dt; if (a.x < -2) { a.x = W + 2; a.y = rand(10, FT - 4); } }
     G.shake = Math.max(0, G.shake - dt * 30);
     G.flash = Math.max(0, G.flash - dt);
+    updateWatcher(dt);
     G.boltT -= dt;
-    if (G.boltT <= 0) { G.boltT = rand(2.5, 6); G.bolt = { x: rand(40, W - 40), life: 0.25, seed: Math.random() * 1000 }; }
+    if (G.boltT <= 0) { G.boltT = G.watch ? rand(1.6, 3.2) : rand(2.5, 6); G.bolt = { x: rand(40, W - 40), life: 0.25, seed: Math.random() * 1000 }; }
     if (G.bolt) { G.bolt.life -= dt; if (G.bolt.life <= 0) G.bolt = null; }
   }
 
@@ -483,6 +493,7 @@
       let x = G.bolt.x, y = H, sd = G.bolt.seed; ctx.fillStyle = `rgba(255,120,150,${a})`;
       while (y > FB + 6) { sd = (sd * 9301 + 49297) % 233280; x += (sd / 233280 - 0.5) * 8; y -= 3; ctx.fillRect(Math.round(x), y, 2, 3); }
     }
+    drawWatcher(); // the giant in the Upside Down sky, lit by the lightning above
     for (const a of AMB) R(a.s > 1 ? "#ff9fb4" : "rgba(230,200,220,.7)", a.x, a.y, a.s, a.s);
     // set pieces (houses, school, ...) then a haze so they sit behind the action
     const layerX = (G.scroll - G.scroll0) * SCN.PARALLAX;
@@ -576,7 +587,7 @@
         R("#1a1124", x - 1, -40, 24, 28); R("#c8413b", x, -39, 22, 26); R("#ffd866", x + 2, -36, 18, 3);
         R("#f3e9dc", x + 3, -30, 16, 2); R("#f3e9dc", x + 3, -26, 12, 2); R("#f3e9dc", x + 3, -22, 14, 2); R("#8e2a2d", x, -14, 22, 1);
         break;
-      case "crow": draw(ctx, Math.floor(t * 8) % 2 ? "crow1" : "crow2", x, -o.h0); break;
+      case "crow": draw(ctx, enemyKey(o, "crow", "fly", ["crow1", "crow2"]), x, -o.h0); break;
       case "stump":
         R("#0b0610", x - 1, -13, 14, 13); R("#3a2440", x, -12, 12, 12); R("#7a1f3d", x + 3, -10, 1, 9); R("#7a1f3d", x + 8, -8, 1, 7);
         R("#b0305a", x + 3, -11, 1, 2); R("#3a2440", x - 2, -3, 3, 3); R("#3a2440", x + 11, -2, 3, 2); break;
@@ -587,18 +598,19 @@
           R("#b0305a", bx + Math.round(Math.sin(t * 2 - 1.4 + i) * 3), -14, 2, 2);
         }
         break;
-      case "crawler": draw(ctx, Math.floor(t * 10) % 2 ? "crawl1" : "crawl2", x, -o.h0); break;
+      case "crawler": draw(ctx, enemyKey(o, "hound", o.h0 > 1 ? "jump" : "run", ["crawl1", "crawl2"]), x, -o.h0); break;
       case "stalker": {
         const f = Math.floor(t * 4) % 2;
-        if (SPR.ART.stalker1) { draw(ctx, f ? "stalker1" : "stalker2", x, 0); break; }
+        const sk = enemyKey(o, "stalker", "walk", SPR.ART.stalker1 ? ["stalker1", "stalker2"] : null);
+        if (sk) { draw(ctx, sk, x, 0); break; }
         // placeholder: a tall hunched shape with long arms and red eyes
         R("#0b0610", x + 2, -25, 11, 19); R("#4a3a52", x + 3, -24, 9, 17);          // body
         R("#0b0610", x, -28, 8, 6); R("#5b4a62", x + 1, -27, 6, 4); R("#ff3b3b", x + 1, -26, 1, 1); R("#ff3b3b", x + 4, -26, 1, 1);
         R("#4a3a52", x - 2, -20 + f, 2, 12); R("#4a3a52", x + 12, -20 - f, 2, 12);  // arms
         R("#2f2236", x + 3, -7, 3, 7 - f); R("#2f2236", x + 9, -7, 3, 7 + f - 1);   // legs
         break; }
-      case "wisp": draw(ctx, Math.floor(t * 8) % 2 ? "wisp1" : "wisp2", x, -o.h0); break;
-      case "pod": draw(ctx, o.t < 0.25 ? "pod2" : "pod1", x, 0); break;
+      case "wisp": draw(ctx, enemyKey(o, "flyer", "fly", ["wisp1", "wisp2"]), x, -o.h0); break;
+      case "pod": draw(ctx, enemyKey(o, "pod", "idle", o.t < 0.3 ? ["pod2"] : ["pod1"]), x, 0); break;
       case "crate": case "crate_dark": {
         const dk = o.type === "crate_dark";
         R("#1a1124", x - 1, -15, 16, 15); R(dk ? "#4a2a3a" : "#a8743a", x, -14, 14, 14);
@@ -632,6 +644,20 @@
       }
     }
   }
+  // Enemy frame: attack frames when close to the runner (or firing, for pods),
+  // otherwise the movement state. Falls back to the older two-frame art.
+  function enemyKey(o, prefix, state, fallback) {
+    const near = o.side === P.side && o.x - PX < (o.type === "stalker" ? 46 : 34) && o.x > PX - 10;
+    const atk = o.type === "pod" ? o.t < 0.35 : near && state !== "jump";
+    let f = atk ? frames(prefix, "attack") : [];
+    if (f.length) return f[Math.min(f.length - 1, Math.floor((o.type === "pod" ? o.t / 0.35 : (34 - (o.x - PX)) / 44) * f.length))] || f[0];
+    f = frames(prefix, state);
+    if (state === "jump" && f.length) return o.vh > 0 ? f[0] : f[f.length - 1];
+    if (!f.length && state === "jump") f = frames(prefix, "run");
+    if (f.length) return cyc(f, o.t, f.length > 2 ? 10 : 8);
+    if (!fallback) return null;
+    return cyc(fallback, o.t, 8);
+  }
   function drawPick(k) {
     const x = Math.round(k.x), y = -Math.round(k.h) - 4;
     const tw = 0.75 + Math.sin(G.t * 5 + k.ph) * 0.25;
@@ -650,6 +676,26 @@
     R(s.ref ? "rgba(95,208,200,.4)" : "rgba(255,61,87,.4)", x - 1, y - 1, 6, 6);
     R(s.ref ? "#5fd0c8" : "#ff6b8f", x, y, 4, 4); R("#ffffff", x + 1, y + 1, 1, 1);
   }
+
+  // ---------- animation frames ----------
+  // Art for a state is looked up as <prefix>_<state>1, _<state>2, ... (any
+  // number of frames), or a single <prefix>_<state>. Returns [] if none.
+  function frames(prefix, state) {
+    const out = [];
+    for (let i = 1; i <= 8; i++) { const k = `${prefix}_${state}${i}`; if (SPR.ART[k]) out.push(k); else break; }
+    if (!out.length && SPR.ART[`${prefix}_${state}`]) out.push(`${prefix}_${state}`);
+    return out;
+  }
+  const PLAYER_FALLBACK = { idle: ["run2"], run: ["run1", "run2"], jump: ["jump"], attack: ["attack"], roll: ["roll"] };
+  // the player's frames for a state: own class art, else the Fighter's, else placeholder
+  function pframes(state) {
+    const sh = SAVE.state.sheet;
+    let f = sh ? frames(sh.cls, state) : [];
+    if (!f.length) f = frames("fighter", state);
+    if (!f.length && state === "idle") f = pframes("run").slice(-1);
+    return f.length ? f : PLAYER_FALLBACK[state];
+  }
+  const cyc = (list, time, fps) => list[Math.floor(time * fps) % list.length];
 
   // player art per class: "ranger_run1" etc., falling back to "run1"
   function pk(frame) {
@@ -673,23 +719,25 @@
     R("rgba(0,0,0,.3)", PX + 1, -1, 10 - Math.min(6, Math.floor(Math.max(0, h) / 8)), 1);
     const idle = G.mode === "attract";
     if (P.roll > 0 && P.flip <= 0) {
-      ctx.save(); ctx.translate(PX + 6, -h - 6); ctx.rotate(Math.floor(G.t * 16) * Math.PI / 2);
-      const rk = pk("roll"), rs = SPR.ART[rk] && SPR.SIZE[rk];
+      const rf = pframes("roll");
+      ctx.save(); ctx.translate(PX + 6, -h - 6);
+      // one roll drawing is spun by the game; several drawings play as frames
+      if (rf.length === 1) ctx.rotate(Math.floor(G.t * 16) * Math.PI / 2);
+      const rk = rf.length === 1 ? rf[0] : cyc(rf, P.runT, 14), rs = SPR.ART[rk] && SPR.SIZE[rk];
       if (rs) { ctx.translate(0, -1); ctx.drawImage(SPR.ART[rk], -rs[0] / 2, -rs[1] / 2, rs[0], rs[1]); }
       else ctx.drawImage(S.roll, -6, -6, 12, 12);
       ctx.restore();
-    } else if (P.blk > 0 && P.flip <= 0) {
-      draw(ctx, pk("block"), PX, -h);
-      if (!SPR.ART[pk("block")]) { // trash-can lid shield
-        const fresh = P.blkAge < 0.12;
-        R("#1a1124", PX + 11, -h - 15, 5, 13); R(fresh ? "#ffffff" : "#9a9caa", PX + 12, -h - 14, 3, 11);
-        R("#7d7f8c", PX + 13, -h - 12, 1, 7); R("#1a1124", PX + 15, -h - 10, 1, 3);
-      }
     } else {
-      const fr = P.atk > 0 ? "attack" : idle ? (SPR.ART[pk("idle")] ? "idle" : "run2") : !P.grounded && P.flip <= 0 ? "jump" : Math.floor(P.runT * 8) % 2 ? "run1" : "run2";
-      const key = pk(fr);
-      draw(ctx, key, PX, -h - (idle && fr !== "idle" && Math.floor(G.t * 2) % 2 ? 1 : 0));
-      if (P.atk > 0 && !ranged() && !SPR.ART[pk("attack")]) {
+      let key, state;
+      if (P.atk > 0) { // attack frames spread over the swing, legs keep running in the art
+        state = "attack"; const af = pframes("attack"), dur = ranged() ? 0.22 : 0.2;
+        key = af[Math.min(af.length - 1, Math.floor((1 - P.atk / dur) * af.length))];
+      } else if (idle) { state = "idle"; key = cyc(pframes("idle"), G.t, 3); }
+      else if (!P.grounded && P.flip <= 0) { // jump: first frame rising, last frame falling
+        state = "jump"; const jf = pframes("jump"); key = P.vh > 0 ? jf[0] : jf[jf.length - 1];
+      } else { state = "run"; key = cyc(pframes("run"), P.runT, pframes("run").length > 2 ? 12 : 8); }
+      draw(ctx, key, PX, -h);
+      if (P.atk > 0 && !ranged() && !SPR.ART[key]) {
         const reach = (G.stats || SAVE.runStats()).reach, pr = 1 - P.atk / 0.2, ang = -1.3 + pr * 2.2;
         for (let i = 0; i < reach; i++) R(i < 5 ? "#5a3220" : "#a8743a", PX + 9 + Math.cos(ang) * i, -h - 9 + Math.sin(ang) * i, 2, 2);
         ctx.fillStyle = "rgba(255,255,255,.5)";
@@ -731,8 +779,8 @@
       R(col, cx - 12, y, 24, 1); R(col, cx - 12, y + 21, 24, 1); R(col, cx - 12, y, 1, 22); R(col, cx + 11, y, 1, 22);
     }
     text(String(n), cx, y + 7, col, "center");
-    text("D20 FATE", cx, y - 11, "#a998b8", "center");
-    if (!rolling) text(f.f.label, cx, y + 27, f.f.col, "center");
+    text(T_("hud.fate"), cx, y - 11, "#a998b8", "center");
+    if (!rolling) text(T_(f.f.label), cx, y + 27, f.f.col, "center");
     ctx.globalAlpha = 1;
   }
 
@@ -742,20 +790,20 @@
     for (let i = 0; i < st.hearts; i++) heart(6 + i * 11, 6, i < G.hearts);
     if (G.reviveLeft) { if (ART("hud_revive")) ctx.drawImage(ART("hud_revive"), 8 + st.hearts * 11, 6, 9, 9); else text("+1", 8 + st.hearts * 11, 7, "#5fd0c8"); }
     text(String(Math.floor(G.score)).padStart(6, "0"), W - 6, 6, "#ffd866", "right");
-    text("HI " + String(Math.max(SAVE.state.best, Math.floor(G.score))).padStart(6, "0"), W - 64, 6, "#f3e9dc", "right");
+    text(T_("hud.hi") + " " + String(Math.max(SAVE.state.best, Math.floor(G.score))).padStart(6, "0"), W - 64, 6, "#f3e9dc", "right");
     if (ART("hud_light")) ctx.drawImage(ART("hud_light"), W - 47, 16, 7, 10);
     else { R("#3b3446", W - 45, 16, 3, 2); R("#1a1124", W - 46, 18, 5, 7); R(BULBS[Math.floor(G.t * 2) % 6][1], W - 45, 18, 3, 6); }
     text(String(G.shards), W - 6, 18, "#f3e9dc", "right");
     const bw = 70, f = G.dread / st.battery, DX = Math.round(W / 2 - bw / 2) - 6; // centred, clear of phone buttons
     ctx.save(); ctx.translate(DX, 0);
-    text(P.side ? "x" + (st.udMult * G.fate.f.score).toFixed(1) : "DREAD", 6, H - 22, P.side ? "#ff6b8f" : "#a998b8");
+    text(P.side ? "x" + (st.udMult * G.fate.f.score).toFixed(1) : T_("hud.dread"), 6, H - 22, P.side ? "#ff6b8f" : "#a998b8");
     const fr = ART("hud_dread_frame"), fl = ART("hud_dread_fill");
     if (fr) ctx.drawImage(fr, 3, H - 13, bw + 6, 10);
     else { R("#1a1124", 5, H - 11, bw + 2, 6); R("#3a2550", 6, H - 10, bw, 4); }
     if (fl && f > 0) ctx.drawImage(fl, 0, 0, Math.max(1, Math.round(fl.width * f)), fl.height, 6, H - 10, Math.round(bw * f), 4);
     else R(f > 0.7 ? (Math.floor(G.t * 8) % 2 ? "#ff3d57" : "#ffd0dc") : "#b0305a", 6, H - 10, Math.round(bw * f), 4);
     if (fl && f > 0.7 && Math.floor(G.t * 8) % 2) R("rgba(255,255,255,.35)", 6, H - 10, Math.round(bw * f), 4);
-    if (P.flipLock > 0) text("LOCKED", 82, H - 12, "#ff3d57");
+    if (P.flipLock > 0) text(T_("hud.locked"), 82, H - 12, "#ff3d57");
     ctx.restore();
     drawFate();
   }
@@ -811,6 +859,69 @@
     ctx.restore();
   }
 
+  // ---------------- The Watcher (Upside Down sky, scenery only) ----------------
+  // An original colossal shadow creature that now and then rises in the
+  // Upside Down sky. Barely visible; lightning lights it up. It sways its
+  // head and bobs while it slowly drifts past. Art: watcher_body + watcher_head.
+  G.watchT = rand(15, 30);
+  function updateWatcher(dt) {
+    if (G.mode === "pause") return;
+    if (!G.watch) {
+      G.watchT -= dt;
+      if (G.watchT <= 0) G.watch = { x: rand(W * 0.45, W * 0.8), t: 0, life: rand(20, 28) };
+      return;
+    }
+    const w = G.watch; w.t += dt; w.x -= (G.speed * 0.03 + 2.5) * dt;
+    if (w.t > w.life) { G.watch = null; G.watchT = rand(35, 70); }
+  }
+  G.summonWatcher = () => { G.watch = { x: W * 0.6, t: 0, life: 25 }; };
+  function drawWatcher() {
+    const w = G.watch; if (!w) return;
+    const fade = Math.min(1, w.t / 3, (w.life - w.t) / 3);
+    const flash = G.bolt ? G.bolt.life / 0.25 : 0;
+    const alpha = fade * (0.12 + 0.6 * flash);
+    if (alpha <= 0.01) return;
+    const bob = Math.sin(w.t * 1.3) * 2, sway = Math.sin(w.t * 0.6) * 0.16;
+    const lit = flash > 0.05;
+    local(1); ctx.globalAlpha = alpha;
+    const B = SPR.ART.watcher_body, Hd = SPR.ART.watcher_head;
+    if (B && Hd) {
+      const bs = SPR.SIZE.watcher_body || [80, 70], hs = SPR.SIZE.watcher_head || [40, 34];
+      if (lit) ctx.filter = `brightness(${1 + flash * 1.5}) drop-shadow(0 0 2px #ff3d57)`;
+      ctx.drawImage(B, Math.round(w.x - bs[0] / 2), Math.round(-bs[1] + bob), bs[0], bs[1]);
+      ctx.translate(Math.round(w.x), Math.round(-bs[1] + bob + 3)); ctx.rotate(sway);
+      ctx.drawImage(Hd, -hs[0] / 2, -hs[1], hs[0], hs[1]);
+      ctx.filter = "none";
+    } else watcherPlaceholder(w.x, bob, sway, lit, w.t);
+    ctx.restore();
+  }
+  // simple silhouette until the art arrives: a root-and-smoke giant with antlers
+  function watcherPlaceholder(x, bob, sway, lit, t) {
+    const col = lit ? "#5a0f1e" : "#050104", rim = "#ff5a6e";
+    ctx.fillStyle = col; ctx.strokeStyle = col; ctx.lineCap = "round";
+    ctx.beginPath(); ctx.moveTo(x - 16, 0); ctx.quadraticCurveTo(x - 6, -30 + bob, x - 5, -58 + bob);
+    ctx.lineTo(x + 5, -58 + bob); ctx.quadraticCurveTo(x + 6, -30 + bob, x + 16, 0); ctx.closePath(); ctx.fill();
+    ctx.lineWidth = 3;
+    for (const d of [-1, 1]) {
+      const reach = Math.sin(t * 0.8 + d) * 3;
+      ctx.beginPath(); ctx.moveTo(x + d * 4, -52 + bob);
+      ctx.quadraticCurveTo(x + d * 26, -66 + bob, x + d * (44 + reach), -40 + bob); ctx.stroke();
+      ctx.lineWidth = 1.5;
+      for (const f of [-6, 0, 6]) { ctx.beginPath(); ctx.moveTo(x + d * (44 + reach), -40 + bob); ctx.lineTo(x + d * (49 + reach), -33 + bob + f * 0.5); ctx.stroke(); }
+      ctx.lineWidth = 3;
+    }
+    ctx.save(); ctx.translate(x, -58 + bob); ctx.rotate(sway);
+    ctx.beginPath(); ctx.ellipse(0, -9, 6, 10, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.lineWidth = 1.5;
+    for (const d of [-1, 1]) {
+      ctx.beginPath(); ctx.moveTo(d * 3, -16); ctx.lineTo(d * 10, -28); ctx.lineTo(d * 18, -34); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(d * 10, -28); ctx.lineTo(d * 9, -38); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(d * 15, -32); ctx.lineTo(d * 22, -30); ctx.stroke();
+    }
+    if (lit) { ctx.fillStyle = rim; ctx.fillRect(-3, -11, 1.5, 1.5); ctx.fillRect(2, -11, 1.5, 1.5); }
+    ctx.restore();
+  }
+
   // ---------------- Debug: hitboxes ----------------
   function drawHitboxes() {
     const box = (side, x, h0, w, h1, col) => {
@@ -832,6 +943,7 @@
   // ---------------- Loop ----------------
   let last = performance.now();
   function loop(now) {
+    INPUT.poll();
     const dt = Math.min(0.05, (now - last) / 1000) * G.debug.slow; last = now;
     G.fps = G.fps ? G.fps * 0.95 + (1 / Math.max(0.001, (now - (G._lt || now - 16)) / 1000)) * 0.05 : 60; G._lt = now;
     if (G.mode !== "pause") update(dt);

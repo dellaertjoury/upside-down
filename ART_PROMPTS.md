@@ -1,290 +1,640 @@
-# The Upside Down — complete art list (v2)
+# The Upside Down — sprite prompts (players and enemies)
 
-Everything the game can show, in one list, so you can redo it all and deliver
-it in one go. **129 images: 125 used in the game + 4 reference sheets.**
-Anything you skip keeps its built-in placeholder, so you can also deliver in parts.
+Every frame has its own prompt, ready to paste. Scenery and UI are done, so they're not in this list.
 
 ## How to deliver
 
-1. **One PNG per key.** Name each file exactly after its key, for example
-   `fighter_run1.png`, `set_school_dark.png`, `ui_button.png`. Lowercase, no spaces.
-2. **Keep ChatGPT's full-size image.** Don't resize; the game's processor
-   (`tools/process_art.py`) crops, scales and outlines everything itself.
-3. **Transparent background** for everything except the 3 opaque images
-   marked *opaque* (backdrops and floor).
-4. **One subject per image,** centred, with empty space around it. No sprite
-   sheets (the dice strip in section 6 is the one exception).
-5. Put all files in one folder, zip it, and send it. Files with unknown names
-   are reported, not used, so nothing breaks.
+1. **File name = key**, e.g. `fighter_run3.png`, `hound_attack2.png`. Lowercase, no spaces.
+2. Keep ChatGPT's full-size PNG. The game's processor crops and scales it and lines frames up on the hitbox.
+3. **Make frame 1 of each set first, then attach it to every following prompt** (the prompts say *"match the attached reference"*). For the players, also attach the class's reference sheet if you have one.
+4. Zip the folder (subfolders are fine) and send it.
 
-**Work order:** make each reference sheet first (marked ★), then upload it with
-every prompt that says *"use the attached reference"*. That keeps characters
-and buildings consistent.
+**Transparency check before you send:** open the PNG in a viewer that shows transparency. You should see your viewer's own background through it, not a painted checkerboard or a black or white box. If ChatGPT paints one in, reply: *"The background is not transparent. Return the same image with a real transparent alpha channel, nothing behind the subject."* (The processor removes plain black, white and checkerboard backgrounds as a safety net, but real transparency gives the cleanest edges.)
+
+**Facing:** players face **right**, enemies face **left**. The game flips everything in the Upside Down, so draw every sprite upright.
+
+**Animation:** the game plays as many frames as you deliver. Missing frames fall back to what's already there.
 
 ---
 
-## Style blocks
+## 1. Players
 
-Paste the matching block at the start of every prompt.
+### Fighter (`fighter_…`, 15 frames)
 
-**[SPRITE]** characters, enemies, obstacles, lights:
-> 16-bit pixel art, crisp hard-edged pixels, no anti-aliasing, no blur. Bold,
-> saturated colours and a dark 1-pixel outline (#1a1124) so it stands out
-> against a background. Pure side view for a 2D side-scrolling runner. 1980s
-> small-town horror mood. Palette: violet #1a1124 #2b1a3d, teal #4a8a8a, lamp
-> gold #ffd866, orange #e7743a, blood red #c8413b #ff3d57, crimson #7a1f3d
-> #b0305a, bone white #ece6d6. Original design, not copied from any show, film
-> or game. Output: one PNG, fully transparent background, subject centred,
-> no text, no frame, no ground shadow.
+**`fighter_idle1`**
 
-**[SCENERY]** backdrops, buildings, props (this keeps the background calm):
-> 16-bit pixel art, crisp pixels, no anti-aliasing. **Background art: muted,
-> desaturated colours, low contrast, soft and simple shapes, few small
-> details, no strong highlights, no pure black or pure white.** It must sit
-> quietly behind brightly coloured characters. Flat side view, no perspective,
-> 1980s American small town at dusk. Original design.
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: an original 12-year-old kid, a tabletop-RPG nerd: messy brown hair, red zip-up jacket over a striped shirt, blue jeans, white sneakers, a yellow flashlight clipped to the jacket, a dented wooden baseball bat in the right hand, a dented metal trash-can lid strapped to the left arm as a shield. Side view, facing right. Idle, frame 1 of 2: standing relaxed, weight on one leg, breathing in (shoulders slightly raised). OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
 
-**[UI]** menus and HUD:
-> Pixel-art game UI element, crisp pixels, no anti-aliasing, flat front view,
-> no perspective, no drop shadow, no text unless asked. Retro 1980s arcade and
-> tabletop-RPG feel. Palette: deep violet #1a1124 #2b1a3d, lamp gold #ffd866,
-> blood red #b8283f, teal #4a8a8a, ivory #ece6d6. Transparent outside the shape.
+**`fighter_idle2`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: an original 12-year-old kid, a tabletop-RPG nerd: messy brown hair, red zip-up jacket over a striped shirt, blue jeans, white sneakers, a yellow flashlight clipped to the jacket, a dented wooden baseball bat in the right hand, a dented metal trash-can lid strapped to the left arm as a shield. Side view, facing right. Idle, frame 2 of 2: same standing pose, breathing out (shoulders slightly lowered), everything else identical. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. Full body visible, about 80% of the image height, feet on the same baseline as the other frames. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`fighter_run1`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: an original 12-year-old kid, a tabletop-RPG nerd: messy brown hair, red zip-up jacket over a striped shirt, blue jeans, white sneakers, a yellow flashlight clipped to the jacket, a dented wooden baseball bat in the right hand, a dented metal trash-can lid strapped to the left arm as a shield. Side view, facing right. Running cycle, frame 1 of 4 (contact): right leg reaching forward with the heel touching down, left leg pushing off behind, arms swinging opposite. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. Full body visible, about 80% of the image height, feet on the same baseline as the other frames. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`fighter_run2`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: an original 12-year-old kid, a tabletop-RPG nerd: messy brown hair, red zip-up jacket over a striped shirt, blue jeans, white sneakers, a yellow flashlight clipped to the jacket, a dented wooden baseball bat in the right hand, a dented metal trash-can lid strapped to the left arm as a shield. Side view, facing right. Running cycle, frame 2 of 4 (down): body slightly lower, right leg under the body taking the weight, left leg bending forward. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. Full body visible, about 80% of the image height, feet on the same baseline as the other frames. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`fighter_run3`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: an original 12-year-old kid, a tabletop-RPG nerd: messy brown hair, red zip-up jacket over a striped shirt, blue jeans, white sneakers, a yellow flashlight clipped to the jacket, a dented wooden baseball bat in the right hand, a dented metal trash-can lid strapped to the left arm as a shield. Side view, facing right. Running cycle, frame 3 of 4 (contact): left leg reaching forward with the heel touching down, right leg pushing off behind, arms swinging opposite. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. Full body visible, about 80% of the image height, feet on the same baseline as the other frames. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`fighter_run4`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: an original 12-year-old kid, a tabletop-RPG nerd: messy brown hair, red zip-up jacket over a striped shirt, blue jeans, white sneakers, a yellow flashlight clipped to the jacket, a dented wooden baseball bat in the right hand, a dented metal trash-can lid strapped to the left arm as a shield. Side view, facing right. Running cycle, frame 4 of 4 (up): body slightly higher, left leg under the body, right knee driving forward. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. Full body visible, about 80% of the image height, feet on the same baseline as the other frames. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`fighter_jump1`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: an original 12-year-old kid, a tabletop-RPG nerd: messy brown hair, red zip-up jacket over a striped shirt, blue jeans, white sneakers, a yellow flashlight clipped to the jacket, a dented wooden baseball bat in the right hand, a dented metal trash-can lid strapped to the left arm as a shield. Side view, facing right. Jump, frame 1 of 2 (rising): knees tucked up, arms reaching up, body leaning slightly forward. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. Full body visible, about 80% of the image height, feet on the same baseline as the other frames. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`fighter_jump2`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: an original 12-year-old kid, a tabletop-RPG nerd: messy brown hair, red zip-up jacket over a striped shirt, blue jeans, white sneakers, a yellow flashlight clipped to the jacket, a dented wooden baseball bat in the right hand, a dented metal trash-can lid strapped to the left arm as a shield. Side view, facing right. Jump, frame 2 of 2 (falling): legs stretching down to land, arms out to the sides for balance. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. Full body visible, about 80% of the image height, feet on the same baseline as the other frames. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`fighter_roll1`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: an original 12-year-old kid, a tabletop-RPG nerd: messy brown hair, red zip-up jacket over a striped shirt, blue jeans, white sneakers, a yellow flashlight clipped to the jacket, a dented wooden baseball bat in the right hand, a dented metal trash-can lid strapped to the left arm as a shield. Side view, facing right. Roll, frame 1 of 4: curled into a tight ball mid-somersault, head at the top. Square image, round silhouette. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. Full body visible, about 80% of the image height, feet on the same baseline as the other frames. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`fighter_roll2`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: an original 12-year-old kid, a tabletop-RPG nerd: messy brown hair, red zip-up jacket over a striped shirt, blue jeans, white sneakers, a yellow flashlight clipped to the jacket, a dented wooden baseball bat in the right hand, a dented metal trash-can lid strapped to the left arm as a shield. Side view, facing right. Roll, frame 2 of 4: the same tight ball turned a quarter turn forward (clockwise), head now on the right. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. Full body visible, about 80% of the image height, feet on the same baseline as the other frames. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`fighter_roll3`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: an original 12-year-old kid, a tabletop-RPG nerd: messy brown hair, red zip-up jacket over a striped shirt, blue jeans, white sneakers, a yellow flashlight clipped to the jacket, a dented wooden baseball bat in the right hand, a dented metal trash-can lid strapped to the left arm as a shield. Side view, facing right. Roll, frame 3 of 4: the same ball turned another quarter, head now at the bottom. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. Full body visible, about 80% of the image height, feet on the same baseline as the other frames. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`fighter_roll4`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: an original 12-year-old kid, a tabletop-RPG nerd: messy brown hair, red zip-up jacket over a striped shirt, blue jeans, white sneakers, a yellow flashlight clipped to the jacket, a dented wooden baseball bat in the right hand, a dented metal trash-can lid strapped to the left arm as a shield. Side view, facing right. Roll, frame 4 of 4: the same ball turned another quarter, head now on the left. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. Full body visible, about 80% of the image height, feet on the same baseline as the other frames. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`fighter_attack1`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: an original 12-year-old kid, a tabletop-RPG nerd: messy brown hair, red zip-up jacket over a striped shirt, blue jeans, white sneakers, a yellow flashlight clipped to the jacket, a dented wooden baseball bat in the right hand, a dented metal trash-can lid strapped to the left arm as a shield. Side view, facing right. Running attack, frame 1 of 3: running stride, the bat pulled back over the right shoulder ready to swing (wind-up). The legs keep running: never a standing pose. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. Full body visible, about 80% of the image height, feet on the same baseline as the other frames. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`fighter_attack2`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: an original 12-year-old kid, a tabletop-RPG nerd: messy brown hair, red zip-up jacket over a striped shirt, blue jeans, white sneakers, a yellow flashlight clipped to the jacket, a dented wooden baseball bat in the right hand, a dented metal trash-can lid strapped to the left arm as a shield. Side view, facing right. Running attack, frame 2 of 3: mid-stride, the bat swinging forward horizontally at chest height, white motion-line pixels behind it. The legs keep running: never a standing pose. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. Full body visible, about 80% of the image height, feet on the same baseline as the other frames. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`fighter_attack3`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: an original 12-year-old kid, a tabletop-RPG nerd: messy brown hair, red zip-up jacket over a striped shirt, blue jeans, white sneakers, a yellow flashlight clipped to the jacket, a dented wooden baseball bat in the right hand, a dented metal trash-can lid strapped to the left arm as a shield. Side view, facing right. Running attack, frame 3 of 3: running follow-through, the bat swept past the front of the body and pointing down-forward, legs still mid-stride. The legs keep running: never a standing pose. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. Full body visible, about 80% of the image height, feet on the same baseline as the other frames. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+### Ranger (`ranger_…`, 15 frames)
+
+**`ranger_idle1`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: an original 12-year-old kid ranger: freckles, sandy hair under a faded green bucket hat, an olive army-surplus vest with bulging pockets over a yellow T-shirt, brown corduroy shorts, knee socks, hiking boots, a small backpack, a wooden Y-slingshot in the left hand. Side view, facing right. Idle, frame 1 of 2: standing relaxed, weight on one leg, breathing in (shoulders slightly raised). OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`ranger_idle2`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: an original 12-year-old kid ranger: freckles, sandy hair under a faded green bucket hat, an olive army-surplus vest with bulging pockets over a yellow T-shirt, brown corduroy shorts, knee socks, hiking boots, a small backpack, a wooden Y-slingshot in the left hand. Side view, facing right. Idle, frame 2 of 2: same standing pose, breathing out (shoulders slightly lowered), everything else identical. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. Full body visible, about 80% of the image height, feet on the same baseline as the other frames. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`ranger_run1`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: an original 12-year-old kid ranger: freckles, sandy hair under a faded green bucket hat, an olive army-surplus vest with bulging pockets over a yellow T-shirt, brown corduroy shorts, knee socks, hiking boots, a small backpack, a wooden Y-slingshot in the left hand. Side view, facing right. Running cycle, frame 1 of 4 (contact): right leg reaching forward with the heel touching down, left leg pushing off behind, arms swinging opposite. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. Full body visible, about 80% of the image height, feet on the same baseline as the other frames. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`ranger_run2`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: an original 12-year-old kid ranger: freckles, sandy hair under a faded green bucket hat, an olive army-surplus vest with bulging pockets over a yellow T-shirt, brown corduroy shorts, knee socks, hiking boots, a small backpack, a wooden Y-slingshot in the left hand. Side view, facing right. Running cycle, frame 2 of 4 (down): body slightly lower, right leg under the body taking the weight, left leg bending forward. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. Full body visible, about 80% of the image height, feet on the same baseline as the other frames. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`ranger_run3`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: an original 12-year-old kid ranger: freckles, sandy hair under a faded green bucket hat, an olive army-surplus vest with bulging pockets over a yellow T-shirt, brown corduroy shorts, knee socks, hiking boots, a small backpack, a wooden Y-slingshot in the left hand. Side view, facing right. Running cycle, frame 3 of 4 (contact): left leg reaching forward with the heel touching down, right leg pushing off behind, arms swinging opposite. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. Full body visible, about 80% of the image height, feet on the same baseline as the other frames. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`ranger_run4`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: an original 12-year-old kid ranger: freckles, sandy hair under a faded green bucket hat, an olive army-surplus vest with bulging pockets over a yellow T-shirt, brown corduroy shorts, knee socks, hiking boots, a small backpack, a wooden Y-slingshot in the left hand. Side view, facing right. Running cycle, frame 4 of 4 (up): body slightly higher, left leg under the body, right knee driving forward. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. Full body visible, about 80% of the image height, feet on the same baseline as the other frames. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`ranger_jump1`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: an original 12-year-old kid ranger: freckles, sandy hair under a faded green bucket hat, an olive army-surplus vest with bulging pockets over a yellow T-shirt, brown corduroy shorts, knee socks, hiking boots, a small backpack, a wooden Y-slingshot in the left hand. Side view, facing right. Jump, frame 1 of 2 (rising): knees tucked up, arms reaching up, body leaning slightly forward. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. Full body visible, about 80% of the image height, feet on the same baseline as the other frames. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`ranger_jump2`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: an original 12-year-old kid ranger: freckles, sandy hair under a faded green bucket hat, an olive army-surplus vest with bulging pockets over a yellow T-shirt, brown corduroy shorts, knee socks, hiking boots, a small backpack, a wooden Y-slingshot in the left hand. Side view, facing right. Jump, frame 2 of 2 (falling): legs stretching down to land, arms out to the sides for balance. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. Full body visible, about 80% of the image height, feet on the same baseline as the other frames. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`ranger_roll1`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: an original 12-year-old kid ranger: freckles, sandy hair under a faded green bucket hat, an olive army-surplus vest with bulging pockets over a yellow T-shirt, brown corduroy shorts, knee socks, hiking boots, a small backpack, a wooden Y-slingshot in the left hand. Side view, facing right. Roll, frame 1 of 4: curled into a tight ball mid-somersault, head at the top. Square image, round silhouette. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. Full body visible, about 80% of the image height, feet on the same baseline as the other frames. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`ranger_roll2`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: an original 12-year-old kid ranger: freckles, sandy hair under a faded green bucket hat, an olive army-surplus vest with bulging pockets over a yellow T-shirt, brown corduroy shorts, knee socks, hiking boots, a small backpack, a wooden Y-slingshot in the left hand. Side view, facing right. Roll, frame 2 of 4: the same tight ball turned a quarter turn forward (clockwise), head now on the right. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. Full body visible, about 80% of the image height, feet on the same baseline as the other frames. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`ranger_roll3`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: an original 12-year-old kid ranger: freckles, sandy hair under a faded green bucket hat, an olive army-surplus vest with bulging pockets over a yellow T-shirt, brown corduroy shorts, knee socks, hiking boots, a small backpack, a wooden Y-slingshot in the left hand. Side view, facing right. Roll, frame 3 of 4: the same ball turned another quarter, head now at the bottom. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. Full body visible, about 80% of the image height, feet on the same baseline as the other frames. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`ranger_roll4`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: an original 12-year-old kid ranger: freckles, sandy hair under a faded green bucket hat, an olive army-surplus vest with bulging pockets over a yellow T-shirt, brown corduroy shorts, knee socks, hiking boots, a small backpack, a wooden Y-slingshot in the left hand. Side view, facing right. Roll, frame 4 of 4: the same ball turned another quarter, head now on the left. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. Full body visible, about 80% of the image height, feet on the same baseline as the other frames. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`ranger_attack1`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: an original 12-year-old kid ranger: freckles, sandy hair under a faded green bucket hat, an olive army-surplus vest with bulging pockets over a yellow T-shirt, brown corduroy shorts, knee socks, hiking boots, a small backpack, a wooden Y-slingshot in the left hand. Side view, facing right. Running attack, frame 1 of 3: running stride, slingshot raised forward in the left hand, the band pulled back to the cheek with the right hand. The legs keep running: never a standing pose. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. Full body visible, about 80% of the image height, feet on the same baseline as the other frames. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`ranger_attack2`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: an original 12-year-old kid ranger: freckles, sandy hair under a faded green bucket hat, an olive army-surplus vest with bulging pockets over a yellow T-shirt, brown corduroy shorts, knee socks, hiking boots, a small backpack, a wooden Y-slingshot in the left hand. Side view, facing right. Running attack, frame 2 of 3: mid-stride, releasing the shot: the band snapping forward, a small blue marble just leaving the slingshot with a tiny flash. The legs keep running: never a standing pose. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. Full body visible, about 80% of the image height, feet on the same baseline as the other frames. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`ranger_attack3`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: an original 12-year-old kid ranger: freckles, sandy hair under a faded green bucket hat, an olive army-surplus vest with bulging pockets over a yellow T-shirt, brown corduroy shorts, knee socks, hiking boots, a small backpack, a wooden Y-slingshot in the left hand. Side view, facing right. Running attack, frame 3 of 3: running, the slingshot lowering after the shot, band slack, still mid-stride. The legs keep running: never a standing pose. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. Full body visible, about 80% of the image height, feet on the same baseline as the other frames. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+### Rogue (`rogue_…`, 15 frames)
+
+**`rogue_idle1`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: an original 12-year-old kid rogue: dark grey zip hoodie with the hood up, black hair poking out, a chunky 1980s walkie-talkie clipped to the chest with its antenna up, black jeans, beat-up canvas high-tops, fingerless gloves, a small metal flashlight in the right hand, sly grin. Side view, facing right. Idle, frame 1 of 2: standing relaxed, weight on one leg, breathing in (shoulders slightly raised). OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`rogue_idle2`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: an original 12-year-old kid rogue: dark grey zip hoodie with the hood up, black hair poking out, a chunky 1980s walkie-talkie clipped to the chest with its antenna up, black jeans, beat-up canvas high-tops, fingerless gloves, a small metal flashlight in the right hand, sly grin. Side view, facing right. Idle, frame 2 of 2: same standing pose, breathing out (shoulders slightly lowered), everything else identical. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. Full body visible, about 80% of the image height, feet on the same baseline as the other frames. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`rogue_run1`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: an original 12-year-old kid rogue: dark grey zip hoodie with the hood up, black hair poking out, a chunky 1980s walkie-talkie clipped to the chest with its antenna up, black jeans, beat-up canvas high-tops, fingerless gloves, a small metal flashlight in the right hand, sly grin. Side view, facing right. Running cycle, frame 1 of 4 (contact): right leg reaching forward with the heel touching down, left leg pushing off behind, arms swinging opposite. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. Full body visible, about 80% of the image height, feet on the same baseline as the other frames. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`rogue_run2`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: an original 12-year-old kid rogue: dark grey zip hoodie with the hood up, black hair poking out, a chunky 1980s walkie-talkie clipped to the chest with its antenna up, black jeans, beat-up canvas high-tops, fingerless gloves, a small metal flashlight in the right hand, sly grin. Side view, facing right. Running cycle, frame 2 of 4 (down): body slightly lower, right leg under the body taking the weight, left leg bending forward. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. Full body visible, about 80% of the image height, feet on the same baseline as the other frames. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`rogue_run3`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: an original 12-year-old kid rogue: dark grey zip hoodie with the hood up, black hair poking out, a chunky 1980s walkie-talkie clipped to the chest with its antenna up, black jeans, beat-up canvas high-tops, fingerless gloves, a small metal flashlight in the right hand, sly grin. Side view, facing right. Running cycle, frame 3 of 4 (contact): left leg reaching forward with the heel touching down, right leg pushing off behind, arms swinging opposite. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. Full body visible, about 80% of the image height, feet on the same baseline as the other frames. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`rogue_run4`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: an original 12-year-old kid rogue: dark grey zip hoodie with the hood up, black hair poking out, a chunky 1980s walkie-talkie clipped to the chest with its antenna up, black jeans, beat-up canvas high-tops, fingerless gloves, a small metal flashlight in the right hand, sly grin. Side view, facing right. Running cycle, frame 4 of 4 (up): body slightly higher, left leg under the body, right knee driving forward. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. Full body visible, about 80% of the image height, feet on the same baseline as the other frames. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`rogue_jump1`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: an original 12-year-old kid rogue: dark grey zip hoodie with the hood up, black hair poking out, a chunky 1980s walkie-talkie clipped to the chest with its antenna up, black jeans, beat-up canvas high-tops, fingerless gloves, a small metal flashlight in the right hand, sly grin. Side view, facing right. Jump, frame 1 of 2 (rising): knees tucked up, arms reaching up, body leaning slightly forward. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. Full body visible, about 80% of the image height, feet on the same baseline as the other frames. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`rogue_jump2`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: an original 12-year-old kid rogue: dark grey zip hoodie with the hood up, black hair poking out, a chunky 1980s walkie-talkie clipped to the chest with its antenna up, black jeans, beat-up canvas high-tops, fingerless gloves, a small metal flashlight in the right hand, sly grin. Side view, facing right. Jump, frame 2 of 2 (falling): legs stretching down to land, arms out to the sides for balance. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. Full body visible, about 80% of the image height, feet on the same baseline as the other frames. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`rogue_roll1`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: an original 12-year-old kid rogue: dark grey zip hoodie with the hood up, black hair poking out, a chunky 1980s walkie-talkie clipped to the chest with its antenna up, black jeans, beat-up canvas high-tops, fingerless gloves, a small metal flashlight in the right hand, sly grin. Side view, facing right. Roll, frame 1 of 4: curled into a tight ball mid-somersault, head at the top. Square image, round silhouette. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. Full body visible, about 80% of the image height, feet on the same baseline as the other frames. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`rogue_roll2`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: an original 12-year-old kid rogue: dark grey zip hoodie with the hood up, black hair poking out, a chunky 1980s walkie-talkie clipped to the chest with its antenna up, black jeans, beat-up canvas high-tops, fingerless gloves, a small metal flashlight in the right hand, sly grin. Side view, facing right. Roll, frame 2 of 4: the same tight ball turned a quarter turn forward (clockwise), head now on the right. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. Full body visible, about 80% of the image height, feet on the same baseline as the other frames. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`rogue_roll3`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: an original 12-year-old kid rogue: dark grey zip hoodie with the hood up, black hair poking out, a chunky 1980s walkie-talkie clipped to the chest with its antenna up, black jeans, beat-up canvas high-tops, fingerless gloves, a small metal flashlight in the right hand, sly grin. Side view, facing right. Roll, frame 3 of 4: the same ball turned another quarter, head now at the bottom. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. Full body visible, about 80% of the image height, feet on the same baseline as the other frames. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`rogue_roll4`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: an original 12-year-old kid rogue: dark grey zip hoodie with the hood up, black hair poking out, a chunky 1980s walkie-talkie clipped to the chest with its antenna up, black jeans, beat-up canvas high-tops, fingerless gloves, a small metal flashlight in the right hand, sly grin. Side view, facing right. Roll, frame 4 of 4: the same ball turned another quarter, head now on the left. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. Full body visible, about 80% of the image height, feet on the same baseline as the other frames. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`rogue_attack1`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: an original 12-year-old kid rogue: dark grey zip hoodie with the hood up, black hair poking out, a chunky 1980s walkie-talkie clipped to the chest with its antenna up, black jeans, beat-up canvas high-tops, fingerless gloves, a small metal flashlight in the right hand, sly grin. Side view, facing right. Running attack, frame 1 of 3: low fast running stride, the flashlight drawn back at the hip (wind-up). The legs keep running: never a standing pose. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. Full body visible, about 80% of the image height, feet on the same baseline as the other frames. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`rogue_attack2`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: an original 12-year-old kid rogue: dark grey zip hoodie with the hood up, black hair poking out, a chunky 1980s walkie-talkie clipped to the chest with its antenna up, black jeans, beat-up canvas high-tops, fingerless gloves, a small metal flashlight in the right hand, sly grin. Side view, facing right. Running attack, frame 2 of 3: mid-stride lunge, the flashlight thrust forward with a bright white strobe flash burst at its tip. The legs keep running: never a standing pose. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. Full body visible, about 80% of the image height, feet on the same baseline as the other frames. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`rogue_attack3`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: an original 12-year-old kid rogue: dark grey zip hoodie with the hood up, black hair poking out, a chunky 1980s walkie-talkie clipped to the chest with its antenna up, black jeans, beat-up canvas high-tops, fingerless gloves, a small metal flashlight in the right hand, sly grin. Side view, facing right. Running attack, frame 3 of 3: running, pulling the flashlight back, the last white sparks fading in front. The legs keep running: never a standing pose. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. Full body visible, about 80% of the image height, feet on the same baseline as the other frames. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+### Wizard (`wizard_…`, 15 frames)
+
+**`wizard_idle1`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: an original 12-year-old kid wizard: a cape made from a striped bedsheet tied at the neck, a cardboard cone hat with tinfoil stars, round glasses, curly red hair, a knitted sweater, a wand made from a painted stick, a cloth pouch of RPG dice on the belt. Side view, facing right. Idle, frame 1 of 2: standing relaxed, weight on one leg, breathing in (shoulders slightly raised). OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`wizard_idle2`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: an original 12-year-old kid wizard: a cape made from a striped bedsheet tied at the neck, a cardboard cone hat with tinfoil stars, round glasses, curly red hair, a knitted sweater, a wand made from a painted stick, a cloth pouch of RPG dice on the belt. Side view, facing right. Idle, frame 2 of 2: same standing pose, breathing out (shoulders slightly lowered), everything else identical. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. Full body visible, about 80% of the image height, feet on the same baseline as the other frames. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`wizard_run1`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: an original 12-year-old kid wizard: a cape made from a striped bedsheet tied at the neck, a cardboard cone hat with tinfoil stars, round glasses, curly red hair, a knitted sweater, a wand made from a painted stick, a cloth pouch of RPG dice on the belt. Side view, facing right. Running cycle, frame 1 of 4 (contact): right leg reaching forward with the heel touching down, left leg pushing off behind, arms swinging opposite. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. Full body visible, about 80% of the image height, feet on the same baseline as the other frames. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`wizard_run2`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: an original 12-year-old kid wizard: a cape made from a striped bedsheet tied at the neck, a cardboard cone hat with tinfoil stars, round glasses, curly red hair, a knitted sweater, a wand made from a painted stick, a cloth pouch of RPG dice on the belt. Side view, facing right. Running cycle, frame 2 of 4 (down): body slightly lower, right leg under the body taking the weight, left leg bending forward. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. Full body visible, about 80% of the image height, feet on the same baseline as the other frames. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`wizard_run3`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: an original 12-year-old kid wizard: a cape made from a striped bedsheet tied at the neck, a cardboard cone hat with tinfoil stars, round glasses, curly red hair, a knitted sweater, a wand made from a painted stick, a cloth pouch of RPG dice on the belt. Side view, facing right. Running cycle, frame 3 of 4 (contact): left leg reaching forward with the heel touching down, right leg pushing off behind, arms swinging opposite. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. Full body visible, about 80% of the image height, feet on the same baseline as the other frames. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`wizard_run4`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: an original 12-year-old kid wizard: a cape made from a striped bedsheet tied at the neck, a cardboard cone hat with tinfoil stars, round glasses, curly red hair, a knitted sweater, a wand made from a painted stick, a cloth pouch of RPG dice on the belt. Side view, facing right. Running cycle, frame 4 of 4 (up): body slightly higher, left leg under the body, right knee driving forward. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. Full body visible, about 80% of the image height, feet on the same baseline as the other frames. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`wizard_jump1`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: an original 12-year-old kid wizard: a cape made from a striped bedsheet tied at the neck, a cardboard cone hat with tinfoil stars, round glasses, curly red hair, a knitted sweater, a wand made from a painted stick, a cloth pouch of RPG dice on the belt. Side view, facing right. Jump, frame 1 of 2 (rising): knees tucked up, arms reaching up, body leaning slightly forward. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. Full body visible, about 80% of the image height, feet on the same baseline as the other frames. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`wizard_jump2`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: an original 12-year-old kid wizard: a cape made from a striped bedsheet tied at the neck, a cardboard cone hat with tinfoil stars, round glasses, curly red hair, a knitted sweater, a wand made from a painted stick, a cloth pouch of RPG dice on the belt. Side view, facing right. Jump, frame 2 of 2 (falling): legs stretching down to land, arms out to the sides for balance. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. Full body visible, about 80% of the image height, feet on the same baseline as the other frames. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`wizard_roll1`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: an original 12-year-old kid wizard: a cape made from a striped bedsheet tied at the neck, a cardboard cone hat with tinfoil stars, round glasses, curly red hair, a knitted sweater, a wand made from a painted stick, a cloth pouch of RPG dice on the belt. Side view, facing right. Roll, frame 1 of 4: curled into a tight ball mid-somersault, head at the top. Square image, round silhouette. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. Full body visible, about 80% of the image height, feet on the same baseline as the other frames. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`wizard_roll2`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: an original 12-year-old kid wizard: a cape made from a striped bedsheet tied at the neck, a cardboard cone hat with tinfoil stars, round glasses, curly red hair, a knitted sweater, a wand made from a painted stick, a cloth pouch of RPG dice on the belt. Side view, facing right. Roll, frame 2 of 4: the same tight ball turned a quarter turn forward (clockwise), head now on the right. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. Full body visible, about 80% of the image height, feet on the same baseline as the other frames. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`wizard_roll3`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: an original 12-year-old kid wizard: a cape made from a striped bedsheet tied at the neck, a cardboard cone hat with tinfoil stars, round glasses, curly red hair, a knitted sweater, a wand made from a painted stick, a cloth pouch of RPG dice on the belt. Side view, facing right. Roll, frame 3 of 4: the same ball turned another quarter, head now at the bottom. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. Full body visible, about 80% of the image height, feet on the same baseline as the other frames. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`wizard_roll4`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: an original 12-year-old kid wizard: a cape made from a striped bedsheet tied at the neck, a cardboard cone hat with tinfoil stars, round glasses, curly red hair, a knitted sweater, a wand made from a painted stick, a cloth pouch of RPG dice on the belt. Side view, facing right. Roll, frame 4 of 4: the same ball turned another quarter, head now on the left. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. Full body visible, about 80% of the image height, feet on the same baseline as the other frames. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`wizard_attack1`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: an original 12-year-old kid wizard: a cape made from a striped bedsheet tied at the neck, a cardboard cone hat with tinfoil stars, round glasses, curly red hair, a knitted sweater, a wand made from a painted stick, a cloth pouch of RPG dice on the belt. Side view, facing right. Running attack, frame 1 of 3: running stride, the wand raised overhead, small violet sparks gathering at its tip, cape flowing behind. The legs keep running: never a standing pose. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. Full body visible, about 80% of the image height, feet on the same baseline as the other frames. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`wizard_attack2`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: an original 12-year-old kid wizard: a cape made from a striped bedsheet tied at the neck, a cardboard cone hat with tinfoil stars, round glasses, curly red hair, a knitted sweater, a wand made from a painted stick, a cloth pouch of RPG dice on the belt. Side view, facing right. Running attack, frame 2 of 3: mid-stride, the wand thrust forward and a glowing violet twenty-sided die launching from its tip. The legs keep running: never a standing pose. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. Full body visible, about 80% of the image height, feet on the same baseline as the other frames. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`wizard_attack3`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: an original 12-year-old kid wizard: a cape made from a striped bedsheet tied at the neck, a cardboard cone hat with tinfoil stars, round glasses, curly red hair, a knitted sweater, a wand made from a painted stick, a cloth pouch of RPG dice on the belt. Side view, facing right. Running attack, frame 3 of 3: running, the wand lowering, a short trail of violet sparks in front, cape billowing. The legs keep running: never a standing pose. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. Full body visible, about 80% of the image height, feet on the same baseline as the other frames. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
 
 ---
 
-## 1. Characters (4 classes × 6 frames + 4 reference sheets + 2 projectiles)
+## 2. Enemies
 
-All four kids must be the **same height and pixel scale**. Upload the
-Fighter's `run1` too when making the other classes' frames.
+### Crow (`crow_…`, 6 frames)
 
-### ★ Reference sheets (not used in the game, needed for consistency)
+**`crow_fly1`**
 
-| Key | Prompt ([SPRITE] block first) |
-|---|---|
-| `fighter_ref` ★ | Character turnaround sheet of an original 12-year-old kid, a tabletop-RPG nerd, side view facing right: messy brown hair, red zip-up jacket over a striped shirt, blue jeans, white sneakers, a yellow flashlight clipped to the jacket, a dented wooden baseball bat, a dented trash-can lid strapped to one arm as a shield. Three poses in a row: standing, running, swinging the bat. |
-| `ranger_ref` ★ | Same scale as the attached Fighter. Original 12-year-old kid ranger, side view facing right: freckles, sandy hair under a faded green bucket hat, olive army-surplus vest with bulging pockets over a yellow T-shirt, brown corduroy shorts, knee socks, hiking boots, a wooden Y-slingshot, a pouch of marbles on the belt, a skateboard strapped to the backpack. Three poses: standing, running, aiming. |
-| `rogue_ref` ★ | Same scale as the attached Fighter. Original 12-year-old kid rogue, side view facing right: dark grey zip hoodie with the hood up, black hair poking out, a chunky 1980s walkie-talkie clipped to the chest with its antenna up, black jeans, beat-up canvas high-tops, fingerless gloves, a small flashlight. Sly grin. Three poses: standing, running, striking. |
-| `wizard_ref` ★ | Same scale as the attached Fighter. Original 12-year-old kid wizard, side view facing right: a cape made from a striped bedsheet tied at the neck, a cardboard cone hat with tinfoil stars, round glasses, curly red hair, a knitted sweater, a wand made from a painted stick, a cloth pouch of RPG dice on the belt. Proud expression. Three poses: standing, running, casting. |
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Creature: a sickly black crow with one glowing white eye, ragged feathers, yellow beak, flying, side view facing LEFT. Original design, not copied from any show, film or game. Flying, frame 1 of 4: wings fully up. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
 
-### Frames: make these 6 for each class
+**`crow_fly2`**
 
-Replace `<class>` with `fighter`, `ranger`, `rogue` or `wizard` (24 files).
-Start each prompt with: *[SPRITE] Use the attached reference. Same character,
-same palette, same pixel scale. Facing right.*
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Creature: a sickly black crow with one glowing white eye, ragged feathers, yellow beak, flying, side view facing LEFT. Original design, not copied from any show, film or game. Flying, frame 2 of 4: wings level, spread out. Match the attached reference exactly: same creature, same proportions, same palette, same pixel size. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
 
-| Key | Prompt |
-|---|---|
-| `<class>_idle` | Standing relaxed in a doorway pose, weight on one leg, ready to run. |
-| `<class>_run1` | Running, frame A: front leg forward, back leg pushing off, arms pumping. |
-| `<class>_run2` | Running, frame B: legs passing under the body mid-stride. Same height as frame A. |
-| `<class>_jump` | Mid-jump, knees tucked up, one arm raised. |
-| `<class>_roll` | Curled into a tight ball mid-somersault, round silhouette that still reads when rotated. Square image. |
-| `<class>_attack` | See the class line below. |
+**`crow_fly3`**
 
-| Class | `_attack` |
-|---|---|
-| Fighter | Swinging the baseball bat forward at chest height, bat fully extended to the right, white motion-line pixels. |
-| Ranger | Aiming the slingshot to the right, band pulled back to the cheek. |
-| Rogue | Quick lunge, flashlight thrust forward with a bright white strobe flash at the tip. |
-| Wizard | Wand thrust forward, a glowing violet twenty-sided die flying from its tip. |
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Creature: a sickly black crow with one glowing white eye, ragged feathers, yellow beak, flying, side view facing LEFT. Original design, not copied from any show, film or game. Flying, frame 3 of 4: wings fully down. Match the attached reference exactly: same creature, same proportions, same palette, same pixel size. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
 
-### Projectiles
+**`crow_fly4`**
 
-| Key | Prompt ([SPRITE]) |
-|---|---|
-| `ranger_shot` | A single glowing blue marble with a short motion trail to the left. Tiny. |
-| `wizard_d20` | A small glowing violet twenty-sided die with a sparkle trail to the left. Tiny. |
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Creature: a sickly black crow with one glowing white eye, ragged feathers, yellow beak, flying, side view facing LEFT. Original design, not copied from any show, film or game. Flying, frame 4 of 4: wings level, folding up. Match the attached reference exactly: same creature, same proportions, same palette, same pixel size. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`crow_attack1`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Creature: a sickly black crow with one glowing white eye, ragged feathers, yellow beak, flying, side view facing LEFT. Original design, not copied from any show, film or game. Attack, frame 1 of 2: diving forward, wings swept back, beak open, talons forward. Match the attached reference exactly: same creature, same proportions, same palette, same pixel size. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`crow_attack2`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Creature: a sickly black crow with one glowing white eye, ragged feathers, yellow beak, flying, side view facing LEFT. Original design, not copied from any show, film or game. Attack, frame 2 of 2: lunging bite, head thrust forward, wings flared. Match the attached reference exactly: same creature, same proportions, same palette, same pixel size. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+### Hound (Upside Down) (`hound_…`, 8 frames)
+
+**`hound_run1`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Creature: an original lean, hairless four-legged predator from a dark parallel world, side view facing LEFT: ash-grey hide stretched over visible ribs, a bony ridge down the spine, long thin legs with hooked black claws, a whip-thin tail, a long narrow eyeless skull with a lipless snarl of needle-like teeth and two small glowing red pits on the snout. Original design, not copied from any show, film or game. Running cycle, frame 1 of 4: front legs reaching far forward, back legs stretched behind (full extension). OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`hound_run2`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Creature: an original lean, hairless four-legged predator from a dark parallel world, side view facing LEFT: ash-grey hide stretched over visible ribs, a bony ridge down the spine, long thin legs with hooked black claws, a whip-thin tail, a long narrow eyeless skull with a lipless snarl of needle-like teeth and two small glowing red pits on the snout. Original design, not copied from any show, film or game. Running cycle, frame 2 of 4: front paws landing, back legs swinging forward. Match the attached reference exactly: same creature, same proportions, same palette, same pixel size. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`hound_run3`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Creature: an original lean, hairless four-legged predator from a dark parallel world, side view facing LEFT: ash-grey hide stretched over visible ribs, a bony ridge down the spine, long thin legs with hooked black claws, a whip-thin tail, a long narrow eyeless skull with a lipless snarl of needle-like teeth and two small glowing red pits on the snout. Original design, not copied from any show, film or game. Running cycle, frame 3 of 4: all four legs gathered under the body (full contraction), spine arched. Match the attached reference exactly: same creature, same proportions, same palette, same pixel size. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`hound_run4`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Creature: an original lean, hairless four-legged predator from a dark parallel world, side view facing LEFT: ash-grey hide stretched over visible ribs, a bony ridge down the spine, long thin legs with hooked black claws, a whip-thin tail, a long narrow eyeless skull with a lipless snarl of needle-like teeth and two small glowing red pits on the snout. Original design, not copied from any show, film or game. Running cycle, frame 4 of 4: back legs pushing off, front legs lifting. Match the attached reference exactly: same creature, same proportions, same palette, same pixel size. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`hound_jump1`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Creature: an original lean, hairless four-legged predator from a dark parallel world, side view facing LEFT: ash-grey hide stretched over visible ribs, a bony ridge down the spine, long thin legs with hooked black claws, a whip-thin tail, a long narrow eyeless skull with a lipless snarl of needle-like teeth and two small glowing red pits on the snout. Original design, not copied from any show, film or game. Pounce, frame 1 of 2 (rising): leaping up and forward, front claws reaching out, jaws wide open. Match the attached reference exactly: same creature, same proportions, same palette, same pixel size. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`hound_jump2`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Creature: an original lean, hairless four-legged predator from a dark parallel world, side view facing LEFT: ash-grey hide stretched over visible ribs, a bony ridge down the spine, long thin legs with hooked black claws, a whip-thin tail, a long narrow eyeless skull with a lipless snarl of needle-like teeth and two small glowing red pits on the snout. Original design, not copied from any show, film or game. Pounce, frame 2 of 2 (falling): coming down, front legs stretched to land, back legs tucked. Match the attached reference exactly: same creature, same proportions, same palette, same pixel size. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`hound_attack1`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Creature: an original lean, hairless four-legged predator from a dark parallel world, side view facing LEFT: ash-grey hide stretched over visible ribs, a bony ridge down the spine, long thin legs with hooked black claws, a whip-thin tail, a long narrow eyeless skull with a lipless snarl of needle-like teeth and two small glowing red pits on the snout. Original design, not copied from any show, film or game. Attack, frame 1 of 2: braking hard, head pulled back, jaws opening. Match the attached reference exactly: same creature, same proportions, same palette, same pixel size. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`hound_attack2`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Creature: an original lean, hairless four-legged predator from a dark parallel world, side view facing LEFT: ash-grey hide stretched over visible ribs, a bony ridge down the spine, long thin legs with hooked black claws, a whip-thin tail, a long narrow eyeless skull with a lipless snarl of needle-like teeth and two small glowing red pits on the snout. Original design, not copied from any show, film or game. Attack, frame 2 of 2: snapping bite, head thrust forward, jaws wide. Match the attached reference exactly: same creature, same proportions, same palette, same pixel size. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+### Stalker (Upside Down) (`stalker_…`, 7 frames)
+
+**`stalker_walk1`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Creature: an original tall, gaunt, hunched humanoid creature from a dark parallel world, side view facing LEFT: wrinkled pale grey-violet hide with dark crimson veins, very long arms hanging past the knees ending in long hooked claws, digitigrade legs, a small head low between the shoulders crowned with a tangle of black root-like antlers, a narrow shadowed face with two pinpoint glowing red eyes, a ragged mane of dark vines down its back. Original design, not copied from any show, film or game. Walking cycle, frame 1 of 4: left leg forward, right arm swinging forward, long claws dangling. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`stalker_walk2`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Creature: an original tall, gaunt, hunched humanoid creature from a dark parallel world, side view facing LEFT: wrinkled pale grey-violet hide with dark crimson veins, very long arms hanging past the knees ending in long hooked claws, digitigrade legs, a small head low between the shoulders crowned with a tangle of black root-like antlers, a narrow shadowed face with two pinpoint glowing red eyes, a ragged mane of dark vines down its back. Original design, not copied from any show, film or game. Walking cycle, frame 2 of 4: legs passing, body at its lowest, arms hanging. Match the attached reference exactly: same creature, same proportions, same palette, same pixel size. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`stalker_walk3`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Creature: an original tall, gaunt, hunched humanoid creature from a dark parallel world, side view facing LEFT: wrinkled pale grey-violet hide with dark crimson veins, very long arms hanging past the knees ending in long hooked claws, digitigrade legs, a small head low between the shoulders crowned with a tangle of black root-like antlers, a narrow shadowed face with two pinpoint glowing red eyes, a ragged mane of dark vines down its back. Original design, not copied from any show, film or game. Walking cycle, frame 3 of 4: right leg forward, left arm swinging forward. Match the attached reference exactly: same creature, same proportions, same palette, same pixel size. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`stalker_walk4`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Creature: an original tall, gaunt, hunched humanoid creature from a dark parallel world, side view facing LEFT: wrinkled pale grey-violet hide with dark crimson veins, very long arms hanging past the knees ending in long hooked claws, digitigrade legs, a small head low between the shoulders crowned with a tangle of black root-like antlers, a narrow shadowed face with two pinpoint glowing red eyes, a ragged mane of dark vines down its back. Original design, not copied from any show, film or game. Walking cycle, frame 4 of 4: legs passing, body at its highest. Match the attached reference exactly: same creature, same proportions, same palette, same pixel size. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`stalker_attack1`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Creature: an original tall, gaunt, hunched humanoid creature from a dark parallel world, side view facing LEFT: wrinkled pale grey-violet hide with dark crimson veins, very long arms hanging past the knees ending in long hooked claws, digitigrade legs, a small head low between the shoulders crowned with a tangle of black root-like antlers, a narrow shadowed face with two pinpoint glowing red eyes, a ragged mane of dark vines down its back. Original design, not copied from any show, film or game. Attack, frame 1 of 3: rearing up, one long arm raised high with claws spread (wind-up). Match the attached reference exactly: same creature, same proportions, same palette, same pixel size. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`stalker_attack2`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Creature: an original tall, gaunt, hunched humanoid creature from a dark parallel world, side view facing LEFT: wrinkled pale grey-violet hide with dark crimson veins, very long arms hanging past the knees ending in long hooked claws, digitigrade legs, a small head low between the shoulders crowned with a tangle of black root-like antlers, a narrow shadowed face with two pinpoint glowing red eyes, a ragged mane of dark vines down its back. Original design, not copied from any show, film or game. Attack, frame 2 of 3: the raised arm slashing down and forward, white claw-slash lines. Match the attached reference exactly: same creature, same proportions, same palette, same pixel size. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`stalker_attack3`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Creature: an original tall, gaunt, hunched humanoid creature from a dark parallel world, side view facing LEFT: wrinkled pale grey-violet hide with dark crimson veins, very long arms hanging past the knees ending in long hooked claws, digitigrade legs, a small head low between the shoulders crowned with a tangle of black root-like antlers, a narrow shadowed face with two pinpoint glowing red eyes, a ragged mane of dark vines down its back. Original design, not copied from any show, film or game. Attack, frame 3 of 3: follow-through, the arm swept low in front, body hunched forward. Match the attached reference exactly: same creature, same proportions, same palette, same pixel size. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+### Flyer (Upside Down) (`flyer_…`, 6 frames)
+
+**`flyer_fly1`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Creature: an original small flying creature from a dark parallel world, side view facing LEFT: a moth-like body covered in dusky grey fuzz, two big tattered wings with dark violet membranes and glowing crimson veins, a long whip-like tail with a barb, two red eyes, a small hooked mouth. Original design, not copied from any show, film or game. Flying, frame 1 of 4: wings fully up. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`flyer_fly2`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Creature: an original small flying creature from a dark parallel world, side view facing LEFT: a moth-like body covered in dusky grey fuzz, two big tattered wings with dark violet membranes and glowing crimson veins, a long whip-like tail with a barb, two red eyes, a small hooked mouth. Original design, not copied from any show, film or game. Flying, frame 2 of 4: wings level. Match the attached reference exactly: same creature, same proportions, same palette, same pixel size. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`flyer_fly3`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Creature: an original small flying creature from a dark parallel world, side view facing LEFT: a moth-like body covered in dusky grey fuzz, two big tattered wings with dark violet membranes and glowing crimson veins, a long whip-like tail with a barb, two red eyes, a small hooked mouth. Original design, not copied from any show, film or game. Flying, frame 3 of 4: wings fully down. Match the attached reference exactly: same creature, same proportions, same palette, same pixel size. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`flyer_fly4`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Creature: an original small flying creature from a dark parallel world, side view facing LEFT: a moth-like body covered in dusky grey fuzz, two big tattered wings with dark violet membranes and glowing crimson veins, a long whip-like tail with a barb, two red eyes, a small hooked mouth. Original design, not copied from any show, film or game. Flying, frame 4 of 4: wings level, rising. Match the attached reference exactly: same creature, same proportions, same palette, same pixel size. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`flyer_attack1`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Creature: an original small flying creature from a dark parallel world, side view facing LEFT: a moth-like body covered in dusky grey fuzz, two big tattered wings with dark violet membranes and glowing crimson veins, a long whip-like tail with a barb, two red eyes, a small hooked mouth. Original design, not copied from any show, film or game. Attack, frame 1 of 2: diving forward, wings folded back, tail barb raised. Match the attached reference exactly: same creature, same proportions, same palette, same pixel size. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`flyer_attack2`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Creature: an original small flying creature from a dark parallel world, side view facing LEFT: a moth-like body covered in dusky grey fuzz, two big tattered wings with dark violet membranes and glowing crimson veins, a long whip-like tail with a barb, two red eyes, a small hooked mouth. Original design, not copied from any show, film or game. Attack, frame 2 of 2: striking, tail barb whipping forward over its head, mouth open. Match the attached reference exactly: same creature, same proportions, same palette, same pixel size. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+### Spore pod (Upside Down) (`pod_…`, 4 frames)
+
+**`pod_idle1`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Creature: a pulsing fleshy spore pod rooted in the ground, crimson and magenta, short root tendrils at the base, two small glowing eyes, side view facing LEFT. Original design, not copied from any show, film or game. Idle, frame 1 of 2: pod slightly swollen, mouth closed. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`pod_idle2`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Creature: a pulsing fleshy spore pod rooted in the ground, crimson and magenta, short root tendrils at the base, two small glowing eyes, side view facing LEFT. Original design, not copied from any show, film or game. Idle, frame 2 of 2: pod slightly shrunk (breathing), mouth closed. Match the attached reference exactly: same creature, same proportions, same palette, same pixel size. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`pod_attack1`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Creature: a pulsing fleshy spore pod rooted in the ground, crimson and magenta, short root tendrils at the base, two small glowing eyes, side view facing LEFT. Original design, not copied from any show, film or game. Attack, frame 1 of 2: pod swelling up, mouth starting to open, glowing pink inside. Match the attached reference exactly: same creature, same proportions, same palette, same pixel size. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`pod_attack2`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Creature: a pulsing fleshy spore pod rooted in the ground, crimson and magenta, short root tendrils at the base, two small glowing eyes, side view facing LEFT. Original design, not copied from any show, film or game. Attack, frame 2 of 2: mouth wide open, spitting a glowing pink spore to the LEFT. Match the attached reference exactly: same creature, same proportions, same palette, same pixel size. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+### Projectiles (3)
+
+**`shot_spore`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Object: a tiny glowing pink spore ball with a short trail to the left (fired by the spore pod). Tiny, simple, bold. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`ranger_shot`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Object: a single glowing blue marble with a short motion trail to the left (the Ranger's slingshot shot). Tiny, simple, bold. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`wizard_d20`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Object: a small glowing violet twenty-sided die with a sparkle trail to the left (the Wizard's spell). Tiny, simple, bold. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
 
 ---
 
-## 2. Enemies (11)
+## 3. The Watcher: background creature in the Upside Down sky (2 images)
 
-Enemies face **left**, toward the player. Two frames each: make frame 1
-first, then frame 2 with *"use the attached image: the exact same creature,
-same size and colours"* plus the pose change. All are original creatures.
+Not an enemy: it rises far away in the Upside Down sky now and then. It's barely visible until lightning lights it up. The game sways the **head** from side to side and bobs the whole creature, so it comes as **two separate pieces**. It should read as a dark silhouette with only a faint crimson rim light.
 
-### The Upside Down pack (new)
+**`watcher_body`**
 
-| Key | Prompt ([SPRITE] block first) |
-|---|---|
-| `crawl1` | **Hound.** An original lean, hairless four-legged predator from a dark parallel world, side view facing left, low hunting stance. Ash-grey hide stretched tight over visible ribs and a bony ridge down the spine, long thin legs with hooked black claws, a whip-thin tail. The head is a long narrow eyeless skull with a lipless snarl of needle-like teeth and two small glowing red pits where nostrils would be. Running pose A: front legs reaching forward. |
-| `crawl2` | Same hound as attached, running pose B: legs gathered under the body mid-stride. |
-| `stalker1` | **Stalker** (a tougher enemy that takes two hits). An original tall, gaunt, hunched humanoid creature from a dark parallel world, side view facing left. Wrinkled pale grey-violet hide with dark crimson veins, very long arms hanging past its knees ending in long hooked claws, digitigrade legs. Its head is small and low between its shoulders, crowned with a tangle of black root-like antlers; a narrow shadowed face with two pinpoint glowing red eyes. A ragged mane of dark vines down its back. Walking pose A: one long arm reaching forward. |
-| `stalker2` | Same stalker as attached, walking pose B: the other leg forward, claws raised higher. |
-| `wisp1` | **Flyer.** An original small flying creature from a dark parallel world, side view facing left: a moth-like body covered in dusky grey fuzz, two big tattered wings with dark violet membranes and glowing crimson veins, a long whip-like tail with a barb, two red eyes, a small hooked mouth. Wings raised. |
-| `wisp2` | Same flyer as attached, wings swept down. |
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Creature: an original colossal creature from a dark parallel world, seen from far away as a towering silhouette: a body made of twisted black roots and drifting storm smoke, two very long branch-like arms with twig claws reaching out to the sides, the bottom fading into smoke and roots. Front view. Draw the body WITHOUT a head: the neck ends flat and centred at the very top of the image, so a separate head can sit on it. Almost black (#14060c) with a thin dull-crimson rim light, very little detail, soft smoky edges made of pixel clusters. Original design, not copied from any show, film or game. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
 
-### Others (unchanged)
+**`watcher_head`**
 
-| Key | Prompt ([SPRITE]) |
-|---|---|
-| `crow1` | A sickly black crow with one glowing white eye flying left, wings up. Ragged feathers, yellow beak. |
-| `crow2` | Same crow as attached, wings down. |
-| `pod1` | A pulsing fleshy spore pod rooted in the ground, crimson and magenta, two small glowing eyes, mouth closed. |
-| `pod2` | Same pod as attached, mouth open, spitting a glowing pink spore to the left. |
-| `shot_spore` | A tiny glowing pink spore ball with a short trail to the left. |
-
----
-
-## 3. Obstacles (2)
-
-Upside Down obstacles are drawn **upright**, standing on the ground. The game flips them under the floor.
-
-| Key | Prompt ([SPRITE]) |
-|---|---|
-| `stump` | A rotten tree stump wrapped in dark crimson veins with glowing red cracks. |
-| `tendril` | A very tall, narrow bundle of dark organic vines hanging from above, pulsing crimson tips at the bottom. Tall thin image (about 1:5). |
-
----
-
-## 4. Christmas lights: the points (9)
-
-The run's currency. Single bulbs hang on strings, and crates are full of them.
-Smash a crate with a hit to spill the lights.
-
-| Key | Prompt ([SPRITE]) |
-|---|---|
-| `bulb_red` | One old-fashioned 1980s Christmas-light bulb (C7 shape) hanging straight down from a small dark green socket, glowing **red**, a white highlight pixel, soft glow. Tall narrow image. |
-| `bulb_green` | Same bulb as attached, glowing **green**. |
-| `bulb_blue` | Same bulb as attached, glowing **blue**. |
-| `bulb_yellow` | Same bulb as attached, glowing **yellow**. |
-| `bulb_orange` | Same bulb as attached, glowing **orange**. |
-| `bulb_pink` | Same bulb as attached, glowing **pink**. |
-| `bulb_gold` | Same bulb as attached, but **gold** with tiny white sparkles around it (the rare one, worth 5). |
-| `crate` | A small wooden shipping crate, slats nailed shut, warm multicoloured Christmas-light glow leaking out between the slats, a tangle of green light-cord hanging from one corner. |
-| `crate_dark` | Same crate as attached, but rotten for a dark parallel world: damp purple wood, crimson veins, the lights inside glowing dimly red. |
-
----
-
-## 5. Environment (35)
-
-**Why this fixes the busy background:** the backdrop is now just sky and a
-soft distant silhouette. The street is built from separate pieces that the
-game places with lots of empty space: a building only every 2–4 blank
-stretches. Every piece uses the **[SCENERY]** block (muted, low contrast).
-
-### Backdrops and floor (3, *opaque*)
-
-| Key | Prompt ([SCENERY]) |
-|---|---|
-| `backdrop_top` | *Opaque.* A wide, seamless, horizontally tileable dusk sky over a small town: teal sky fading to warm peach at the horizon, a few soft clouds, a low hazy sun, and along the bottom only a soft, low silhouette of distant trees and rooftops in muted blue-grey. **No buildings in front, no street, no details in the lower third.** The bottom edge is the horizon. Left and right edges must match. 3:1. |
-| `backdrop_bottom` | *Opaque.* The same sky as attached but in a rotten mirror dimension: deep crimson and dark plum, faint red lightning far away, floating ash, a soft dark silhouette of dead trees along the bottom. Calm and dim, low contrast, no details in the lower third. Tileable, 3:1. |
-| `floor` | *Opaque.* A seamless, horizontally tileable side-view strip of ground, 4:1. Top 40%: a thin green grass edge over grey asphalt. Bottom 60%: dark soil turning into black roots with glowing crimson veins. No sky above the grass. |
-
-### Hellfire Club (2): the start of every run
-
-| Key | Prompt ([SCENERY], but this one may be a bit brighter: it's the hub) |
-|---|---|
-| `club` ★ | A small two-storey red-brick 1980s building where a tabletop gaming club meets at night. **Open double door exactly in the centre**, spilling warm light onto stone steps, a red awning over it. Warm-lit windows, one with kids around a table. A sign above the door reads "HELLFIRE CLUB" in plain blocky red neon letters, no logo. A small paper poster of a twenty-sided die by the door. Ground line at the bottom edge. |
-| `club_dark` | The exact building as attached, same size and outline, rotten in a dark mirror dimension: dark purple and crimson bricks, dull red windows, black vines from the roof, dead cracked sign. |
-
-### Buildings (18): one every few blank stretches
-
-Make the normal version first (★), then the `_dark` twin with *"use the
-attached reference: the exact same building, same size and outline, rotten
-in a dark mirror dimension: dark purple and crimson, dull red windows, black
-vines, broken sign"*. Every building: **one standalone building, transparent
-background, no street, no sidewalk, no neighbours, ground line at the bottom edge.**
-
-| Key | Prompt ([SCENERY]) |
-|---|---|
-| `set_house` ★ / `set_house_dark` | A modest one-storey wooden family house with a gabled roof, porch, two windows and a door. |
-| `set_houses` ★ / `set_houses_dark` | Two small neighbouring houses side by side with a little gap, different siding colours. |
-| `set_school` ★ / `set_school_dark` | A long two-storey brick high school with a flat roof, rows of windows, a double-door entrance, a flagpole, and a plain sign reading "HIGH SCHOOL". Wide image. |
-| `set_police` ★ / `set_police_dark` | A small single-storey concrete police station with a plain sign reading "POLICE", a blue lamp by the door, a few windows. |
-| `set_store` ★ / `set_store_dark` | A small-town general store with a striped awning, a big shop window and a plain sign reading "GENERAL STORE". |
-| `set_arcade` ★ / `set_arcade_dark` | A small 1980s video arcade with a neon sign reading "ARCADE", glass front with the glow of arcade cabinets inside. |
-| `set_diner` ★ / `set_diner_dark` | A low chrome roadside diner with a strip of windows and a plain sign reading "DINER". Wide image. |
-| `set_gas` ★ / `set_gas_dark` | A small gas station: a flat canopy on two pillars over two old pumps, a tall sign pole reading "GAS". |
-| `set_camper` ★ / `set_camper_dark` | A small 1970s camper trailer on blocks, with a couple of bikes leaning against it. Wide image. |
-
-### Props (12): dotted along the blank stretches
-
-Same rules as the buildings: normal version ★ first, then `_dark` with the same twin prompt. Small, simple, transparent background.
-
-| Key | Prompt ([SCENERY]) |
-|---|---|
-| `prop_tree` ★ / `prop_tree_dark` | One round leafy street tree. (Dark: bare twisted tree with vines.) |
-| `prop_lamp` ★ / `prop_lamp_dark` | One tall thin street lamp with a soft warm bulb. |
-| `prop_mailbox` ★ / `prop_mailbox_dark` | One curbside mailbox on a wooden post. |
-| `prop_hedge` ★ / `prop_hedge_dark` | One low trimmed hedge, wide and short. |
-| `prop_phonebooth` ★ / `prop_phonebooth_dark` | One 1980s outdoor phone booth. |
-| `prop_hydrant` ★ / `prop_hydrant_dark` | One fire hydrant. |
-
----
-
-## 6. Menu UI (34)
-
-**Frames stretch with 9-slice scaling:** the corners stay sharp and the
-middle stretches. So every frame needs **evenly thick borders and a
-completely flat, empty centre.** The exact ratios matter:
-
-| Key | Prompt ([UI]) |
-|---|---|
-| `ui_logo` | A wide game logo reading "THE UPSIDE DOWN" in chunky retro arcade letters: "THE UPSIDE" in warm lamp-gold with a dark outline and orange shading; "DOWN" underneath, flipped upside down, glowing blood red with dark crimson vines. A thin crack line between the words. About 3:1. |
-| `ui_button` | A rectangular button frame, **exactly 3:1, border thickness exactly 1/4 of the height**: violet #2b1a3d face, lighter bevel top-left, darker bevel bottom-right, dark outline, tiny rivets in the corners. Flat empty centre. |
-| `ui_button_primary` | Same frame as attached, blood red #b8283f with a pink top bevel, gold rivets. |
-| `ui_panel` | A **square** panel frame, **border exactly 1/6 of the width**: dark wood with brass corner caps and a thin gold inner line, flat very dark violet centre. For the hub and the run-over screen. |
-| `ui_sheet` | A **square** frame for a tabletop-RPG character sheet, **border exactly 1/6 of the width**: aged parchment border with ink doodles of dice and swords in the corners, a flat dark violet centre. |
-| `ui_box` | A small **square** box frame, **border exactly 1/6 of the width**: dark violet border with a thin teal inner line, flat dark centre. For ability scores and upgrade rows. |
-| `ui_row` | A leaderboard row frame, **exactly 3:1, border exactly 1/4 of the height**: thin gold line on dark violet, flat centre. |
-| `ui_dice` | A horizontal strip of **six identical square six-sided dice faces** seen straight on, showing 1 to 6 pips in order left to right, ivory faces, dark pips, rounded pixel corners, evenly spaced. **Exactly 6:1.** |
-| `ui_light` | Icon: one glowing red Christmas-light bulb, the currency symbol. Square. |
-| `ui_lock` | Icon: a small iron padlock. Square. |
-| `ui_medal_1` / `ui_medal_2` / `ui_medal_3` | Icon: a round medal on a ribbon, gold / silver / bronze, with a tiny d20 engraved. Square. |
-| `ui_class_fighter` | Icon: a wooden baseball bat crossed with a trash-can lid on a dark violet circle. |
-| `ui_class_ranger` | Icon: a wooden slingshot with a blue marble on a dark violet circle. |
-| `ui_class_rogue` | Icon: a chunky walkie-talkie in front of a hood shape on a dark violet circle. |
-| `ui_class_wizard` | Icon: a cardboard wizard hat with tinfoil stars and a small glowing d20 on a dark violet circle. |
-| `ui_stat_str` | Icon: a flexed arm. Small, bold, gold on transparent. |
-| `ui_stat_dex` | Icon: a winged sneaker. Same style as attached. |
-| `ui_stat_con` | Icon: a heart with a bandage. Same style. |
-| `ui_stat_int` | Icon: an open spellbook. Same style. |
-| `ui_stat_wis` | Icon: an eye inside a flashlight beam. Same style. |
-| `ui_stat_cha` | Icon: a smiling theatre mask. Same style. |
-| `ui_up_heart` | Upgrade icon: a red heart with a plus. Square, on a dark violet rounded tile. |
-| `ui_up_reach` | Upgrade icon: a long baseball bat with an arrow. Same tile style as attached. |
-| `ui_up_battery` | Upgrade icon: a flashlight battery with a lightning bolt. Same style. |
-| `ui_up_magnet` | Upgrade icon: a horseshoe magnet pulling a Christmas-light bulb. Same style. |
-| `ui_up_greed` | Upgrade icon: a red-glowing bulb with dark vines. Same style. |
-| `ui_up_djump` | Upgrade icon: a sneaker with two upward arrows. Same style. |
-| `ui_up_revive` | Upgrade icon: a heart with angel wings. Same style. |
-| `ui_touch_jump` | Phone button icon: a chunky up arrow, white with gold outline. |
-| `ui_touch_roll` | Phone button icon: a curved arrow circling a ball. Same style. |
-| `ui_touch_attack` | Phone button icon: a bat mid-swing with motion lines. Same style. |
-| `ui_touch_flip` | Phone button icon: two curved arrows, gold above a line and red below it. Same style. |
-
----
-
-## 7. In-game HUD (8)
-
-Drawn very small, so keep shapes **bold and simple**: strong outline, 3–4 colours.
-
-| Key | Prompt ([UI]) |
-|---|---|
-| `hud_heart_full` | A tiny heart, blood red with a pink highlight pixel, thick dark outline. |
-| `hud_heart_empty` | Same heart as attached, empty: dark violet inside. |
-| `hud_light` | A tiny Christmas-light bulb, glowing, bold outline (the light counter). |
-| `hud_revive` | A tiny teal heart with small wings (the Second Wind token). |
-| `hud_dread_frame` | A long thin gauge frame like a flashlight battery, **about 7.5:1**: dark metal casing, a small nub on the right, **inside completely empty and transparent.** |
-| `hud_dread_fill` | A long thin bar of glowing crimson liquid with darker veins and a pink top edge, **about 17:1**, filling the image edge to edge (not transparent). |
-| `hud_d20` | A badge for the start-of-run dice roll: dark violet rounded square, gold outline, faint twenty-sided-die silhouette; **the centre stays dark and empty** (the game prints the number). Square. |
-| `hud_warning` | A tiny yellow warning triangle with a dark exclamation mark. |
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Creature: the head of the colossal root-and-smoke giant in the attached image. A long narrow skull, front view, crowned with huge branching black antlers like dead trees, two tiny glowing red eyes, a short neck stump centred at the very bottom of the image. Same near-black colour with a thin dull-crimson rim light. Match the attached reference exactly: same creature, same proportions, same palette, same pixel size. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
 
 ---
 
 ## Checklist
 
-| Section | Files |
+| Set | Files |
 |---|---|
-| 1. Characters | 4 reference sheets + 24 frames + 2 projectiles |
-| 2. Enemies | 11 |
-| 3. Obstacles | 2 |
-| 4. Christmas lights | 9 |
-| 5. Environment | 3 + 2 + 18 + 12 = 35 |
-| 6. Menu UI | 34 |
-| 7. HUD | 8 |
-| **Total** | **129 (125 in the game)** |
+| Fighter, Ranger, Rogue, Wizard | 4 × 15 = 60 |
+| Crow 6, Hound 8, Stalker 7, Flyer 6, Spore pod 4 | 31 |
+| Projectiles | 3 |
+| The Watcher | 2 |
+| **Total** | **96** |
 
-Ranger, Rogue and Wizard are still locked in the game. Their art goes in now
-and shows on the character sheet as soon as each class is unlocked.
+Per player class: idle 2, run 4, jump 2 (rising, falling), roll 4, running attack 3.

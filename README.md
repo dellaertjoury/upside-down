@@ -20,21 +20,30 @@ Plain HTML + JavaScript. No build step, no dependencies.
 
 ## Controls
 
-| Action | Keyboard | Touch |
-|---|---|---|
-| Jump (double jump with upgrade) | ↑ | Jump button or swipe up |
-| Roll (duck under things) | ↓ | Roll button or swipe down |
-| Attack (bat, or the Ranger's slingshot) | Space | Hit button or swipe sideways |
-| Flip to the other side | F | Flip button or tap |
-| Pause | P / Esc | |
+Every key and controller button can be changed in **Settings → Controls**
+(two keyboard keys and two controller buttons per action). Defaults:
 
-In the Upside Down you hang under the floor, so ↑ and ↓ swap: ↓ jumps (away
-from the floor) and ↑ rolls. Swipes swap the same way; the touch buttons don't.
-W/S work as alternates for ↑/↓. In the air, Roll and Flip do a fast-fall
-first, then trigger on landing. Space also starts a run from the menu. Full
-screen is a button on the menu.
+| Action | Keyboard | Controller | Touch |
+|---|---|---|---|
+| Jump | ↑ / W | A / D-pad ↑ | Jump button or swipe up |
+| Roll | ↓ / S | B / D-pad ↓ | Roll button or swipe down |
+| Attack (bat or slingshot) | Space | X / RT | Hit button or swipe sideways |
+| Flip to the other side | F | Y / RB | Flip button or tap |
+| Pause | P / Esc | Start | |
 
-A bat swing (or a slingshot marble) also knocks spore shots away.
+In the Upside Down you hang under the floor, so jump and roll swap
+directions automatically. In the air, roll and flip do a fast-fall first.
+A swing or a slingshot marble also knocks spore shots away.
+
+**Controller:** any standard gamepad (Xbox, PlayStation, Switch Pro in a
+browser that supports it). In menus the D-pad or left stick moves, A selects,
+B goes back and Start starts a run.
+
+## Settings
+
+Music and sound effects (on/off and volume), language (English, Nederlands;
+add more in `js/i18n.js`), full screen, when to show the touch buttons, and
+the controls above. Everything is saved in the browser.
 
 ## Character sheet (D&D style)
 
@@ -53,6 +62,12 @@ Ranger (slingshot, DEX +2, WIS +1). Rogue and Wizard are still locked.
 
 **D20 fate:** each run opens with a d20 roll. A natural 20 gives +1 heart, 15–19
 gives +20% score, 2–5 fills Dread 15% faster, and a natural 1 fills it 30% faster.
+
+## The Watcher
+
+Now and then an original colossal shadow creature rises far away in the
+Upside Down sky. It's barely visible until lightning lights it up; it sways
+its head and bobs while it drifts past. It's scenery, not an enemy.
 
 ## Sound
 
@@ -149,6 +164,8 @@ js/audio.js         chiptune sound effects (WebAudio, no files)
 js/save.js          progress, character sheet, dice, upgrades
 js/leaderboard.js   claude / supabase / local leaderboard
 js/scenery.js       the street: blank stretches, buildings, props
+js/i18n.js          translations (English, Nederlands)
+js/input.js         keyboard + controller bindings
 js/game.js          the game: physics, spawning, collisions, rendering
 js/ui.js            hub, character sheet and other menus
 assets/             game art + manifest.json

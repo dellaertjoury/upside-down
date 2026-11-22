@@ -1,13 +1,30 @@
 // Menus: hub (outside the Hellfire Club), character sheet, upgrades,
-// leaderboard, pause, game over.
+// leaderboard, settings (sound, language, display, keybinds), pause, game over.
 (function () {
   const $ = s => document.querySelector(s);
-  const panels = ["menu", "sheet", "upgrades", "leaderboard", "pause", "over"];
-  const st = SAVE.state;
+  const panels = ["menu", "sheet", "upgrades", "leaderboard", "settings", "pause", "over"];
+  const st = SAVE.state, S = INPUT.S;
   const sign = n => (n >= 0 ? "+" : "") + n;
+  const esc = v => String(v).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 
   if (!st.sheet) { st.sheet = SAVE.newSheet(); SAVE.save(); }
   const sheet = () => st.sheet;
+
+  // ---- settings defaults (older saves kept sound/music toggles at the top level) ----
+  if (S.musicOn === undefined) S.musicOn = st.music !== false;
+  if (S.sfxOn === undefined) S.sfxOn = !st.muted;
+  if (S.lang) I18N.lang = S.lang;
+  function applySound() {
+    SFX.setMuted(!S.sfxOn);
+    SFX.music.setOn(S.musicOn);
+    SFX.setVolumes(S.musicVol, S.sfxVol);
+  }
+  applySound();
+  function applyTouch() {
+    document.body.classList.toggle("touch-always", S.touch === "always");
+    document.body.classList.toggle("touch-never", S.touch === "never");
+  }
+  applyTouch();
 
   function applyLook() {
     const s = sheet();
@@ -17,30 +34,40 @@
   }
   applyLook();
 
+  let current = null;
   function show(name) {
+    current = name;
     panels.forEach(p => $("#p-" + p).classList.toggle("hidden", p !== name));
     $("#touch").classList.add("hide");
     if (name === "menu") refreshMenu();
     if (name === "sheet") renderSheet();
     if (name === "upgrades") renderUpgrades();
     if (name === "leaderboard") renderBoard();
+    if (name === "settings") renderSettings();
     document.querySelectorAll(".bank-n").forEach(n => n.textContent = st.shards);
     const first = name && $("#p-" + name + " .btn");
-    if (first && !matchMedia("(pointer:coarse)").matches) first.focus({ preventScroll: true });
+    if (first && (!matchMedia("(pointer:coarse)").matches || INPUT.padName_)) first.focus({ preventScroll: true });
   }
-  const hideAll = () => { panels.forEach(p => $("#p-" + p).classList.add("hidden")); $("#touch").classList.remove("hide"); if (document.activeElement) document.activeElement.blur(); };
+  const hideAll = () => {
+    current = null;
+    panels.forEach(p => $("#p-" + p).classList.add("hidden")); $("#touch").classList.remove("hide");
+    if (document.activeElement) document.activeElement.blur();
+  };
 
   function refreshMenu() {
     $("#bank").textContent = st.shards;
     $("#best").textContent = st.best;
-    $("#mute").textContent = st.muted ? "Sound off" : "Sound on";
-    $("#music").textContent = st.music === false ? "Music off" : "Music on";
-    const s = sheet(), cls = SAVE.CLASSES.find(c => c.id === s.cls);
+    const s = sheet();
     $("#who").innerHTML = "";
-    const n = document.createElement("b"); n.textContent = s.name || "ADVENTURER";
+    const n = document.createElement("b"); n.textContent = s.name || t("sheet.placeholder");
     const c = document.createElement("span");
-    c.textContent = ` · ${cls.name} · ` + SAVE.ABIL.map(a => a + " " + SAVE.score(s, a)).join(" ");
+    c.textContent = ` · ${t("cls." + s.cls)} · ` + SAVE.ABIL.map(a => a + " " + SAVE.score(s, a)).join(" ");
     $("#who").append(n, c);
+    $("#keys-hint").textContent = t("keys.hint", Object.fromEntries(INPUT.ACTIONS.map(a => [a, INPUT.label(a)])));
+  }
+  function relabel() { // after a language change
+    I18N.apply();
+    if (current) show(current);
   }
 
   // ---- navigation ----
@@ -51,18 +78,15 @@
     const go = b.dataset.go;
     if (go === "play") return startRun();
     if (go === "resume") { hideAll(); GAME.resume(); return; }
-    if (go === "quit" || (go === "menu" && GAME.mode !== "attract")) GAME.toHub();
+    if (go === "quit" || (go === "menu" && GAME.mode !== "attract" && GAME.mode !== "pause")) GAME.toHub();
+    if (go === "menu" && GAME.mode === "pause") return show("pause");
     show(go === "quit" ? "menu" : go);
   });
   GAME.onPause = () => show("pause");
 
-  $("#mute").addEventListener("click", () => { st.muted = !st.muted; SFX.setMuted(st.muted); SAVE.save(); refreshMenu(); });
-  SFX.setMuted(st.muted);
-  $("#music").addEventListener("click", () => { st.music = !st.music; SFX.music.setOn(st.music); SAVE.save(); refreshMenu(); });
-  SFX.music.on = st.music !== false;
   // browsers only allow sound after the first click or key press: start the hub music then
   const wake = () => {
-    SFX.unlock();
+    SFX.unlock(); applySound();
     if (SFX.music.mode === "off" && GAME.mode === "attract") SFX.music.setMode("hub");
     removeEventListener("pointerdown", wake); removeEventListener("keydown", wake);
   };
@@ -72,7 +96,6 @@
   const root = document.documentElement;
   const fsApi = root.requestFullscreen ? "requestFullscreen" : root.webkitRequestFullscreen ? "webkitRequestFullscreen" : null;
   const fsEl = () => document.fullscreenElement || document.webkitFullscreenElement;
-  $("#fs").hidden = !fsApi;
   function toggleFull() {
     if (!fsApi) return;
     if (fsEl()) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
@@ -82,21 +105,22 @@
     }
   }
   $("#fs").addEventListener("click", toggleFull);
-  ["fullscreenchange", "webkitfullscreenchange"].forEach(ev => document.addEventListener(ev, () => { $("#fs").textContent = fsEl() ? "Exit full screen" : "Full screen"; }));
-  // (F is the flip key now; full screen is the menu button)
+  ["fullscreenchange", "webkitfullscreenchange"].forEach(ev => document.addEventListener(ev, () => { if (current === "settings") renderSettings(); }));
 
-  // ---- the game's border glows in the colour of each light you collect ----
+  // ---- the border flickers in the colour of each light you collect ----
   const frame = $("#frame");
   GAME.onLight = col => {
     frame.style.setProperty("--glow", col);
     frame.classList.remove("glow"); void frame.offsetWidth; frame.classList.add("glow");
   };
 
-  // Space at the hub or after a run = start
+  // Space / Enter at the hub or after a run = start
   window.addEventListener("keydown", e => {
-    if (e.target.tagName === "INPUT") { if (e.key === "Enter") e.target.blur(); return; }
-    const hubOpen = !$("#p-menu").classList.contains("hidden") || !$("#p-over").classList.contains("hidden");
+    if (INPUT.listening) return;
+    if (e.target.tagName === "INPUT" && e.target.type !== "range") { if (e.key === "Enter") e.target.blur(); return; }
+    const hubOpen = current === "menu" || current === "over";
     if (hubOpen && e.code === "Space" && (GAME.mode === "attract" || GAME.mode === "over")) { e.preventDefault(); startRun(); }
+    if (e.code === "Escape" && current && !["menu", "pause", "over"].includes(current)) { e.preventDefault(); show(GAME.mode === "pause" ? "pause" : "menu"); }
   });
 
   // ---- character sheet ----
@@ -104,14 +128,12 @@
   function renderSheet() {
     const s = sheet();
     $("#cname").value = s.name;
-    // classes
     $("#classes").innerHTML = SAVE.CLASSES.map(c => {
       const bonus = Object.entries(c.bonus).map(([k, v]) => `${k} +${v}`).join(", ");
       const icon = SPR.ART["ui_class_" + c.id];
-      return `<button class="btn tiny cls${s.cls === c.id ? " on" : ""}" data-cls="${c.id}" ${c.locked ? "disabled" : ""} title="${c.desc}">
-        ${icon ? `<img class="cls-ic" src="${icon.src}" alt="">` : ""}${c.locked && SPR.ART.ui_lock ? `<img class="lock-ic" src="${SPR.ART.ui_lock.src}" alt="locked">` : ""}<span>${c.name}<small>${c.locked ? "soon" : bonus}</small></span></button>`;
+      return `<button class="btn tiny cls${s.cls === c.id ? " on" : ""}" data-cls="${c.id}" ${c.locked ? "disabled" : ""} title="${esc(t("cls." + c.id + ".d"))}">
+        ${icon ? `<img class="cls-ic" src="${icon.src}" alt="">` : ""}${c.locked && SPR.ART.ui_lock ? `<img class="lock-ic" src="${SPR.ART.ui_lock.src}" alt="">` : ""}<span>${esc(t("cls." + c.id))}<small>${c.locked ? esc(t("sheet.soon")) : bonus}</small></span></button>`;
     }).join("");
-    // looks
     ["hair", "jacket"].forEach(k => {
       $("#" + k).innerHTML = SAVE.LOOKS[k].map(o =>
         `<button class="sw${s[k] === o.id ? " on" : ""}" data-look="${k}" data-id="${o.id}" style="background:${o.c[0]}" aria-label="${k} ${o.id}"></button>`).join("");
@@ -134,28 +156,28 @@
       const sic = SPR.ART["ui_stat_" + a.toLowerCase()];
       return `<div class="ab${fake ? " spin" : ""}"><span class="an">${sic ? `<img class="sic" src="${sic.src}" alt="">` : ""}${a}</span><span class="av">${total}</span>
         <span class="am">${sign(m)}</span><span class="dice">${faces}</span>
-        <span class="ai">${SAVE.ABIL_INFO[a]}${cls ? ` <em>+${cls} class</em>` : ""}</span></div>`;
+        <span class="ai">${esc(t("ab." + a))}${cls ? ` <em>${esc(t("ab.class", { n: cls }))}</em>` : ""}</span></div>`;
     }).join("");
     const used = s.rerolls || 0, free = SAVE.FREE_REROLLS - used;
-    $("#roll").innerHTML = free > 0 ? `Reroll (${free} free)` : `Reroll · ${SAVE.REROLL_COST} <i class="bulb"></i>`;
+    $("#roll").innerHTML = free > 0 ? esc(t("sheet.reroll", { n: free })) : esc(t("sheet.rerollCost", { n: SAVE.REROLL_COST })) + ' <i class="bulb"></i>';
     $("#roll").disabled = rolling || (free <= 0 && st.shards < SAVE.REROLL_COST);
-    $("#roll-note").textContent = "4d6, drop the lowest";
     const r = SAVE.runStats(s);
     const rows = [
-      ["Hearts", r.hearts], SAVE.CLASSES.find(c => c.id === s.cls).ranged ? ["Slingshot", "full screen"] : ["Bat reach", r.reach + " px"], ["Jump", Math.round(r.jumpV / 3.2) + "%"],
-      ["Dread time", r.battery.toFixed(1) + " s"],
-      ["Magnet", r.magnet + " px"], ["Light bonus", "1 per " + r.bonusDiv + " pts"],
+      [t("d.hearts"), r.hearts],
+      SAVE.CLASSES.find(c => c.id === s.cls).ranged ? [t("d.sling"), t("d.fullscreen")] : [t("d.reach"), r.reach + " px"],
+      [t("d.jump"), Math.round(r.jumpV / 3.2) + "%"],
+      [t("d.dread"), r.battery.toFixed(1) + " s"],
+      [t("d.magnet"), r.magnet + " px"], [t("d.bonus"), t("d.bonusVal", { n: r.bonusDiv })],
     ];
-    $("#derived").innerHTML = rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("");
+    $("#derived").innerHTML = rows.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("");
   }
   function drawPreview() {
-    const c = $("#preview"), art = SPR.ART[GAME.pk("idle")] || SPR.ART[GAME.pk("run2")];
+    const c = $("#preview"), art = SPR.ART[GAME.pk("idle")] || SPR.ART[GAME.pk("idle1")] || SPR.ART[GAME.pk("run1")];
     const src = art || SPR.S.run2;
     c.width = src.width; c.height = src.height;
     c.style.aspectRatio = src.width + "/" + src.height;
     const x = c.getContext("2d"); x.imageSmoothingEnabled = false;
     x.drawImage(src, 0, 0);
-    // colour pickers only recolour the built-in placeholder sprite
     document.querySelectorAll("#hair, #jacket").forEach(el => el.parentElement.hidden = !!art);
   }
 
@@ -192,8 +214,8 @@
       const l = SAVE.lvl(u.id), max = u.costs.length, done = l >= max, cost = u.costs[l];
       const pips = u.costs.map((_, i) => `<i class="${i < l ? "on" : ""}"></i>`).join("");
       const uic = SPR.ART["ui_up_" + u.id];
-      return `<div class="row${uic ? " has-ic" : ""}">${uic ? `<img class="uic" src="${uic.src}" alt="">` : ""}<div><h3>${u.name}<span class="pips">${pips}</span></h3><p>${u.desc}</p></div>
-        <button class="btn tiny${done ? "" : " primary"}" data-buy="${u.id}" ${done || st.shards < cost ? "disabled" : ""}>${done ? "Maxed" : cost + ' <i class="bulb"></i>'}</button></div>`;
+      return `<div class="row${uic ? " has-ic" : ""}">${uic ? `<img class="uic" src="${uic.src}" alt="">` : ""}<div><h3>${esc(t("up." + u.id))}<span class="pips">${pips}</span></h3><p>${esc(t("up." + u.id + ".d"))}</p></div>
+        <button class="btn tiny${done ? "" : " primary"}" data-buy="${u.id}" ${done || st.shards < cost ? "disabled" : ""}>${done ? esc(t("up.maxed")) : cost + ' <i class="bulb"></i>'}</button></div>`;
     }).join("");
   }
   $("#up-list").addEventListener("click", e => {
@@ -204,11 +226,11 @@
   // ---- leaderboard ----
   async function renderBoard() {
     const list = $("#lb-list");
-    list.innerHTML = '<li class="muted">Loading…</li>';
+    list.innerHTML = `<li class="muted">${esc(t("lb.loading"))}</li>`;
     try {
       const rows = await LB.top(25);
-      $("#lb-mode").textContent = LB.label();
-      if (!rows.length) { list.innerHTML = '<li class="muted">No scores yet. Be the first.</li>'; return; }
+      $("#lb-mode").textContent = t("lb." + LB.mode);
+      if (!rows.length) { list.innerHTML = `<li class="muted">${esc(t("lb.empty"))}</li>`; return; }
       list.innerHTML = "";
       rows.forEach((r, i) => {
         const li = document.createElement("li");
@@ -221,30 +243,103 @@
         li.append(a, b, c); list.appendChild(li);
       });
     } catch (e) {
-      $("#lb-mode").textContent = LB.label();
-      list.innerHTML = '<li class="muted">Leaderboard unreachable right now.</li>';
+      $("#lb-mode").textContent = t("lb." + LB.mode);
+      list.innerHTML = `<li class="muted">${esc(t("lb.down"))}</li>`;
     }
   }
+
+  // ---- settings ----
+  let listening = null; // { kind: "key" | "pad", action, slot }
+  function renderSettings() {
+    $("#s-music").textContent = S.musicOn ? t("set.on") : t("set.off");
+    $("#s-sfx").textContent = S.sfxOn ? t("set.on") : t("set.off");
+    $("#s-music").setAttribute("aria-pressed", S.musicOn); $("#s-sfx").setAttribute("aria-pressed", S.sfxOn);
+    $("#s-musicvol").value = S.musicVol; $("#s-sfxvol").value = S.sfxVol;
+    $("#s-lang").innerHTML = I18N.langs.map(l => `<button class="btn tiny${I18N.lang === l ? " on" : ""}" data-lang="${l}">${esc(I18N.name(l))}</button>`).join("");
+    $("#s-touch").innerHTML = ["auto", "always", "never"].map(m => `<button class="btn tiny${S.touch === m ? " on" : ""}" data-touch="${m}">${esc(t("set." + m))}</button>`).join("");
+    $("#fs").textContent = fsEl() ? t("set.on") : t("set.off");
+    $("#fs").disabled = !fsApi;
+    renderBinds();
+  }
+  function renderBinds() {
+    const slot = (kind, a, i) => {
+      const L = listening && listening.kind === kind && listening.action === a && listening.slot === i;
+      const v = kind === "key" ? S.keys[a][i] : S.pad[a][i];
+      const label = L ? t(kind === "key" ? "set.press" : "set.pressPad") : v == null ? "—" : kind === "key" ? INPUT.keyName(v) : INPUT.padName(v);
+      return `<td><button class="btn tiny bind${L ? " on" : ""}" data-bind="${kind}" data-act="${a}" data-slot="${i}">${esc(label)}</button></td>`;
+    };
+    $("#s-binds").innerHTML = INPUT.ACTIONS.map(a =>
+      `<tr><th>${esc(t("act." + a))}</th>${slot("key", a, 0)}${slot("key", a, 1)}${slot("pad", a, 0)}${slot("pad", a, 1)}</tr>`).join("");
+    $("#s-pad").textContent = INPUT.padName_ ? t("set.padFound", { n: INPUT.padName_ }) : t("set.padNone");
+  }
+  setInterval(() => { if (current === "settings" && !listening) { const el = $("#s-pad"), want = INPUT.padName_ ? t("set.padFound", { n: INPUT.padName_ }) : t("set.padNone"); if (el.textContent !== want) el.textContent = want; } }, 1000);
+
+  $("#p-settings").addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    if (b.id === "s-music") { S.musicOn = !S.musicOn; applySound(); SAVE.save(); renderSettings(); return; }
+    if (b.id === "s-sfx") { S.sfxOn = !S.sfxOn; applySound(); SAVE.save(); renderSettings(); SFX.click(); return; }
+    if (b.id === "s-reset") { INPUT.reset(); renderBinds(); SFX.buy(); return; }
+    if (b.dataset.lang) { S.lang = b.dataset.lang; SAVE.save(); I18N.set(S.lang); relabel(); return; }
+    if (b.dataset.touch) { S.touch = b.dataset.touch; SAVE.save(); applyTouch(); renderSettings(); return; }
+    if (b.dataset.bind) {
+      listening = { kind: b.dataset.bind, action: b.dataset.act, slot: +b.dataset.slot };
+      INPUT.listening = listening.kind === "key" ? listening : null;
+      if (listening.kind === "pad") INPUT.capture = btn => { INPUT.bindPad(listening.action, listening.slot, btn); listening = null; renderBinds(); SFX.buy(); };
+      renderBinds();
+    }
+  });
+  ["s-musicvol", "s-sfxvol"].forEach(id => $("#" + id).addEventListener("input", e => {
+    S[id === "s-musicvol" ? "musicVol" : "sfxVol"] = +e.target.value; applySound();
+  }));
+  ["s-musicvol", "s-sfxvol"].forEach(id => $("#" + id).addEventListener("change", () => { SAVE.save(); if (id === "s-sfxvol") SFX.light(); }));
+  // capture the next key while rebinding (Esc cancels, Backspace/Delete clears the slot)
+  window.addEventListener("keydown", e => {
+    if (!listening || listening.kind !== "key") return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    const L = listening; listening = null; INPUT.listening = null;
+    if (e.code === "Backspace" || e.code === "Delete") INPUT.clear("key", L.action, L.slot);
+    else if (e.code !== "Escape") { INPUT.bindKey(L.action, L.slot, e.code); SFX.buy(); }
+    renderBinds();
+  }, true);
 
   // ---- game over ----
   GAME.onOver = async (r) => {
     $("#over-stats").innerHTML = `
-      <span>Score</span><b>${r.score}${r.newBest ? " ★ NEW BEST" : ""}</b>
-      <span>Distance</span><b>${r.dist} m</b>
-      <span>Kills / parries</span><b>${r.kills} / ${r.parries}</b>
-      <span>D20 fate</span><b>${r.fate}</b>
-      <span>Lights found</span><b>${r.shards}</b>
-      <span>Score bonus</span><b>+${r.bonus}</b>
-      <span>Banked</span><b><i class="bulb"></i> ${r.earned} (total ${st.shards})</b>`;
+      <span>${esc(t("over.score"))}</span><b>${r.score}${r.newBest ? " ★ " + esc(t("over.best")) : ""}</b>
+      <span>${esc(t("over.dist"))}</span><b>${r.dist} m</b>
+      <span>${esc(t("over.kills"))}</span><b>${r.kills}</b>
+      <span>${esc(t("over.fate"))}</span><b>${r.fate}</b>
+      <span>${esc(t("over.found"))}</span><b>${r.shards}</b>
+      <span>${esc(t("over.bonus"))}</span><b>+${r.bonus}</b>
+      <span>${esc(t("over.banked"))}</span><b><i class="bulb"></i> ${r.earned} (${esc(t("over.total", { n: st.shards }))})</b>`;
     show("over");
     const msg = $("#over-lb");
     if (r.score <= 0) { msg.textContent = ""; return; }
-    msg.textContent = "Posting score…";
+    msg.textContent = t("lb.posting");
     try {
-      const res = await LB.submit(sheet().name || "ADVENTURER", r.score);
-      msg.textContent = LB.mode === "local" ? "Saved on this device." : res.saved ? "Score posted to the leaderboard." : `Your best stays ${res.best}.`;
-    } catch (e) {
-      msg.textContent = "Couldn't post the score (you may need Contributor access to the shared page).";
+      const res = await LB.submit(sheet().name || t("sheet.placeholder"), r.score);
+      msg.textContent = LB.mode === "local" ? t("lb.savedLocal") : res.saved ? t("lb.posted") : t("lb.kept", { n: res.best });
+    } catch (e) { msg.textContent = t("lb.fail"); }
+  };
+
+  // ---- controller in the menus: D-pad / stick moves focus, A selects, B goes back ----
+  INPUT.onMenu = cmd => {
+    if (!current) return;
+    if (cmd === "start" && (current === "menu" || current === "over")) return startRun();
+    if (cmd === "start" && current === "pause") { hideAll(); GAME.resume(); return; }
+    const panel = $("#p-" + current);
+    const items = Array.from(panel.querySelectorAll("button:not([disabled]), input")).filter(el => el.offsetParent !== null);
+    const at = items.indexOf(document.activeElement);
+    const el = document.activeElement;
+    if ((cmd === "left" || cmd === "right") && el && el.type === "range") {
+      el.value = Math.min(1, Math.max(0, +el.value + (cmd === "right" ? 0.05 : -0.05))); el.dispatchEvent(new Event("input")); el.dispatchEvent(new Event("change")); return;
+    }
+    if (cmd === "up" || cmd === "left") (items[at - 1] || items[items.length - 1]).focus();
+    if (cmd === "down" || cmd === "right") (items[at + 1] || items[0]).focus();
+    if (cmd === "ok" && el && items.includes(el)) el.click();
+    if (cmd === "back") {
+      if (current === "pause") { hideAll(); GAME.resume(); }
+      else if (current !== "menu") { const back = panel.querySelector('[data-go="menu"]'); if (back) back.click(); }
     }
   };
 
@@ -254,24 +349,24 @@
     ["pointerup", "pointerleave", "pointercancel"].forEach(ev => b.addEventListener(ev, () => b.classList.remove("on")));
   });
 
-  // ---- menu art from assets/ (see ART_PROMPTS.md, section 9) ----
+  // ---- menu art from assets/ ----
   const CSS_ART = ["ui_button", "ui_button_primary", "ui_panel", "ui_box", "ui_dice", "ui_sheet", "ui_light", "ui_row"];
   function applyUiArt() {
-    const A = SPR.ART, root = document.documentElement;
-    CSS_ART.forEach(k => { if (A[k]) { root.style.setProperty("--" + k.replace(/_/g, "-"), `url("${A[k].src}")`); document.body.classList.add("has-" + k.replace(/_/g, "-")); } });
+    const A = SPR.ART, rt = document.documentElement;
+    CSS_ART.forEach(k => { if (A[k]) { rt.style.setProperty("--" + k.replace(/_/g, "-"), `url("${A[k].src}")`); document.body.classList.add("has-" + k.replace(/_/g, "-")); } });
     if (A.ui_logo) {
       const img = document.createElement("img"); img.src = A.ui_logo.src; img.alt = "The Upside Down"; img.className = "logo-img";
-      const h = $(".logo"); h.replaceChildren(img);
+      $(".logo").replaceChildren(img);
     }
     document.querySelectorAll(".touch button").forEach(b => {
       const a = A["ui_touch_" + b.dataset.k];
-      if (a) { b.setAttribute("aria-label", b.textContent); const i = document.createElement("img"); i.src = a.src; i.alt = ""; b.replaceChildren(i); }
+      if (a) { b.setAttribute("aria-label", b.textContent); b.removeAttribute("data-i18n"); const i = document.createElement("img"); i.src = a.src; i.alt = ""; b.replaceChildren(i); }
     });
-    if (!$("#p-sheet").classList.contains("hidden")) renderSheet();
-    if (!$("#p-menu").classList.contains("hidden")) refreshMenu();
+    if (current) show(current);
   }
   (SPR.ready || Promise.resolve()).then(applyUiArt);
 
   if (document.fonts && document.fonts.load) document.fonts.load("8px 'Press Start 2P'");
+  I18N.apply();
   show("menu");
 })();

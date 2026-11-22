@@ -30,10 +30,18 @@ for _p in ("tree", "lamp", "mailbox", "hedge", "phonebooth", "hydrant"):
     ALIASES["set_" + _p] = "prop_" + _p; ALIASES["set_" + _p + "_dark"] = "prop_" + _p + "_dark"
 
 def key_out_black(im, limit=16):
-    """Images without transparency: make the near-black area touching the
-    border transparent (e.g. a building painted on a black background)."""
+    """Images without transparency: make the background touching the border
+    transparent. Handles a black fill, and a white or grey checkerboard
+    (the fake 'transparent' pattern image generators sometimes paint in)."""
     a = np.array(im.convert("RGBA"))
-    dark = a[:, :, :3].max(axis=2) <= limit
+    rgb = a[:, :, :3].astype(int)
+    border = np.concatenate([rgb[0], rgb[-1], rgb[:, 0], rgb[:, -1]])
+    light = np.median(border.max(axis=1)) > 170
+    if light:   # white / light-grey checkerboard: bright and colourless
+        sat = rgb.max(axis=2) - rgb.min(axis=2)
+        dark = (rgb.min(axis=2) >= 150) & (sat <= 18)
+    else:
+        dark = rgb.max(axis=2) <= limit
     h, w = dark.shape
     seen = np.zeros_like(dark)
     dq = deque([(y, x) for x in range(w) for y in (0, h - 1) if dark[y, x]] +
@@ -96,10 +104,10 @@ FRAME_H = {"ranger_block": 17, "ranger_run2": 23, "ranger_jump": 20, "fighter_id
 
 # key -> handler
 def player(key, im):
-    frame = key.split("_")[-1]
+    frame = re.sub(r"\d+$", "", key.split("_")[-1])   # run3 -> run
     if frame == "roll":
         w, h = by_h(im, 14); write(key, im, w, h, DARK); manifest[key] = [w, h, 0, 0]; return
-    w, h = by_h(im, FRAME_H.get(key, 20 if frame == "jump" else 22))
+    w, h = by_h(im, FRAME_H.get(key, 22))
     write(key, im, w, h, DARK)
     manifest[key] = [w, h, q(6 - body_x(im) * w / im.width), 0]
 
@@ -108,6 +116,16 @@ ENEMY = {  # base: (size by 'h' or 'w', value, hit_w, hit_h, on_ground, outline)
     "wisp": ("h", 18, 10, 7, False, RIM), "pod": ("h", 18, 12, 12, True, RIM),
     "stalker": ("h", 30, 14, 24, True, RIM),
 }
+# new-style enemy frames: <enemy>_<state><n>, e.g. hound_run3, stalker_attack2
+ENEMY2 = {"crow": "crow", "hound": "crawl", "flyer": "wisp", "pod": "pod", "stalker": "stalker"}
+def enemy2(key, im):
+    name = key.split("_")[0]
+    by, v, hw, hh, ground, line = ENEMY[ENEMY2[name]]
+    w, h = by_h(im, v) if by == "h" else by_w(im, v)
+    ox = hw / 2 - body_x(im) * w / im.width          # body centred on the hitbox
+    oy = 0 if ground else (h - hh) / 2
+    write(key, im, w, h, line); manifest[key] = [w, h, q(ox), q(oy)]
+
 def enemy(key, im):
     base, frame = key[:-1], key[-1]
     by, v, hw, hh, ground, line = ENEMY[base]
@@ -181,7 +199,12 @@ for full, f in files:
         continue
     frame_key = re.sub(r"^(%s)_" % "|".join(CLASSES), "", key)
     try:
-        if frame_key in ("idle", "run1", "run2", "jump", "attack", "block", "roll"): player(key, load(path))
+        if re.match(r"^(idle|run|jump|attack|block|roll)\d?$", frame_key) and (frame_key != key or key in ("idle", "run1", "run2", "jump", "attack", "roll")):
+            player(key, load(path))
+        elif re.match(r"^(crow|hound|flyer|pod|stalker)_(idle|fly|run|walk|jump|attack)\d$", key): enemy2(key, load(path))
+        elif key in ("watcher_body", "watcher_head"):
+            im = load(path); w, h = by_h(im, 72 if key == "watcher_body" else 34)
+            write(key, im, w, h); manifest[key] = [w, h]
         elif re.match(r"^(crow|crawl|wisp|pod|stalker)[12]$", key): enemy(key, load(path))
         elif key in OBST: obstacle(key, load(path))
         elif re.match(r"^bulb_(red|green|blue|yellow|orange|pink|gold)$", key):

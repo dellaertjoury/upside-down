@@ -20,99 +20,133 @@
     <section class="panel hub" id="p-menu">
       <div class="hub-card">
         <h1 class="logo"><span class="up">THE UPSIDE</span> <span class="down">DOWN</span></h1>
-        <p class="tag">Hellfire Club · tonight's campaign starts at the door</p>
+        <p class="tag" data-i18n="tag"></p>
         <div class="who" id="who"></div>
         <div class="menu-grid">
-          <button class="btn primary" data-go="play">Start run</button>
-          <button class="btn" data-go="sheet">Character sheet</button>
-          <button class="btn" data-go="upgrades">Upgrades</button>
-          <button class="btn" data-go="leaderboard">Leaderboard</button>
+          <button class="btn primary" data-go="play" data-i18n="menu.play"></button>
+          <button class="btn" data-go="sheet" data-i18n="menu.sheet"></button>
+          <button class="btn" data-go="upgrades" data-i18n="menu.upgrades"></button>
+          <button class="btn" data-go="leaderboard" data-i18n="menu.leaderboard"></button>
+          <button class="btn wide" data-go="settings" data-i18n="menu.settings"></button>
         </div>
         <div class="menu-foot">
-          <span class="bank"><i class="bulb"></i> Lights <b id="bank">0</b></span>
-          <span class="bank">Best <b id="best">0</b></span>
-          <button class="btn tiny" id="mute" aria-label="Toggle sound">Sound on</button>
-          <button class="btn tiny" id="music" aria-label="Toggle music">Music on</button>
-          <button class="btn tiny fs-btn" id="fs" aria-label="Toggle full screen">Full screen</button>
+          <span class="bank"><i class="bulb"></i> <span data-i18n="lights"></span> <b id="bank">0</b></span>
+          <span class="bank"><span data-i18n="best"></span> <b id="best">0</b></span>
         </div>
-        <p class="keys">↑ jump · ↓ roll (swapped when upside down) · Space hit · F flip · P pause</p>
+        <p class="keys" id="keys-hint"></p>
       </div>
     </section>
 
     <!-- CHARACTER SHEET -->
     <section class="panel hidden sheet-panel" id="p-sheet">
       <div class="sheet">
-        <header class="ph"><h2>Character sheet</h2><span class="bank"><i class="bulb"></i> Lights <b class="bank-n">0</b></span></header>
+        <header class="ph"><h2 data-i18n="sheet.title"></h2><span class="bank"><i class="bulb"></i> <span data-i18n="lights"></span> <b class="bank-n">0</b></span></header>
         <div class="sheet-grid">
           <div class="sheet-left">
             <canvas id="preview" width="12" height="16"></canvas>
-            <label class="field">Name <input id="cname" maxlength="12" autocomplete="off" spellcheck="false" placeholder="ADVENTURER"></label>
-            <div class="field">Class <div class="classes" id="classes"></div></div>
-            <div class="field">Hair <div class="swatches" id="hair"></div></div>
-            <div class="field">Jacket <div class="swatches" id="jacket"></div></div>
+            <label class="field"><span data-i18n="sheet.name"></span> <input id="cname" maxlength="12" autocomplete="off" spellcheck="false" data-i18n-attr="placeholder:sheet.placeholder"></label>
+            <div class="field"><span data-i18n="sheet.class"></span> <div class="classes" id="classes"></div></div>
+            <div class="field"><span data-i18n="sheet.hair"></span> <div class="swatches" id="hair"></div></div>
+            <div class="field"><span data-i18n="sheet.jacket"></span> <div class="swatches" id="jacket"></div></div>
           </div>
           <div class="sheet-right">
             <div class="abil" id="abil"></div>
             <div class="rollbar">
-              <button class="btn" id="roll">Roll 4d6 ×6</button>
-              <span class="muted" id="roll-note"></span>
+              <button class="btn" id="roll"></button>
+              <span class="muted" data-i18n="sheet.rollNote"></span>
             </div>
             <dl class="derived" id="derived"></dl>
           </div>
         </div>
         <div class="menu-grid">
-          <button class="btn primary" data-go="play">Save &amp; start run</button>
-          <button class="btn" data-go="menu">Save &amp; back</button>
+          <button class="btn primary" data-go="play" data-i18n="sheet.saveRun"></button>
+          <button class="btn" data-go="menu" data-i18n="sheet.saveBack"></button>
         </div>
       </div>
     </section>
 
     <!-- UPGRADES -->
     <section class="panel hidden" id="p-upgrades">
-      <header class="ph"><h2>Upgrades</h2><span class="bank"><i class="bulb"></i> Lights <b class="bank-n">0</b></span></header>
+      <header class="ph"><h2 data-i18n="up.title"></h2><span class="bank"><i class="bulb"></i> <span data-i18n="lights"></span> <b class="bank-n">0</b></span></header>
       <div class="list" id="up-list"></div>
-      <button class="btn back" data-go="menu">Back</button>
+      <button class="btn back" data-go="menu" data-i18n="back"></button>
     </section>
 
     <!-- LEADERBOARD -->
     <section class="panel hidden" id="p-leaderboard">
-      <header class="ph"><h2>Leaderboard</h2><span class="mode" id="lb-mode"></span></header>
-      <ol class="board" id="lb-list"><li class="muted">Loading…</li></ol>
-      <button class="btn back" data-go="menu">Back</button>
+      <header class="ph"><h2 data-i18n="lb.title"></h2><span class="mode" id="lb-mode"></span></header>
+      <ol class="board" id="lb-list"></ol>
+      <button class="btn back" data-go="menu" data-i18n="back"></button>
+    </section>
+
+    <!-- SETTINGS -->
+    <section class="panel hidden sheet-panel" id="p-settings">
+      <div class="sheet settings">
+        <header class="ph"><h2 data-i18n="set.title"></h2></header>
+        <div class="set-grid">
+          <div class="set-col">
+            <h3 data-i18n="set.sound"></h3>
+            <div class="set-row"><span data-i18n="set.music"></span>
+              <button class="btn tiny tog" id="s-music"></button>
+              <input type="range" id="s-musicvol" min="0" max="1" step="0.05" data-i18n-attr="aria-label:set.volume"></div>
+            <div class="set-row"><span data-i18n="set.sfx"></span>
+              <button class="btn tiny tog" id="s-sfx"></button>
+              <input type="range" id="s-sfxvol" min="0" max="1" step="0.05" data-i18n-attr="aria-label:set.volume"></div>
+            <h3 data-i18n="set.language"></h3>
+            <div class="seg" id="s-lang"></div>
+            <h3 data-i18n="set.display"></h3>
+            <div class="set-row"><span data-i18n="set.fullscreen"></span><button class="btn tiny tog" id="fs"></button></div>
+            <div class="set-row"><span data-i18n="set.touch"></span><div class="seg" id="s-touch"></div></div>
+          </div>
+          <div class="set-col">
+            <h3 data-i18n="set.keys"></h3>
+            <table class="binds">
+              <thead><tr><th data-i18n="set.action"></th><th data-i18n="set.keyboard" colspan="2"></th><th data-i18n="set.controller" colspan="2"></th></tr></thead>
+              <tbody id="s-binds"></tbody>
+            </table>
+            <p class="muted small" data-i18n="set.swap"></p>
+            <p class="muted small" id="s-pad"></p>
+            <button class="btn tiny" id="s-reset" data-i18n="set.reset"></button>
+          </div>
+        </div>
+        <button class="btn back" data-go="menu" data-i18n="back"></button>
+      </div>
     </section>
 
     <!-- PAUSE -->
     <section class="panel hidden" id="p-pause">
-      <h2>Paused</h2>
+      <h2 data-i18n="pause.title"></h2>
       <div class="menu-grid">
-        <button class="btn primary" data-go="resume">Resume</button>
-        <button class="btn" data-go="quit">Back to the club</button>
+        <button class="btn primary" data-go="resume" data-i18n="pause.resume"></button>
+        <button class="btn" data-go="quit" data-i18n="pause.quit"></button>
       </div>
     </section>
 
     <!-- GAME OVER -->
     <section class="panel hidden" id="p-over">
-      <h2 class="over-t">Run over</h2>
+      <h2 class="over-t" data-i18n="over.title"></h2>
       <div class="stats" id="over-stats"></div>
       <p class="muted" id="over-lb"></p>
       <div class="menu-grid">
-        <button class="btn primary" data-go="play">Run again</button>
-        <button class="btn" data-go="upgrades">Upgrades</button>
-        <button class="btn" data-go="menu">Back to the club</button>
+        <button class="btn primary" data-go="play" data-i18n="over.again"></button>
+        <button class="btn" data-go="upgrades" data-i18n="menu.upgrades"></button>
+        <button class="btn wide" data-go="menu" data-i18n="pause.quit"></button>
       </div>
     </section>
   </div>
 
   <div class="touch" id="touch">
-    <div class="tg"><button data-k="roll">Roll</button><button data-k="jump">Jump</button></div>
-    <div class="tg"><button data-k="attack">Hit</button><button data-k="flip">Flip</button></div>
+    <div class="tg"><button data-k="roll" data-i18n="touch.roll"></button><button data-k="jump" data-i18n="touch.jump"></button></div>
+    <div class="tg"><button data-k="attack" data-i18n="touch.attack"></button><button data-k="flip" data-i18n="touch.flip"></button></div>
   </div>
 </main>
 
 <script src="js/config.js"></script>
+<script src="js/i18n.js"></script>
 <script src="js/sprites.js"></script>
 <script src="js/audio.js"></script>
 <script src="js/save.js"></script>
+<script src="js/input.js"></script>
 <script src="js/leaderboard.js"></script>
 <script src="js/scenery.js"></script>
 <script src="js/game.js"></script>
