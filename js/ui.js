@@ -350,7 +350,7 @@
       <span>${esc(t("over.ptsLights"))}</span><b>${r.pts.lights}</b>
       <span>${esc(t("over.kills"))}</span><b>${r.kills}</b>
       <span>${esc(t("over.haul"))}</span><b>${r.bestHaul}</b>
-      ${r.lostHaul > 0 ? `<span>${esc(t("over.lost"))}</span><b style="color:#ff6b8f">−${r.lostHaul} · −${r.lostLights} <i class="bulb"></i></b>` : ""}
+      ${r.lostHaul > 0 ? `<span>${esc(t("over.lost"))}</span><b style="color:#ff6b8f">−${r.lostHaul}${r.lostLights ? ` · −${r.lostLights} <i class="bulb"></i>` : ""}</b>` : ""}
       ${r.dice ? `<span>${esc(t("over.dice"))}</span><b style="color:#ff9fb4">${r.dice}</b>` : ""}
       <span>${esc(t("over.found"))}</span><b>${r.shards}</b>
       <span>${esc(t("over.bonus"))}</span><b>+${r.bonus}</b>
