@@ -32,8 +32,10 @@
           <span class="bank"><i class="bulb"></i> Lights <b id="bank">0</b></span>
           <span class="bank">Best <b id="best">0</b></span>
           <button class="btn tiny" id="mute" aria-label="Toggle sound">Sound on</button>
+          <button class="btn tiny" id="music" aria-label="Toggle music">Music on</button>
+          <button class="btn tiny fs-btn" id="fs" aria-label="Toggle full screen">Full screen</button>
         </div>
-        <p class="keys">↑ jump · ↓ roll (swapped when upside down) · → hit · ← block · Space flip · P pause</p>
+        <p class="keys">↑ jump · ↓ roll (swapped when upside down) · → hit · ← block · Space flip · P pause · F full screen</p>
       </div>
     </section>
 
@@ -102,11 +104,8 @@
   </div>
 
   <div class="touch" id="touch">
-    <button data-k="block">Block</button>
-    <button data-k="roll">Roll</button>
-    <button data-k="flip">Flip</button>
-    <button data-k="attack">Hit</button>
-    <button data-k="jump">Jump</button>
+    <div class="tg"><button data-k="roll">Roll</button><button data-k="jump">Jump</button></div>
+    <div class="tg"><button data-k="block">Block</button><button data-k="attack">Hit</button><button data-k="flip">Flip</button></div>
   </div>
 </main>
 

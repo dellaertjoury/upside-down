@@ -44,7 +44,7 @@
 
   const FREE_REROLLS = 3, REROLL_COST = 10;
 
-  const fresh = () => ({ shards: 0, best: 0, runs: 0, muted: false, up: {}, sheet: null });
+  const fresh = () => ({ shards: 0, best: 0, runs: 0, muted: false, music: true, up: {}, sheet: null });
   function load() {
     try { return Object.assign(fresh(), JSON.parse(localStorage.getItem(KEY) || "{}")); }
     catch (e) { return fresh(); }

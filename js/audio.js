@@ -52,8 +52,124 @@
     thud: () => { noise(0.1, 0.5); tone("sine", 90, 50, 0.12, 0.6); },
     sling: () => { tone("triangle", 220, 880, 0.08, 0.5); noise(0.04, 0.25); },
     click: () => tone("square", 440, 440, 0.04, 0.3),
-    setMuted(m) { muted = m; },
+    setMuted(m) { muted = m; MUSIC.refresh(); },
     get muted() { return muted; },
   };
+
+  // ------------------------------------------------------------------
+  // Background music: an original 8-bit synth score in an 80s horror
+  // style (pulsing arpeggios, driving bass, a lonely lead), composed for
+  // this game. It is scheduled live with WebAudio, no files.
+  //   hub  - arpeggio + soft pad, no drums (outside the Hellfire Club)
+  //   play - full band: arp, bass, drums, lead every other loop
+  //   down - the same song, muffled and detuned, with a low drone
+  //   over - fades to the drone
+  // ------------------------------------------------------------------
+  const BPM = 108, STEP = 60 / BPM / 4;            // 16th notes
+  const mtof = m => 440 * Math.pow(2, (m - 69) / 12);
+  // A minor, i - VI - iv - V (Am, F, Dm, E): the E major gives the eerie pull back
+  const CHORDS = [[57, 60, 64], [53, 57, 60], [50, 53, 57], [52, 56, 59]];
+  const ARP = [0, 1, 2, 4, 3, 2, 1, 2, 0, 1, 2, 5, 4, 2, 1, 2]; // indexes into chord tones over 2 octaves
+  // lead melody: [step, midi, length in steps], one bar per chord
+  const LEAD = [
+    [[0, 69, 4], [4, 72, 2], [6, 76, 2], [8, 74, 4], [12, 72, 4]],
+    [[0, 72, 4], [4, 69, 2], [6, 72, 2], [8, 77, 6], [14, 76, 2]],
+    [[0, 74, 4], [4, 77, 2], [6, 81, 2], [8, 79, 4], [12, 77, 4]],
+    [[0, 76, 6], [6, 80, 2], [8, 83, 4], [12, 80, 2], [14, 76, 2]],
+  ];
+  const MUSIC = {
+    on: true, mode: "off", step: 0, next: 0, timer: null, bus: null, filter: null, drone: null, playT: 0,
+    init() {
+      const a = ctx(); if (!a || this.bus) return a;
+      this.filter = a.createBiquadFilter(); this.filter.type = "lowpass"; this.filter.frequency.value = 9000; this.filter.Q.value = 2;
+      this.bus = a.createGain(); this.bus.gain.value = 0;
+      // a short echo for that 80s space
+      const dl = a.createDelay(); dl.delayTime.value = STEP * 3; const fb = a.createGain(); fb.gain.value = 0.28;
+      this.filter.connect(this.bus); this.filter.connect(dl); dl.connect(fb); fb.connect(dl); dl.connect(this.bus);
+      this.bus.connect(a.destination);
+      return a;
+    },
+    level() { return muted || !this.on || this.mode === "off" ? 0 : this.mode === "over" ? 0.05 : this.mode === "pause" ? 0.03 : this.mode === "hub" ? 0.12 : 0.08; },
+    refresh() {
+      if (!this.bus) return;
+      const a = ac, t = a.currentTime;
+      this.bus.gain.cancelScheduledValues(t); this.bus.gain.setTargetAtTime(this.level(), t, 0.4);
+      const dark = this.mode === "down" || this.mode === "over";
+      this.filter.frequency.cancelScheduledValues(t);
+      this.filter.frequency.setTargetAtTime(dark ? 650 : this.mode === "hub" ? 2600 : 9000, t, 0.25);
+      if (dark && !this.drone) { // low detuned drone under the Upside Down
+        const g = a.createGain(); g.gain.value = 0; g.gain.setTargetAtTime(0.13, t, 0.6);
+        const o1 = a.createOscillator(), o2 = a.createOscillator();
+        o1.type = "sawtooth"; o2.type = "sawtooth"; o1.frequency.value = mtof(33); o2.frequency.value = mtof(33) * 1.012;
+        o1.connect(g); o2.connect(g); g.connect(this.filter); o1.start(); o2.start();
+        this.drone = { g, o1, o2 };
+      } else if (!dark && this.drone) {
+        const d = this.drone; this.drone = null;
+        d.g.gain.setTargetAtTime(0, t, 0.3); d.o1.stop(t + 1.5); d.o2.stop(t + 1.5);
+      }
+    },
+    setMode(m) {
+      if (m === this.mode) return;
+      if (m === "play" && this.mode !== "down" && this.mode !== "pause") this.playT = 0;
+      this.mode = m;
+      const a = this.init(); if (!a) return;
+      if (!this.timer) { this.next = a.currentTime + 0.1; this.step = 0; this.timer = setInterval(() => this.tick(), 25); }
+      this.refresh();
+    },
+    setOn(v) { this.on = v; this.refresh(); },
+    note(type, midi, t, dur, vol, detune = 0) {
+      const a = ac, o = a.createOscillator(), g = a.createGain();
+      o.type = type; o.frequency.value = mtof(midi); o.detune.value = detune;
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(vol, t + 0.008);
+      g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+      o.connect(g); g.connect(this.filter); o.start(t); o.stop(t + dur + 0.02);
+    },
+    drum(kind, t, vol) {
+      const a = ac;
+      if (kind === "kick") {
+        const o = a.createOscillator(), g = a.createGain();
+        o.frequency.setValueAtTime(130, t); o.frequency.exponentialRampToValueAtTime(40, t + 0.14);
+        g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
+        o.connect(g); g.connect(this.bus); o.start(t); o.stop(t + 0.2); return;
+      }
+      const len = kind === "snare" ? 0.12 : 0.03, buf = a.createBuffer(1, Math.floor(a.sampleRate * len), a.sampleRate), d = buf.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+      const src = a.createBufferSource(), f = a.createBiquadFilter(), g = a.createGain();
+      f.type = kind === "snare" ? "bandpass" : "highpass"; f.frequency.value = kind === "snare" ? 1800 : 7000;
+      g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.001, t + len);
+      src.buffer = buf; src.connect(f); f.connect(g); g.connect(this.filter); src.start(t);
+    },
+    tick() {
+      if (!ac || this.mode === "off") return;
+      while (this.next < ac.currentTime + 0.12) { this.play(this.step, this.next); this.step++; this.next += STEP; }
+    },
+    play(step, t) {
+      if (this.level() === 0) return;
+      const s = step % 16, bar = Math.floor(step / 16) % 4, loop = Math.floor(step / 64);
+      const ch = CHORDS[bar], tones = [ch[0], ch[1], ch[2], ch[0] + 12, ch[1] + 12, ch[2] + 12];
+      const m = this.mode, full = m === "play" || m === "down";
+      if (m === "pause") return;
+      if (full) this.playT += STEP;
+      const dark = m === "down" || m === "over";
+      // arpeggio (half speed in the hub, wobbly in the Upside Down)
+      if (m !== "over" && (full || s % 2 === 0))
+        this.note("square", tones[ARP[s]] + 12, t, STEP * 1.6, 0.16, dark ? Math.sin(step * 0.7) * 25 : 0);
+      // pad on every chord change
+      if (s === 0) { for (const n of ch) this.note("triangle", n, t, STEP * 15, m === "over" ? 0.06 : 0.09, dark ? 14 : 0); }
+      if (!full) return;
+      // bass: pulsing 8ths on the root
+      if (s % 2 === 0) this.note(dark ? "sawtooth" : "triangle", ch[0] - 12, t, STEP * 1.8, dark ? 0.16 : 0.3);
+      // drums come in after a few seconds of running
+      if (this.playT > 6) {
+        if (s === 0 || s === 8 || s === 10) this.drum("kick", t, dark ? 0.5 : 0.7);
+        if (s === 4 || s === 12) this.drum("snare", t, dark ? 0.12 : 0.22);
+        if (s % 2 === 1) this.drum("hat", t, 0.06);
+      }
+      // lead on every second loop, an octave lower and slower in the dark
+      if (this.playT > 12 && loop % 2 === 1) for (const [st, n, len] of LEAD[bar])
+        if (st === s) this.note(dark ? "triangle" : "square", dark ? n - 12 : n, t, STEP * len * 0.95, dark ? 0.12 : 0.1, dark ? -18 : 0);
+    },
+  };
+  SFX.music = MUSIC;
   window.SFX = SFX;
 })();

@@ -1,7 +1,7 @@
 # The Upside Down — complete art list (v2)
 
 Everything the game can show, in one list, so you can redo it all and deliver
-it in one go. **136 images: 132 used in the game + 4 reference sheets.**
+it in one go. **135 images: 131 used in the game + 4 reference sheets.**
 Anything you skip keeps its built-in placeholder, so you can also deliver in parts.
 
 ## How to deliver
@@ -116,13 +116,12 @@ Enemies face **left**, toward the player. Two frames each; frame 2 uses frame 1 
 
 ---
 
-## 3. Obstacles (7)
+## 3. Obstacles (6)
 
 Upside Down obstacles are drawn **upright**, standing on the ground. The game flips them under the floor.
 
 | Key | Prompt ([SPRITE]) |
 |---|---|
-| `cone` | An orange traffic cone with two white reflective stripes. |
 | `trash` | A dented metal garbage can, lid slightly askew. |
 | `fence` | A short section of white picket fence, 4 pickets, weathered. |
 | `billboard` | A tall narrow image: a red-and-white "LOW CLEARANCE" board hanging at the bottom from two chains that go up out of frame. |
@@ -275,12 +274,12 @@ Drawn very small, so keep shapes **bold and simple**: strong outline, 3–4 colo
 |---|---|
 | 1. Characters | 4 reference sheets + 28 frames + 2 projectiles |
 | 2. Enemies | 9 |
-| 3. Obstacles | 7 |
+| 3. Obstacles | 6 |
 | 4. Christmas lights | 9 |
 | 5. Environment | 3 + 2 + 16 + 12 = 33 |
 | 6. Menu UI | 36 |
 | 7. HUD | 8 |
-| **Total** | **136 (132 in the game)** |
+| **Total** | **135 (131 in the game)** |
 
 Ranger, Rogue and Wizard are still locked in the game. Their art goes in now
 and shows on the character sheet as soon as each class is unlocked.

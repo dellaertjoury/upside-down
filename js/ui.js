@@ -19,6 +19,7 @@
 
   function show(name) {
     panels.forEach(p => $("#p-" + p).classList.toggle("hidden", p !== name));
+    $("#touch").classList.add("hide");
     if (name === "menu") refreshMenu();
     if (name === "sheet") renderSheet();
     if (name === "upgrades") renderUpgrades();
@@ -27,12 +28,13 @@
     const first = name && $("#p-" + name + " .btn");
     if (first && !matchMedia("(pointer:coarse)").matches) first.focus({ preventScroll: true });
   }
-  const hideAll = () => { panels.forEach(p => $("#p-" + p).classList.add("hidden")); if (document.activeElement) document.activeElement.blur(); };
+  const hideAll = () => { panels.forEach(p => $("#p-" + p).classList.add("hidden")); $("#touch").classList.remove("hide"); if (document.activeElement) document.activeElement.blur(); };
 
   function refreshMenu() {
     $("#bank").textContent = st.shards;
     $("#best").textContent = st.best;
     $("#mute").textContent = st.muted ? "Sound off" : "Sound on";
+    $("#music").textContent = st.music === false ? "Music off" : "Music on";
     const s = sheet(), cls = SAVE.CLASSES.find(c => c.id === s.cls);
     $("#who").innerHTML = "";
     const n = document.createElement("b"); n.textContent = s.name || "ADVENTURER";
@@ -56,6 +58,32 @@
 
   $("#mute").addEventListener("click", () => { st.muted = !st.muted; SFX.setMuted(st.muted); SAVE.save(); refreshMenu(); });
   SFX.setMuted(st.muted);
+  $("#music").addEventListener("click", () => { st.music = !st.music; SFX.music.setOn(st.music); SAVE.save(); refreshMenu(); });
+  SFX.music.on = st.music !== false;
+  // browsers only allow sound after the first click or key press: start the hub music then
+  const wake = () => {
+    SFX.unlock();
+    if (SFX.music.mode === "off" && GAME.mode === "attract") SFX.music.setMode("hub");
+    removeEventListener("pointerdown", wake); removeEventListener("keydown", wake);
+  };
+  addEventListener("pointerdown", wake); addEventListener("keydown", wake);
+
+  // ---- full screen (real browser full screen; the game already fills the window) ----
+  const root = document.documentElement;
+  const fsApi = root.requestFullscreen ? "requestFullscreen" : root.webkitRequestFullscreen ? "webkitRequestFullscreen" : null;
+  const fsEl = () => document.fullscreenElement || document.webkitFullscreenElement;
+  $("#fs").hidden = !fsApi;
+  function toggleFull() {
+    if (!fsApi) return;
+    if (fsEl()) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+    else {
+      const p = root[fsApi]();
+      if (p && p.then) p.then(() => { try { screen.orientation.lock("landscape").catch(() => {}); } catch (e) {} }).catch(() => {});
+    }
+  }
+  $("#fs").addEventListener("click", toggleFull);
+  ["fullscreenchange", "webkitfullscreenchange"].forEach(ev => document.addEventListener(ev, () => { $("#fs").textContent = fsEl() ? "Exit full screen" : "Full screen"; }));
+  addEventListener("keydown", e => { if (e.code === "KeyF" && e.target.tagName !== "INPUT") toggleFull(); });
 
   // Space at the hub or after a run = start
   window.addEventListener("keydown", e => {

@@ -28,6 +28,7 @@ Plain HTML + JavaScript. No build step, no dependencies.
 | Block (trash-can lid) | ← | Block button or swipe left |
 | Flip to the other side | Space | Flip button or tap |
 | Pause | P / Esc | |
+| Full screen | F | Full screen button on the menu |
 
 In the Upside Down you hang under the floor, so ↑ and ↓ swap: ↓ jumps (away
 from the floor) and ↑ rolls. Swipes swap the same way; the touch buttons don't.
@@ -55,6 +56,15 @@ Ranger, Rogue and Wizard are placeholders) and a hair and jacket colour.
 
 **D20 fate:** each run opens with a d20 roll. A natural 20 gives +1 heart, 15–19
 gives +20% score, 2–5 fills Dread 15% faster, and a natural 1 fills it 30% faster.
+
+## Sound
+
+All sound is generated live with WebAudio, no audio files. The background
+music (`MUSIC` in `js/audio.js`) is an original 8-bit score in an 80s synth
+horror style: arpeggio and pad at the Hellfire Club; bass, drums and a lead
+melody during a run; and the same song muffled, detuned and over a low drone
+in the Upside Down. Music and sound effects each have their own toggle on
+the menu.
 
 ## Rules
 

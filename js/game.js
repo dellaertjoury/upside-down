@@ -43,7 +43,7 @@
   // Christmas-light colours (the run currency). Gold is rare and worth 5.
   const BULBS = [["red", "#ff3d57"], ["green", "#5fd068"], ["blue", "#4da3ff"], ["yellow", "#ffd866"], ["orange", "#ff9a3d"], ["pink", "#ff6bd0"]];
   const POOL = [
-    ["cone", "trash", "fence", "billboard", "crow"],
+    ["trash", "fence", "billboard", "crow"],
     ["stump", "tendril", "crawler", "wisp", "pod"],
   ];
 
@@ -180,15 +180,16 @@
       fate: { roll, f, t: 0 } });
     G.stats.hearts += f.hearts;
     G.scroll0 = G.scroll; SCN.reset(); G.crateHint = false;
+    SFX.music.setMode("play");
     resetPlayer();
     SFX.dice();
   };
-  G.pause = () => { if (G.mode === "play") { G.mode = "pause"; G.onPause && G.onPause(); } };
-  G.resume = () => { if (G.mode === "pause") { G.mode = "play"; last = performance.now(); } };
-  G.toHub = () => { G.scroll0 = G.scroll; SCN.reset(); G.mode = "attract"; G.obs = []; G.picks = []; G.shots = []; G.pshots = []; G.pops = []; G.dist = 0; G.speed = 0; G.fate = null; resetPlayer(); };
+  G.pause = () => { if (G.mode === "play") { G.mode = "pause"; SFX.music.setMode("pause"); G.onPause && G.onPause(); } };
+  G.resume = () => { if (G.mode === "pause") { G.mode = "play"; SFX.music.setMode(P.side ? "down" : "play"); last = performance.now(); } };
+  G.toHub = () => { if (SFX.music.mode !== "off") SFX.music.setMode("hub"); G.scroll0 = G.scroll; SCN.reset(); G.mode = "attract"; G.obs = []; G.picks = []; G.shots = []; G.pshots = []; G.pops = []; G.dist = 0; G.speed = 0; G.fate = null; resetPlayer(); };
 
   function gameOver() {
-    P.dead = true; G.mode = "dying"; G.overT = 0.9; SFX.over();
+    P.dead = true; G.mode = "dying"; G.overT = 0.9; SFX.over(); SFX.music.setMode("over");
     const bonus = Math.floor(G.score / G.stats.bonusDiv);
     const earned = G.shards + bonus;
     const st = SAVE.state, score = Math.floor(G.score);
@@ -261,6 +262,7 @@
       P.flip -= dt;
       if (!P.switched && P.flip <= FLIP_T / 2) {
         P.switched = true; P.side = 1 - P.side;
+        if (G.mode === "play") SFX.music.setMode(P.side ? "down" : "play");
         G.flash = 0.12; G.flashCol = P.side ? "#3a0f26" : "#fff3b0";
       }
       if (P.flip <= 0) { P.flip = 0; P.flipCd = 0.12; P.grounded = true; P.jumps = 0; }
@@ -731,7 +733,8 @@
     if (ART("hud_light")) ctx.drawImage(ART("hud_light"), W - 47, 16, 7, 10);
     else { R("#3b3446", W - 45, 16, 3, 2); R("#1a1124", W - 46, 18, 5, 7); R(BULBS[Math.floor(G.t * 2) % 6][1], W - 45, 18, 3, 6); }
     text(String(G.shards), W - 6, 18, "#f3e9dc", "right");
-    const bw = 70, f = G.dread / st.battery;
+    const bw = 70, f = G.dread / st.battery, DX = Math.round(W / 2 - bw / 2) - 6; // centred, clear of phone buttons
+    ctx.save(); ctx.translate(DX, 0);
     text(P.side ? "x" + (st.udMult * G.fate.f.score).toFixed(1) : "DREAD", 6, H - 22, P.side ? "#ff6b8f" : "#a998b8");
     const fr = ART("hud_dread_frame"), fl = ART("hud_dread_fill");
     if (fr) ctx.drawImage(fr, 3, H - 13, bw + 6, 10);
@@ -740,6 +743,7 @@
     else R(f > 0.7 ? (Math.floor(G.t * 8) % 2 ? "#ff3d57" : "#ffd0dc") : "#b0305a", 6, H - 10, Math.round(bw * f), 4);
     if (fl && f > 0.7 && Math.floor(G.t * 8) % 2) R("rgba(255,255,255,.35)", 6, H - 10, Math.round(bw * f), 4);
     if (P.flipLock > 0) text("LOCKED", 82, H - 12, "#ff3d57");
+    ctx.restore();
     drawFate();
   }
 
