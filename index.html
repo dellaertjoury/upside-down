@@ -4,9 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>The Upside Down</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<link rel="preload" href="fonts/press-start-2p-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="css/style.css">
 <script>window.__errs=[];addEventListener("error",e=>__errs.push(e.message+" @ "+(e.filename||"").split("/").pop()+":"+e.lineno));</script>
 <script src="js/build.js" onerror="window.BUILD={sha:'local',time:''}"></script>
@@ -51,7 +49,10 @@
             <div class="field"><span data-i18n="sheet.jacket"></span> <div class="swatches" id="jacket"></div></div>
           </div>
           <div class="sheet-right">
-            <div class="abil" id="abil"></div>
+            <table class="abil-t">
+              <thead><tr><th data-i18n="ab.ability"></th><th data-i18n="ab.score"></th><th></th><th data-i18n="ab.grows"></th><th data-i18n="ab.bonus"></th></tr></thead>
+              <tbody id="abil"></tbody>
+            </table>
             <p class="rollbar muted" data-i18n="sheet.growNote"></p>
             <dl class="derived" id="derived"></dl>
           </div>
@@ -82,7 +83,7 @@
       <div class="sheet settings">
         <header class="ph"><h2 data-i18n="set.title"></h2><button class="btn back" data-go="menu" data-i18n="back"></button></header>
         <div class="set-grid">
-            <section class="set-card">
+            <section class="set-card set-sound">
               <h3 data-i18n="set.sound"></h3>
               <div class="set-row"><span data-i18n="set.music"></span>
                 <button class="btn tiny tog" id="s-music"></button>
@@ -132,6 +133,7 @@
 
     <!-- BUG / IDEA REPORTS -->
     <section class="panel hidden" id="p-report">
+     <div class="rep-wrap">
       <header class="ph"><h2 data-i18n="rep.title"></h2></header>
       <div class="rep-grid">
         <div class="rep-new">
@@ -156,6 +158,7 @@
         </div>
       </div>
       <button class="btn back" id="rep-back" data-i18n="back"></button>
+     </div>
     </section>
 
     <!-- GAME OVER -->

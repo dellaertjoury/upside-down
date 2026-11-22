@@ -41,7 +41,7 @@
     panels.forEach(p => $("#p-" + p).classList.toggle("hidden", p !== name));
     $("#touch").classList.add("hide");
     if (name === "menu") refreshMenu();
-    if (name === "sheet") renderSheet();
+    if (name === "sheet") { renderSheet(); fitSettings(); }
     if (name === "upgrades") renderUpgrades();
     if (name === "leaderboard") renderBoard();
     if (name === "settings") { bindTab = INPUT.padName_ ? "pad" : "key"; renderSettings(); fitSettings(); }
@@ -62,8 +62,10 @@
     $("#who").innerHTML = "";
     const n = document.createElement("b"); n.textContent = s.name || t("sheet.placeholder");
     const c = document.createElement("span");
-    c.textContent = ` · ${t("cls." + s.cls)} · ` + SAVE.ABIL.map(a => a + " " + SAVE.score(s, a)).join(" ");
-    $("#who").append(n, c);
+    c.textContent = ` · ${t("cls." + s.cls)}`;
+    const ab = document.createElement("span"); ab.className = "who-ab";
+    ab.textContent = SAVE.ABIL.map(a => a + " " + SAVE.score(s, a)).join("  ");
+    $("#who").append(n, c, ab);
     $("#keys-hint").textContent = t("keys.hint", Object.fromEntries(INPUT.ACTIONS.map(a => [a, INPUT.label(a)])));
   }
   function relabel() { // after a language change
@@ -157,9 +159,9 @@
       const cls = SAVE.CLASSES.find(c => c.id === s.cls).bonus[a] || 0;
       const total = SAVE.score(s, a), m = SAVE.mod(total), up = SAVE.fromUpgrades(a);
       const sic = SPR.ART["ui_stat_" + a.toLowerCase()];
-      return `<div class="ab"><span class="an">${sic ? `<img class="sic" src="${sic.src}" alt="">` : ""}${a}</span><span class="av">${total}</span>
-        <span class="am">${sign(m)}</span>
-        <span class="ai">${esc(t("ab." + a))}${cls ? ` <em>${esc(t("ab.class", { n: cls }))}</em>` : ""}${up ? ` <em>${esc(t("ab.up", { n: up }))}</em>` : ""}</span></div>`;
+      const bonus = [cls ? t("ab.class", { n: cls }) : "", up ? t("ab.up", { n: up }) : ""].filter(Boolean).join(" · ") || "—";
+      return `<tr><th>${sic ? `<img class="sic" src="${sic.src}" alt="">` : ""}${a}</th><td class="av">${total}</td><td class="am">${sign(m)}</td>
+        <td class="ai">${esc(t("ab." + a))}</td><td class="ab-b">${esc(bonus)}</td></tr>`;
     }).join("");
     const r = SAVE.runStats(s);
     const rows = [
@@ -285,7 +287,7 @@
   }
   // short screens: scale the settings panel down until it fits (never up)
   function fitSettings() {
-    const el = $("#p-settings .settings"); if (!el || current !== "settings") return;
+    const el = current === "settings" ? $("#p-settings .settings") : current === "sheet" ? $("#p-sheet .sheet") : current === "report" ? $("#p-report .rep-wrap") : null; if (!el) return;
     el.style.zoom = "";
     const frame = el.closest(".frame") || document.body;
     const avail = Math.min(frame.clientHeight || innerHeight, innerHeight) * 0.97, need = el.getBoundingClientRect().height;
@@ -377,7 +379,7 @@
     $("#rep-shot").src = repShot || ""; $("#rep-text").value = ""; $("#rep-msg").textContent = "";
     $("#rep-clear").textContent = t("rep.clear");
     document.querySelectorAll("[data-kind]").forEach(b => b.classList.toggle("on", b.dataset.kind === repKind));
-    renderReports();
+    renderReports().then(fitSettings);
     $("#rep-text").focus({ preventScroll: true });
   }
   function closeReport() { show(repFrom === "report" ? "menu" : repFrom || "menu"); }

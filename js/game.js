@@ -129,7 +129,7 @@
   function flipVertical(a) { return a; } // controls stay the same upside down (up = jump, down = roll)
   // swipes on the canvas: up=jump, down=roll, sideways=attack, tap=flip
   let sw = null;
-  cv.addEventListener("pointerdown", e => { sw = { x: e.clientX, y: e.clientY }; });
+  cv.addEventListener("pointerdown", e => { sw = e.pointerType === "touch" ? { x: e.clientX, y: e.clientY } : null; }); // the mouse does nothing in the game
   cv.addEventListener("pointerup", e => {
     if (!sw || G.mode !== "play") return;
     const dx = e.clientX - sw.x, dy = e.clientY - sw.y; sw = null;
@@ -303,7 +303,7 @@
     const f = FATE[2]; // the start-of-run fate roll is gone: no random head start or handicap
     Object.assign(G, { mode: "play", t: 0, speed: SPEED_START, dist: 0, score: 0, shards: 0, kills: 0, parries: 0, nextAt: 420,
       sc: { dist: 0, combat: 0, lights: 0 }, crateT: rand(8, 12), platT: rand(6, 10), nextMile: BAL.milestoneEvery,
-      haul: { dist: 0, combat: 0, lights: 0, n: 0 }, dice: 0, diceT: rand(BAL.dice.first[0], BAL.dice.first[1]), udT: 0, heat: 1, banked: 0, bestHaul: 0, shieldT: 0, skateT: rand(20, 35),
+      haul: { dist: 0, combat: 0, lights: 0, n: 0 }, dice: 0, diceT: rand(BAL.dice.first[0], BAL.dice.first[1]), udT: 0, heat: 1, banked: 0, bestHaul: 0, shieldT: 0, skateT: rand(8, 12),   // first skateboard early, so you meet it in every run
       obs: [], picks: [], parts: [], shots: [], pshots: [], pops: [], shake: 0, flash: 0,
       hearts: G.stats.hearts + f.hearts, reviveLeft: G.stats.revive, dread: 0, overT: 0,
       fate: { roll: 0, f, t: 99 } });
@@ -667,6 +667,9 @@
         if (k.h < 5) { k.h = 5; k.vh = Math.abs(k.vh) * 0.35; k.vx *= 0.5; if (k.vh < 25) k.fly = false; }
       }
       if (k.taken || !playing) continue;
+      if (k.kind === "skate" && !k.told && k.x < W - 20) { // point it out the first time it rolls into view
+        k.told = true; pop(T_("pop.skateAhead"), "#ffd866", k.x + 6, sy(k.side, k.h + 22)); SFX.light();
+      }
       const cx = PX + 6, ch = P.h + 8;
       const ddx = k.x - cx, ddh = k.h - ch, dist = Math.hypot(ddx, ddh);
       if (k.side === P.side && P.flip <= 0 && dist < st.magnet + 12) {
@@ -1101,13 +1104,13 @@
     ctx.fillStyle = `rgba(255,61,87,${p})`; ctx.fillRect(0, FB - 1, W, 1);
   }
 
-  function heart(x, y, full) {
-    const img = ART(full ? "hud_heart_full" : "hud_heart_empty");
+  function heart(x, y, full, col) {
+    const img = !col && ART(full ? "hud_heart_full" : "hud_heart_empty");
     if (img) { ctx.drawImage(img, x, y, 9, 8); return; }
-    const c = full ? "#ff3d57" : "#3a2550";
+    const c = col || (full ? "#ff3d57" : "#3a2550");
     R("#1a1124", x, y + 1, 9, 5); R("#1a1124", x + 1, y, 3, 8); R("#1a1124", x + 5, y, 3, 8); R("#1a1124", x + 3, y + 6, 3, 2);
     R(c, x + 1, y + 1, 3, 4); R(c, x + 5, y + 1, 3, 4); R(c, x + 2, y + 4, 5, 2); R(c, x + 3, y + 6, 3, 1);
-    if (full) R("#ffb0bc", x + 2, y + 2, 1, 1);
+    if (full && !col) R("#ffb0bc", x + 2, y + 2, 1, 1);
   }
 
   function drawFate() {
@@ -1138,12 +1141,18 @@
       const f = P.skate / st.skate;
       R("#1a1124", 5, 19, 52, 4); R(BULBS[Math.floor(G.t * 8) % 6][1], 6, 20, Math.round(50 * f), 2);
     }
-    if (perk().shield) { // the Fighter's lid: bright when ready, dim while recharging
-      const x0 = 8 + st.hearts * 11 + (G.reviveLeft ? 12 : 0), ok = G.shieldT <= 0;
-      R("#1a1124", x0, 6, 9, 9); R(ok ? "#c9d1dc" : "#4c4e5a", x0 + 1, 7, 7, 7); R(ok ? "#9a9caa" : "#3b3446", x0 + 3, 9, 3, 3);
-      if (!ok) R("#5fd0c8", x0, 16, Math.round(9 * (1 - G.shieldT / perk().shield)), 1);
+    // left to right: hearts, extra life (Second wind), the Fighter's lid. Each has its own slot.
+    let hx = 6 + st.hearts * 11 + 2;
+    if (G.reviveLeft) { // a small teal heart with a plus
+      if (ART("hud_revive")) ctx.drawImage(ART("hud_revive"), hx, 6, 9, 9);
+      else { heart(hx, 6, true, "#5fd0c8"); R("#ffffff", hx + 4, 8, 1, 3); R("#ffffff", hx + 3, 9, 3, 1); }
+      hx += 13;
     }
-    if (G.reviveLeft) { if (ART("hud_revive")) ctx.drawImage(ART("hud_revive"), 8 + st.hearts * 11, 6, 9, 9); else text("+1", 8 + st.hearts * 11, 7, "#5fd0c8"); }
+    if (perk().shield) { // the Fighter's lid: bright when ready, dim while recharging
+      const ok = G.shieldT <= 0;
+      R("#1a1124", hx, 6, 9, 9); R(ok ? "#c9d1dc" : "#4c4e5a", hx + 1, 7, 7, 7); R(ok ? "#9a9caa" : "#3b3446", hx + 3, 9, 3, 3);
+      if (!ok) R("#5fd0c8", hx, 16, Math.round(9 * (1 - G.shieldT / perk().shield)), 1);
+    }
     text(String(Math.floor(G.score)).padStart(6, "0"), W - 6, 6, "#ffd866", "right");
     text(T_("hud.hi") + " " + String(Math.max(SAVE.state.best, Math.floor(G.score))).padStart(6, "0"), W - 64, 6, "#f3e9dc", "right");
     if (ART("hud_light")) ctx.drawImage(ART("hud_light"), W - 47, 16, 7, 10);

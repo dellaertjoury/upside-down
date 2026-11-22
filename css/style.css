@@ -1,3 +1,6 @@
+/* Press Start 2P (SIL Open Font License, fonts/OFL.txt), served with the game */
+@font-face{font-family:"Press Start 2P";font-style:normal;font-weight:400;font-display:swap;src:url(../fonts/press-start-2p-latin-400-normal.woff2) format("woff2");unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+2074,U+20AC,U+2122,U+2191-2193,U+2212,U+2215,U+FEFF,U+FFFD}
+@font-face{font-family:"Press Start 2P";font-style:normal;font-weight:400;font-display:swap;src:url(../fonts/press-start-2p-latin-ext-400-normal.woff2) format("woff2");unicode-range:U+0100-02AF,U+0304,U+0308,U+0329,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
 /*
 VOICE  arcade cabinet at night: loud, warm, a little scary
 IDEA   a club-night game cabinet whose screen is split by the floor
@@ -245,3 +248,63 @@ body.has-ui-d20 .d20{background:var(--ui-d20) center/contain no-repeat;clip-path
 #p-report{background:rgba(14,8,24,.94);box-shadow:0 0 0 3px #2b1a3d,0 10px 40px rgba(0,0,0,.6);padding:16px 20px}
 body.has-ui-panel #p-report{border:24px solid transparent;border-image:var(--ui-panel) 24 fill / 24px stretch;image-rendering:pixelated;box-shadow:none;background:none}
 
+
+/* ---- character sheet (one line per item, sized for Press Start 2P) ---- */
+.sheet{width:min(96vw,1240px)}
+.sheet-grid{grid-template-columns:minmax(0,5fr) minmax(0,8fr);gap:clamp(16px,2.2vw,30px)}
+.sheet .ph{width:100%;align-items:center}
+.cls span,.cls small,.cls{white-space:nowrap}
+.cls{min-width:0;padding-left:8px;padding-right:8px}
+.abil-t{width:100%;border-collapse:separate;border-spacing:0 5px;font-size:clamp(9px,1vw,13px)}
+.abil-t th,.abil-t td{white-space:nowrap;padding:6px 8px;text-align:left;background:#160d22}
+.abil-t thead th{background:none;color:var(--muted);font-weight:400;padding-top:0;padding-bottom:0;font-size:clamp(8px,.85vw,11px)}
+.abil-t tbody th{color:var(--muted);font-weight:400;box-shadow:inset 3px 0 0 #3a2550}
+.abil-t .sic{width:16px;height:16px;vertical-align:-3px;margin-right:6px;image-rendering:pixelated}
+.abil-t .av{color:var(--ink);font-size:clamp(11px,1.3vw,16px);text-align:right}
+.abil-t .am{color:var(--teal)}
+.abil-t .ai{width:100%;color:var(--ink)}
+.abil-t .ab-b{color:var(--gold)}
+.sheet .rollbar{display:block;margin:8px 0;line-height:1.7}
+.derived{grid-template-columns:repeat(2,max-content minmax(0,1fr));gap:8px 14px}
+.derived dt{white-space:nowrap}
+.sheet .menu-grid .btn,#p-settings .btn,.set-row>span{white-space:nowrap}
+/* settings: labels on one line, touch options in their own row */
+#p-settings .settings{width:min(96vw,1400px)}
+.set-row{grid-template-columns:max-content auto minmax(60px,1fr)}
+.set-row.inline{grid-template-columns:1fr}
+.set-row.inline>.seg{grid-column:1}
+.seg-fill .btn{min-width:0;flex:1 1 0}
+.sheet .classes{grid-template-columns:minmax(0,1fr)}
+.sheet .cls span{flex-direction:row;align-items:baseline;gap:12px}
+.sheet .menu-grid{grid-template-columns:repeat(2,max-content);justify-content:center}
+
+.set-sound{display:grid;grid-template-columns:max-content auto minmax(60px,1fr);gap:10px 12px;align-items:center;align-content:start}
+.set-sound h3{grid-column:1/-1;margin-bottom:4px}
+.set-sound .set-row{display:contents}
+/* long translations: menu columns as wide as the longest label, never wrapping */
+.menu-grid{width:max-content;max-width:100%;grid-template-columns:repeat(2,minmax(200px,1fr))}
+.menu-grid .btn{white-space:nowrap}
+.set-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1.3fr)}
+#p-settings .btn.tiny{padding-left:6px;padding-right:6px;font-size:clamp(9px,.95vw,13px)}
+#p-settings .tog{min-width:4.5em}
+.hub-card{width:min(100%,64%)}
+.menu-grid .btn{font-size:clamp(11px,1.15vw,15px);padding-left:10px;padding-right:10px}
+#p-settings .tog{min-width:6.5em}
+.set-grid{grid-template-columns:minmax(0,1fr) minmax(0,1.05fr) minmax(0,1.25fr)}
+.seg-lang{gap:8px}.seg-lang .btn.tiny{padding-left:3px;padding-right:3px}
+#p-settings .seg-fill .btn.tiny{padding-left:3px;padding-right:3px}
+#p-settings .seg-fill .btn.tiny{font-size:clamp(9px,.85vw,13px)}
+.who .who-ab{display:block;white-space:nowrap;margin-top:4px;color:var(--muted)}
+.set-sound{grid-template-columns:max-content minmax(0,1fr);row-gap:6px}
+.set-sound .tog{justify-self:start}
+.set-sound input[type=range]{grid-column:1/-1;width:100%;margin:0 0 6px}
+#p-settings #s-reset{white-space:normal;text-align:left;max-width:100%}
+#p-upgrades .list{width:min(96%,1100px);grid-template-columns:repeat(2,minmax(0,1fr));max-height:70%}
+#p-upgrades .ph{width:min(96%,1100px)}
+@media (max-width:860px){#p-upgrades .list{grid-template-columns:minmax(0,1fr)}}
+/* report: the frame sits on an inner wrapper so the panel can scale to fit */
+#p-report,body.has-ui-panel #p-report{max-width:none;background:#0e0816cc;border:0;border-image:none;padding:0;box-shadow:none}
+.rep-wrap{width:min(1100px,96%);display:flex;flex-direction:column;align-items:center;gap:clamp(8px,1.4vw,16px);
+  background:rgba(14,8,24,.96);box-shadow:0 0 0 3px #2b1a3d,0 10px 40px rgba(0,0,0,.6);padding:16px 20px}
+body.has-ui-panel .rep-wrap{border:24px solid transparent;border-image:var(--ui-panel) 24 fill / 24px stretch;image-rendering:pixelated;box-shadow:none;background:none}
+.rep-wrap .ph{width:100%}
