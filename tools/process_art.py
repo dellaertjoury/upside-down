@@ -199,7 +199,7 @@ for full, f in files:
         continue
     frame_key = re.sub(r"^(%s)_" % "|".join(CLASSES), "", key)
     try:
-        if re.match(r"^(idle|run|jump|attack|block|roll|skate)\d?$", frame_key) and (frame_key != key or key in ("idle", "run1", "run2", "jump", "attack", "roll")):
+        if re.match(r"^(idle|run|jump|attack|block|roll|skate|die)\d?$", frame_key) and (frame_key != key or key in ("idle", "run1", "run2", "jump", "attack", "roll")):
             player(key, load(path))
         elif re.match(r"^(crow|hound|flyer|pod|stalker)_(idle|fly|run|walk|jump|attack)\d$", key): enemy2(key, load(path))
         elif re.match(r"^plat_(dumpster|car|cop|van|pickup|bus)(_dark)?$", key):  # street objects to jump on

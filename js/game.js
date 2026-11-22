@@ -92,7 +92,7 @@
   function resetPlayer() {
     Object.assign(P, { side: 0, h: 0, vh: 0, grounded: true, jumps: 0, roll: 0, atk: 0, atkCd: 0,
       blk: 0, blkCd: 0, blkAge: 0, flip: 0, switched: false, flipCd: 0, flipLock: 0, inv: 0, runT: 0,
-      bufJump: 0, bufFlip: 0, bufRoll: 0, bufAtk: 0, bufBlk: 0, dead: false });
+      bufJump: 0, bufFlip: 0, bufRoll: 0, bufAtk: 0, bufBlk: 0, dead: false, die: null });
   }
   resetPlayer();
 
@@ -292,7 +292,12 @@
   G.toHub = () => { if (SFX.music.mode !== "off") SFX.music.setMode("hub"); G.scroll0 = G.scroll; SCN.reset(); G.mode = "attract"; G.obs = []; G.picks = []; G.shots = []; G.pshots = []; G.pops = []; G.dist = 0; G.speed = 0; G.fate = null; resetPlayer(); };
 
   function gameOver() {
-    P.dead = true; G.mode = "dying"; G.overT = 0.9; SFX.over(); SFX.music.setMode("over");
+    P.dead = true; G.mode = "dying"; G.overT = 1.3; SFX.over(); SFX.music.setMode("over");
+    // death tumble: knocked up and backwards, spinning, then falling off the bottom of the screen
+    const top = P.side === 0;
+    P.die = { x: PX + 6, y: sy(P.side, P.h) + (top ? -9 : 9), vy: top ? -170 : -40, vx: -38, rot: 0, spin: -11, mir: top ? 1 : -1 };
+    P.skate = 0; P.roll = 0; P.atk = 0; P.flip = 0;
+    G.shake = 8; burst(PX + 6, sy(P.side, P.h + 9), "#ff3d57", 22, 90);
     const bonus = Math.floor(G.score / G.stats.bonusDiv);
     const earned = G.shards + bonus;
     const st = SAVE.state, score = Math.floor(G.score);
@@ -495,6 +500,8 @@
     const playing = G.mode === "play";
     if (G.mode === "dying") {
       G.speed = Math.max(0, G.speed - 400 * dt); G.overT -= dt;
+      const d = P.die;
+      if (d) { d.vy += 560 * dt; d.y += d.vy * dt; d.x += d.vx * dt; d.rot += d.spin * dt; d.spin *= 1 - 0.6 * dt; }
       if (G.overT <= 0) { G.mode = "over"; G.onOver && G.onOver(G.result); }
     } else if (playing) {
       G.speed = Math.min(SPEED_MAX, SPEED_START + G.t * SPEED_GAIN);
@@ -945,13 +952,14 @@
     if (!out.length && SPR.ART[`${prefix}_${state}`]) out.push(`${prefix}_${state}`);
     return out;
   }
-  const PLAYER_FALLBACK = { skate: ["run2"], idle: ["run2"], run: ["run1", "run2"], jump: ["jump"], attack: ["attack"], roll: ["roll"] };
+  const PLAYER_FALLBACK = { skate: ["run2"], idle: ["run2"], run: ["run1", "run2"], jump: ["jump"], attack: ["attack"], roll: ["roll"], die: ["jump"] };
   // the player's frames for a state: own class art, else the Fighter's, else placeholder
   function pframes(state) {
     const sh = SAVE.state.sheet;
     let f = sh ? frames(sh.cls, state) : [];
     if (!f.length) f = frames("fighter", state);
     if (!f.length && state === "idle") f = pframes("run").slice(-1);
+    if (!f.length && state === "die") f = pframes("jump").slice(-1); // tumble pose: the falling jump frame
     if (!f.length && state === "skate") f = pframes("run").slice(-1); // riding pose: a run frame on the board
     return f.length ? f : PLAYER_FALLBACK[state];
   }
@@ -976,7 +984,7 @@
   G.attackCfg = attackCfg; G.BAL = BAL;
   G.pk = pk;
   function drawPlayer() {
-    if (P.dead && Math.floor(G.t * 16) % 2) return;
+    if (P.die) return; // drawn by drawDeath, over the floor
     if (P.inv > 0 && Math.floor(G.t * 20) % 2) return;
     let h = P.h;
     if (P.flip > 0) { const pr = 1 - P.flip / FLIP_T; h = pr < 0.5 ? -18 * pr * 2 : -18 * (1 - (pr - 0.5) * 2); }
@@ -1022,6 +1030,14 @@
         for (let a = -1.3; a < ang; a += 0.12) ctx.fillRect(Math.round(PX + 9 + Math.cos(a) * reach), Math.round(-h - 9 + Math.sin(a) * reach), 2, 2);
       }
     }
+    ctx.restore();
+  }
+
+  function drawDeath() {
+    const d = P.die; if (d.y > H + 30) return;
+    const key = cyc(pframes("die"), G.t, 8);
+    ctx.save(); ctx.translate(Math.round(d.x), Math.round(d.y)); ctx.rotate(d.rot); ctx.scale(1, d.mir);
+    draw(ctx, key, -6, 9);
     ctx.restore();
   }
 
@@ -1133,6 +1149,7 @@
     }
     drawPlayer();
     drawFloor();
+    if (P.die) drawDeath();
     for (const o of G.obs) if (o.wall && o.x > W - 4 && Math.floor(G.t * 8) % 2) {
       const y = o.side ? FB + 40 : FT - 50;
       if (ART("hud_warning")) { ctx.drawImage(ART("hud_warning"), W - 13, y - 1, 11, 13); continue; }
@@ -1252,5 +1269,5 @@
   SPR.ready = SPR.loadOverrides();
   requestAnimationFrame(loop);
   window.GAME = G;
-  G._P = P; G._TYPES = TYPES;
+  G._P = P; G._TYPES = TYPES; G._hurt = hurt;
 })();

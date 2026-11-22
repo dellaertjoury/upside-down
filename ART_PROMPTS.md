@@ -781,6 +781,60 @@ Riding frames, 2 per class (optional: without them the game shows a run frame st
 
 ---
 
+## 6. Death tumble (optional, 8)
+
+When the last heart is lost the kid is knocked up and backwards, spins and falls off the screen. Without these frames the game spins the falling jump frame. Attach the class reference. The game does the spinning, so draw the pose upright.
+
+**`fighter_die1`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: the Fighter kid (red jacket, bat, trash-can lid), side view, knocked backwards off their feet, body arched back, arms and legs flung out, eyes squeezed shut, weapon flying loose from one hand. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`fighter_die2`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: the Fighter kid (red jacket, bat, trash-can lid), curled into a tumbling ball mid-air, knees tucked, arms over the head, hair and clothes flapping, shocked open mouth. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`ranger_die1`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: the Ranger kid (bucket hat, vest, slingshot), side view, knocked backwards off their feet, body arched back, arms and legs flung out, eyes squeezed shut, weapon flying loose from one hand. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`ranger_die2`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: the Ranger kid (bucket hat, vest, slingshot), curled into a tumbling ball mid-air, knees tucked, arms over the head, hair and clothes flapping, shocked open mouth. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`rogue_die1`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: the Rogue kid (grey hoodie, walkie-talkie), side view, knocked backwards off their feet, body arched back, arms and legs flung out, eyes squeezed shut, weapon flying loose from one hand. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`rogue_die2`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: the Rogue kid (grey hoodie, walkie-talkie), curled into a tumbling ball mid-air, knees tucked, arms over the head, hair and clothes flapping, shocked open mouth. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`wizard_die1`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: the Wizard kid (bedsheet cape, cardboard hat), side view, knocked backwards off their feet, body arched back, arms and legs flung out, eyes squeezed shut, weapon flying loose from one hand. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+**`wizard_die2`**
+
+```
+16-bit pixel art sprite for a 2D side-scrolling runner, crisp hard-edged pixels, bold saturated colours, dark 1-pixel outline (#1a1124), 1980s small-town horror mood. Character: the Wizard kid (bedsheet cape, cardboard hat), curled into a tumbling ball mid-air, knees tucked, arms over the head, hair and clothes flapping, shocked open mouth. Match the attached reference exactly: same character, same proportions, same palette, same pixel size. OUTPUT: one PNG, FULLY TRANSPARENT BACKGROUND (RGBA with a real alpha channel). Subject centred. No background, no scenery, no floor, no ground shadow, no checkerboard pattern, no black or white fill, no text, no frame or border. Sharp, hard pixel edges, no anti-aliasing, no blur, no glow halo.
+```
+
+---
+
 ## Checklist
 
 | Set | Files |
@@ -791,6 +845,7 @@ Riding frames, 2 per class (optional: without them the game shows a run frame st
 | The Watcher | 2 |
 | Street objects to jump on (6 + 6 dark) | 12 |
 | Skateboard: pickup, board, upgrade icon, 2 riding frames × 4 classes | 11 |
-| **Total** | **119** |
+| Death tumble: 2 frames × 4 classes (optional) | 8 |
+| **Total** | **127** |
 
-Per player class: idle 2, run 4, jump 2 (rising, falling), roll 4, running attack 3 (+ 2 optional skateboard frames).
+Per player class: idle 2, run 4, jump 2 (rising, falling), roll 4, running attack 3 (+ 2 optional skateboard frames, + 2 optional death-tumble frames).
