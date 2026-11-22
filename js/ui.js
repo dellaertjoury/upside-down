@@ -315,7 +315,7 @@
       <span>${esc(t("over.ptsDist"))}</span><b>${r.pts.dist}</b>
       <span>${esc(t("over.ptsCombat"))}</span><b>${r.pts.combat}</b>
       <span>${esc(t("over.ptsLights"))}</span><b>${r.pts.lights}</b>
-      <span>${esc(t("over.kills"))} · ${esc(t("over.combo"))}</span><b>${r.kills} · x${Math.min(GAME.BAL.comboMax, 1 + (Math.max(1, r.bestCombo) - 1) * GAME.BAL.comboStep).toFixed(1)}</b>
+      <span>${esc(t("over.kills"))}</span><b>${r.kills}</b>
       <span>${esc(t("over.fate"))}</span><b>${r.fate}</b>
       <span>${esc(t("over.found"))}</span><b>${r.shards}</b>
       <span>${esc(t("over.bonus"))}</span><b>+${r.bonus}</b>

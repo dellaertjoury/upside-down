@@ -20,6 +20,7 @@
     prop_hedge: [26, 11], prop_phonebooth: [12, 30], prop_hydrant: [7, 10],
   };
 
+  const BACKGROUND = ["set_house", "set_houses", "set_school"];
   const rand = (a, b) => a + Math.random() * (b - a);
   const pick = a => a[Math.floor(Math.random() * a.length)];
   const S = { chunks: [], nextX: 0, blanks: 2, last: "" };
@@ -45,7 +46,9 @@
         c.items.push({ key, x }); cur = x + pw + 4;
       }
     } else {           // a building
-      const key = pick(Object.keys(BUILDINGS).filter(k => k !== S.last));
+      // store, police, diner, arcade, camper and gas station are rooftop platforms in
+      // the foreground (js/game.js), so the background keeps the houses and the school
+      const key = pick(BACKGROUND.filter(k => k !== S.last));
       S.last = key;
       const [bw] = size(key), pad = Math.round(rand(20, 40));
       c.w = bw + pad * 2;

@@ -31,8 +31,8 @@ Every key and controller button can be changed in **Settings → Controls**
 | Flip to the other side | F | Y / RB | Flip button or tap |
 | Pause | P / Esc | Start | |
 
-In the Upside Down you hang under the floor, so jump and roll swap
-directions automatically. In the air, roll and flip do a fast-fall first.
+The controls are the same in the Upside Down: ↑ jumps away from the floor,
+↓ rolls. In the air, roll and flip do a fast-fall first.
 A swing or a slingshot marble also knocks spore shots away.
 
 **Controller:** any standard gamepad (Xbox, PlayStation, Switch Pro in a
@@ -87,15 +87,20 @@ the menu.
   Spore pods shoot along the ground every few seconds: jump them, flip away,
   or hit the shot back.
 - **The Upside Down** scores ×2 (more with upgrades) and its lights count
-  double. But the **Dread** meter fills while you're down there. When it's
-  full you get thrown back up and can't flip again for a moment.
+  double. But the **Dread** meter fills while you're down there (about 8
+  seconds before upgrades). When it's full you get thrown back up and can't
+  flip again for a moment.
+- **Rooftops:** every 11–17 seconds a store, police station, diner, arcade,
+  camper or gas station rolls by with the street. Jump onto its roof (only
+  from above; the walls never hurt) for the lights and crates up there. Run
+  off the end and you drop back down. Works in the Upside Down too.
 
 ## Classes and attacks
 
 | Class | Attack | Why it's fair |
 |---|---|---|
-| Fighter | Bat, short reach, kills in 1 hit, knocks spore shots back | Riskiest: kills count **×1.5** (close-range bonus) |
-| Ranger | Slingshot marble lobbed in an arc with gravity: lands at about **half the screen**, hits what it actually touches | Safe but limited range; no close-range bonus. Longer-bat upgrades and STR throw it further |
+| Fighter | Bat, short reach, kills in 1 hit, knocks spore shots back | Riskiest: has to get close |
+| Ranger | Slingshot marble lobbed in an arc with gravity: lands at about **half the screen**, hits what it actually touches | Safe but limited range. Longer-bat upgrades and STR throw it further |
 | Wizard *(locked)* | Magic bolt straight across the whole screen | Half damage: every enemy takes **2 hits** (the stalker 4) |
 | Rogue *(locked)* | Fast melee jabs | 1 in 4 hits is a double-damage crit |
 
@@ -104,16 +109,15 @@ the menu.
 The high score is one number made of three parts, shown after each run:
 
 - **Distance:** 1 point per metre (×2 in the Upside Down).
-- **Combat:** points per kill (crow 25, hound 40, flyer 40, spore pod 60,
-  stalker 120) × the **combo**: every kill within 5 seconds of the last
-  raises the multiplier (×1.5, ×2, ×2.5, up to ×3). Getting hit resets it.
-  Melee kills ×1.5, Upside Down ×2.
+- **Combat:** points per kill: flyers (crows, flyers) 10, crawlers (hounds,
+  spore pods) 15, walkers (stalkers) 25. ×2 in the Upside Down.
 - **Lights:** 5 points per light collected.
 
 ## Christmas lights (the currency)
 
-- Single bulbs in random colours now and then (Upside Down ones count double,
-  the rare gold bulb is worth 5).
+- Bulbs float high (jump for them), alone or in rows of 2–3 that follow the
+  arc of a jump, so one well-timed jump collects them all. Upside Down ones
+  count double, the rare gold bulb is worth 5.
 - **Crates** about every 20 seconds: small (3 lights), medium (5) or big with
   a gold glow (10); big crates get more common the further you run. One in
   four crates holds a heart instead (lights if you're at full health). Hit

@@ -11,16 +11,17 @@
     // score
     metrePts: 1,                 // per metre run (10 game px = 1 m)
     lightPts: 5,                 // per light collected
-    killPts: { crow: 25, crawler: 40, wisp: 40, pod: 60, stalker: 120 },
-    meleeBonus: 1.5,             // close-range kills are riskier: worth more
-    comboWindow: 5,              // seconds to land the next kill and keep the combo
-    comboStep: 0.5, comboMax: 3, // x1, x1.5, x2, x2.5, x3
+    killPts: { crow: 10, wisp: 10, crawler: 15, pod: 15, stalker: 25 }, // bats 10, crawlers 15, walkers 25 (x2 upside down)
+    dreadRate: 0.6,              // Dread fills at 60% speed: ~8 s in the Upside Down before upgrades
     // lights economy
     crateEvery: [16, 24],        // seconds between crates
     crateTiers: [[3, 0.6, 0.3], [5, 0.3, 0.4], [10, 0.1, 0.3]], // [lights, chance at the start, chance from 2000 m]
     heartCrate: 0.25,            // share of crates holding a heart instead
     killDrop: 0.2,               // chance an enemy drops a light (the stalker always drops 3)
     milestoneEvery: 500, milestoneLights: 10, // every 500 m: +10 lights
+    lightHeight: [20, 38],       // single lights float this high: jump for them
+    platformEvery: [11, 17],     // seconds between rooftop platforms
+    roofHeight: [24, 34],        // roof height in game px (a jump reaches ~50)
     // ranged attacks
     arc: { vx: 200, perReach: 5, vh: 90, g: 380 }, // Ranger marble (reach upgrades add speed = range)
     bolt: { vx: 300 },                             // Wizard bolt
@@ -116,10 +117,7 @@
   };
   // Upside down, "away from the floor" is down on screen: swap up/down so the
   // arrow you press matches the direction you move.
-  function flipVertical(a) {
-    if (P.side !== 1) return a;
-    return a === "jump" ? "roll" : a === "roll" ? "jump" : a;
-  }
+  function flipVertical(a) { return a; } // controls stay the same upside down (up = jump, down = roll)
   // swipes on the canvas: up=jump, down=roll, sideways=attack, tap=flip
   let sw = null;
   cv.addEventListener("pointerdown", e => { sw = { x: e.clientX, y: e.clientY }; });
@@ -143,21 +141,76 @@
     return { side, x, h, kind: "bulb", name, col, gold, group, idx, taken: false, fly: false, vx: 0, vh: 0, ph: Math.random() * 6 };
   }
   // one Christmas light floating at a reachable height
-  function addLight(side, x) { G.picks.push(bulb(side, x, rand(6, 24), null, 0)); }
+  // a light at a given height (kill drops sit low so you can just run through them)
+  function addLight(side, x, h) { G.picks.push(bulb(side, x, h == null ? rand(BAL.lightHeight[0], BAL.lightHeight[1]) : h, null, 0)); }
+  // 1-3 lights along the path of a jump that takes off at x (at the current speed),
+  // so one well-timed jump collects them all. base = floor or roof height.
+  function addLightArc(side, x, n, base = 0) {
+    const J = (G.stats || SAVE.runStats()).jumpV, T = 2 * J / GRAV, v = Math.max(60, G.speed);
+    for (let i = 0; i < n; i++) {
+      const tt = T * (n === 1 ? 0.5 : (i + 1) / (n + 1));
+      G.picks.push(bulb(side, x + v * tt, base + J * tt - GRAV * tt * tt / 2 + 6, null, i));
+    }
+  }
   function typeFor(side, d) {
     const pool = POOL[side].filter(t => (TYPES[t].after || 0) <= G.dist);
     const enemies = pool.filter(t => TYPES[t].enemy), rest = pool.filter(t => !TYPES[t].enemy);
     if (enemies.length && Math.random() < 0.25 + d * 0.25) return pick(enemies);
     return pick(rest);
   }
+  // Rooftop platforms: a building that moves with the street. You run past its
+  // front; jump up and you can land on the roof, where lights (and sometimes a
+  // crate) wait. Run off the end and you drop back down. Walls never hurt.
+  const PLAT_KEYS = ["set_store", "set_police", "set_diner", "set_arcade", "set_camper", "set_gas"];
+  const roofCache = {};
+  function roofFrac(img) { // share of the image above the roof line (signs, poles)
+    if (roofCache[img.src] != null) return roofCache[img.src];
+    let f = 0;
+    try {
+      const c = document.createElement("canvas"); c.width = img.width; c.height = img.height;
+      const x = c.getContext("2d"); x.drawImage(img, 0, 0);
+      const d = x.getImageData(0, 0, c.width, c.height).data;
+      for (let y = 0; y < c.height; y++) {
+        let n = 0; for (let i = 0; i < c.width; i++) if (d[(y * c.width + i) * 4 + 3] > 80) n++;
+        if (n > c.width * 0.6) { f = y / c.height; break; }
+      }
+    } catch (e) { f = 0; }
+    return (roofCache[img.src] = f);
+  }
+  function addPlatform(side, X) {
+    const key = pick(PLAT_KEYS), img = SPR.ART[side ? key + "_dark" : key] || SPR.ART[key];
+    const top = Math.round(rand(BAL.roofHeight[0], BAL.roofHeight[1]));
+    let w = 90, h = top, rf = 0;
+    if (img) { rf = roofFrac(img); h = top / (1 - rf); w = Math.round(h * img.width / img.height); }
+    w = Math.max(60, Math.min(150, w));
+    const o = { type: "platform", platform: true, side, x: X, w, h0: 0, h1: top, top, key, drawH: h, t: 0, dead: false };
+    G.obs.push(o);
+    // lights on the roof (a jump arc from the roof), sometimes a crate
+    addLightArc(side, X + 10, 3, top);
+    if (G.crateT <= 0 || Math.random() < 0.35) {
+      if (G.crateT <= 0) G.crateT = rand(BAL.crateEvery[0], BAL.crateEvery[1]);
+      addOb(side ? "crate_dark" : "crate", X + w - 30);
+      const c = G.obs[G.obs.length - 1];
+      c.tier = pick([3, 5, 5, 10]); if (c.tier >= 5) { c.w = c.tier >= 10 ? 18 : 16; }
+      c.h0 = top; c.h1 = top + c.w; c.onRoof = true;
+    }
+    return o;
+  }
+
   function spawnChunk() {
     const d = Math.min(1, G.dist / 9000);
     const X = W + 16, r = Math.random();
     const gap = G.speed * rand(0.95, 1.6) * (1 - d * 0.2) + 50;
+    if (G.platT <= 0 && G.dist > 1500) { // a rooftop to jump on, the street under it kept clear
+      G.platT = rand(BAL.platformEvery[0], BAL.platformEvery[1]);
+      const p = addPlatform(Math.random() < 0.55 ? P.side : 1 - P.side, X + 40);
+      addLightArc(p.side, X + 40 - G.speed * 0.12, 2);   // a lead-in arc up toward the roof
+      return p.w + 40 + G.speed * 0.9;
+    }
     if (r < 0.5) {
       const s = Math.random() < 0.5 ? 0 : 1;
       addOb(typeFor(s, d), X);
-      if (Math.random() < 0.35) addLight(Math.random() < 0.5 ? s : 1 - s, X + rand(-40, 40));
+      if (Math.random() < 0.35) addLightArc(Math.random() < 0.5 ? s : 1 - s, X + rand(30, 70), pick([1, 2, 3]));
       return gap;
     }
     if (r < 0.78) {
@@ -176,7 +229,7 @@
       for (const t of BAL.crateTiers) { r2 -= t[1] * (1 - p) + t[2] * p; if (r2 <= 0) { c.tier = t[0]; break; } }
       c.tier = c.heart ? 5 : (c.tier || 3);
       if (c.tier >= 5) { c.w = c.tier >= 10 ? 18 : 16; c.h1 = c.w; } // bigger crate, bigger haul
-    } else addLight(s, X);
+    } else addLightArc(s, X, pick([2, 3]));
     if (G.dist > 400) addOb(typeFor(1 - s, d), X + 50);
     return gap;
   }
@@ -188,7 +241,7 @@
     const roll = 1 + Math.floor(Math.random() * 20);
     const f = FATE.find(x => roll >= x.min);
     Object.assign(G, { mode: "play", t: 0, speed: SPEED_START, dist: 0, score: 0, shards: 0, kills: 0, parries: 0, nextAt: 420,
-      sc: { dist: 0, combat: 0, lights: 0 }, combo: 0, comboT: 0, bestCombo: 0, crateT: rand(8, 12), nextMile: BAL.milestoneEvery,
+      sc: { dist: 0, combat: 0, lights: 0 }, crateT: rand(8, 12), platT: rand(6, 10), nextMile: BAL.milestoneEvery,
       obs: [], picks: [], parts: [], shots: [], pshots: [], pops: [], shake: 0, flash: 0,
       hearts: G.stats.hearts + f.hearts, reviveLeft: G.stats.revive, dread: 0, overT: 0,
       fate: { roll, f, t: 0 } });
@@ -210,7 +263,7 @@
     const newBest = score > st.best;
     st.shards += earned; st.runs += 1; if (newBest) st.best = score; SAVE.save();
     G.result = { score, shards: G.shards, bonus, earned, kills: G.kills, parries: G.parries,
-      pts: { dist: Math.floor(G.sc.dist), combat: Math.floor(G.sc.combat), lights: Math.floor(G.sc.lights) }, bestCombo: G.bestCombo,
+      pts: { dist: Math.floor(G.sc.dist), combat: Math.floor(G.sc.combat), lights: Math.floor(G.sc.lights) },
       dist: Math.floor(G.dist / 10), newBest, fate: G.fate ? G.fate.roll : 0 };
   }
 
@@ -218,7 +271,6 @@
     if (G.debug.god) { G.flash = 0.1; G.flashCol = "#5fd0c8"; return; }
     if (P.inv > 0 || P.flip > 0 || P.dead) return;
     G.hearts -= 1; G.shake = 7; G.flash = 0.25; G.flashCol = "#ff3d57"; SFX.hurt();
-    G.combo = 0; G.comboT = 0; // getting hit breaks the combo
     burst(PX + 6, sy(P.side, P.h + 8), "#ff3d57", 14);
     if (G.hearts <= 0) {
       if (G.reviveLeft) {
@@ -242,7 +294,7 @@
     G.pops.push({ txt, col, x: x == null ? PX + 6 : x, y: y == null ? sy(P.side, P.h + 26) : y, life: 0.9 });
   }
   function startFlip(forced) {
-    P.flip = FLIP_T; P.switched = false; P.roll = 0; P.blk = 0; P.bufFlip = 0; P.h = 0; P.vh = 0;
+    P.flip = FLIP_T; P.switched = false; P.roll = 0; P.blk = 0; P.bufFlip = 0; P.h = 0; P.vh = 0; P.plat = null;
     if (G.mode === "play") (P.side === 0 ? SFX.flip : SFX.flipUp)();
     burst(PX + 6, FT + 5, P.side === 0 ? "#b0305a" : "#ffd866", 16, 80);
     if (forced) { P.flipLock = 1.4; SFX.dread(); pop(T_("pop.dread"), "#ff3d57", PX + 6, FB + 30); }
@@ -280,18 +332,14 @@
       return true;
     }
     o.dead = true; G.kills++;
-    // combo: every kill within the window raises the multiplier
-    G.combo = G.comboT > 0 ? G.combo + 1 : 1; G.comboT = BAL.comboWindow; G.bestCombo = Math.max(G.bestCombo, G.combo);
-    const mult = Math.min(BAL.comboMax, 1 + (G.combo - 1) * BAL.comboStep);
-    const pts = Math.round((BAL.killPts[o.type] || 30) * mult * (how === "melee" ? BAL.meleeBonus : 1) * (o.side ? st.udMult : 1));
+    const pts = Math.round((BAL.killPts[o.type] || 10) * (o.side ? st.udMult : 1));
     addPts("combat", pts);
     pop("+" + pts, "#ffd866", at[0], at[1] - 12);
-    if (G.combo >= 2) pop(T_("pop.combo", { n: mult.toFixed(1) }), "#5fd0c8", at[0], at[1] - 24);
     SFX.kill(); G.shake = how === "melee" ? 3 : 2;
     burst(at[0], at[1], o.side ? "#b0305a" : "#433a52", 18, 90);
     // loot: sometimes a light, the stalker always leaves three
     const drops = o.type === "stalker" ? 3 : Math.random() < BAL.killDrop ? 1 : 0;
-    for (let i = 0; i < drops; i++) addLight(o.side, Math.max(PX + 14, o.x + i * 9));
+    for (let i = 0; i < drops; i++) addLight(o.side, Math.max(PX + 14, o.x + i * 9), Math.max(6, o.h0 + 6));
     return true;
   }
   function parry(o, viaShot) {
@@ -349,13 +397,20 @@
     P.blk = Math.max(0, P.blk - dt); P.blkAge += dt;
 
     if (!P.grounded) {
+      const prev = P.h;
       P.vh -= GRAV * dt; P.h += P.vh * dt;
-      if (P.h <= 0) { P.h = 0; P.vh = 0; P.grounded = true; P.jumps = 0; }
+      if (P.vh < 0) for (const o of G.obs) { // falling onto a roof (one-way: only from above)
+        if (!o.platform || o.side !== P.side || o.x > PX + 9 || o.x + o.w < PX + 4) continue;
+        if (prev >= o.top - 0.5 && P.h <= o.top) { P.h = o.top; P.vh = 0; P.grounded = true; P.jumps = 0; P.plat = o; break; }
+      }
+      if (P.h <= 0) { P.h = 0; P.vh = 0; P.grounded = true; P.jumps = 0; P.plat = null; }
+    } else if (P.plat && (P.plat.x + P.plat.w < PX + 4 || P.plat.side !== P.side)) {
+      P.plat = null; P.grounded = false; P.vh = 0;  // ran off the end of the roof
     }
 
     if (G.mode === "play") {
       if (P.side === 1) {
-        if (!G.debug.noDread) G.dread += dt * G.fate.f.dread;
+        if (!G.debug.noDread) G.dread += dt * G.fate.f.dread * BAL.dreadRate;
         if (G.dread >= st.battery) { G.dread = st.battery; startFlip(true); }
       } else G.dread = Math.max(0, G.dread - dt * 1.6);
     }
@@ -382,12 +437,13 @@
       G.dist += dx;
       addPts("dist", dx / 10 * BAL.metrePts * (P.side === 1 ? G.stats.udMult : 1));
       G.crateT -= dt;
-      if (G.comboT > 0) { G.comboT -= dt; if (G.comboT <= 0) G.combo = 0; }
-      if (G.dist / 10 >= G.nextMile) { // distance milestone: a handful of lights
-        G.shards += BAL.milestoneLights; addPts("lights", BAL.lightPts * BAL.milestoneLights);
-        pop(T_("pop.mile", { m: G.nextMile, n: BAL.milestoneLights }), "#ffd866", W / 2, FT - 40);
+      G.platT -= dt;
+      if (G.dist / 10 >= G.nextMile) { // distance milestone(s): a handful of lights
+        let m = 0; while (G.dist / 10 >= G.nextMile) { G.nextMile += BAL.milestoneEvery; m++; }
+        const n = BAL.milestoneLights * m;
+        G.shards += n; addPts("lights", BAL.lightPts * n);
+        pop(T_("pop.mile", { m: G.nextMile - BAL.milestoneEvery, n }), "#ffd866", W / 2, FT - 40);
         SFX.gold(); G.onLight && G.onLight("#ffd866");
-        G.nextMile += BAL.milestoneEvery;
       }
       if (G.dist >= G.nextAt) G.nextAt = G.dist + (G.debug.noSpawn ? 200 : spawnChunk());
     } else if (G.mode === "dying") G.dist += dx;
@@ -406,6 +462,7 @@
           o.h1 = o.h0 + 10;
         }
       }
+      if (o.platform) { o.t += 0; continue; }
       if (o.dead || !playing) continue;
       if (o.shooter) {
         o.cd -= dt;
@@ -417,8 +474,8 @@
       }
       if (o.side !== P.side || P.flip > 0) continue;
       if (o.crate) { // smash with a hit for lights; running into it just kicks it over
-        if (P.atk > 0 && !ranged() && o.x < PX + 9 + st.reach && o.x + o.w > PX + 6 && P.h < 18) { breakCrate(o, true); continue; }
-        if (o.x < px1 && o.x + o.w > px0 && o.h1 > ph0) breakCrate(o, false);
+        if (P.atk > 0 && !ranged() && o.x < PX + 9 + st.reach && o.x + o.w > PX + 6 && Math.abs(P.h - o.h0) < 18) { breakCrate(o, true); continue; }
+        if (o.x < px1 && o.x + o.w > px0 && o.h1 > ph0 && o.h0 < ph1) breakCrate(o, false);
         else if (!G.crateHint && o.x < PX + 70) { G.crateHint = true; pop(T_("pop.crate"), "#ffd866", PX + 70, sy(o.side, 30)); }
         continue;
       }
@@ -726,6 +783,19 @@
     if (!fallback) return null;
     return cyc(fallback, o.t, 8);
   }
+  // a rooftop building (art scaled so its roof line sits at o.top), with a roof edge highlight
+  function drawPlatform(o) {
+    const x = Math.round(o.x), img = SPR.ART[o.side ? o.key + "_dark" : o.key] || SPR.ART[o.key];
+    if (img) ctx.drawImage(img, x, Math.round(-o.drawH), o.w, Math.round(o.drawH));
+    else {
+      const dk = o.side === 1;
+      R(dk ? "#120812" : "#3b3446", x - 1, -o.top - 1, o.w + 2, o.top + 1); R(dk ? "#3a2440" : "#8f6a60", x, -o.top, o.w, o.top);
+      for (let i = 6; i < o.w - 8; i += 14) { R(dk ? "#9b2335" : "#e8cf8a", x + i, -o.top + 6, 7, 6); }
+      R(dk ? "#1d0f1f" : "#5e5266", x - 2, -o.top - 3, o.w + 4, 3);
+    }
+    // a faint line on the roof so it reads as something to stand on
+    ctx.globalAlpha = 0.55; R(o.side ? "#ff6b8f" : "#fff3b0", x + 2, -o.top - 1, o.w - 4, 1); ctx.globalAlpha = 1;
+  }
   function drawPick(k) {
     const x = Math.round(k.x), y = -Math.round(k.h) - 4;
     const tw = 0.75 + Math.sin(G.t * 5 + k.ph) * 0.25;
@@ -867,11 +937,7 @@
     if (ART("hud_light")) ctx.drawImage(ART("hud_light"), W - 47, 16, 7, 10);
     else { R("#3b3446", W - 45, 16, 3, 2); R("#1a1124", W - 46, 18, 5, 7); R(BULBS[Math.floor(G.t * 2) % 6][1], W - 45, 18, 3, 6); }
     text(String(G.shards), W - 6, 18, "#f3e9dc", "right");
-    if (G.combo >= 2 && G.comboT > 0) { // combo meter under the light count
-      const m = Math.min(BAL.comboMax, 1 + (G.combo - 1) * BAL.comboStep);
-      text(T_("hud.combo") + " x" + m.toFixed(1), W - 6, 30, "#5fd0c8", "right");
-      R("#1a1124", W - 61, 40, 56, 3); R("#5fd0c8", W - 60, 41, Math.round(54 * G.comboT / BAL.comboWindow), 1);
-    }
+
     const bw = 70, f = G.dread / st.battery, DX = Math.round(W / 2 - bw / 2) - 6; // centred, clear of phone buttons
     ctx.save(); ctx.translate(DX, 0);
     text(P.side ? "x" + (st.udMult * G.fate.f.score).toFixed(1) : T_("hud.dread"), 6, H - 22, P.side ? "#ff6b8f" : "#a998b8");
@@ -894,9 +960,11 @@
     for (const side of [0, 1]) {
       local(side);
       drawClub(side === 1);
+      for (const o of G.obs) if (o.platform && o.side === side) drawPlatform(o); // rooftops behind everything
       drawWires(side);
       for (const k of G.picks) if (k.side === side) drawPick(k);
-      for (const o of G.obs) if (o.side === side && !o.dead) {
+      for (const o of G.obs) if (o.side === side && !o.dead && !o.platform) {
+        ctx.save(); if (o.onRoof) ctx.translate(0, -o.h0); // crates standing on a roof
         if (o.flash > 0) ctx.filter = "brightness(3)";
         drawOb(o); ctx.filter = "none";
         if (o.heart) { // heart crate: a beating heart on the front, always upright
@@ -904,6 +972,7 @@
           ctx.globalAlpha = 0.3 + Math.sin(G.t * 6) * 0.15; R("#ff3d57", -6, -6, 12, 11); ctx.globalAlpha = 1;
           heart(-4.5, -4, true); ctx.restore();
         }
+        ctx.restore();
       }
       for (const s of G.shots) if (s.side === side) drawShot(s);
       for (const m of G.pshots) if (m.side === side) {
