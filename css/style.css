@@ -153,6 +153,8 @@ body.has-ui-row .board li{border:12px solid transparent;border-image:var(--ui-ro
 /* border glow when a Christmas light is collected (fades over a second) */
 .frame::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:4;opacity:0;
   box-shadow:inset 0 0 0 5px var(--glow,#ffd866),inset 0 0 60px 14px var(--glow,#ffd866)}
-.frame.glow::after{animation:glow 1s ease-out}
-@keyframes glow{from{opacity:.95}to{opacity:0}}
+.frame.glow::after{animation:glow 1s linear}
+/* flickers like a Christmas bulb on a loose wire, then dies out */
+@keyframes glow{0%{opacity:1}6%{opacity:.15}11%{opacity:.95}17%{opacity:.25}22%{opacity:1}
+  34%{opacity:.4}38%{opacity:.9}52%{opacity:.75}57%{opacity:.1}61%{opacity:.7}78%{opacity:.35}84%{opacity:.5}100%{opacity:0}}
 @media (prefers-reduced-motion:reduce){.frame.glow::after{animation-duration:.4s}}

@@ -106,6 +106,7 @@ def player(key, im):
 ENEMY = {  # base: (size by 'h' or 'w', value, hit_w, hit_h, on_ground, outline)
     "crow": ("h", 18, 12, 7, False, LIGHT), "crawl": ("w", 26, 16, 10, True, RIM),
     "wisp": ("h", 18, 10, 7, False, RIM), "pod": ("h", 18, 12, 12, True, RIM),
+    "stalker": ("h", 30, 14, 24, True, RIM),
 }
 def enemy(key, im):
     base, frame = key[:-1], key[-1]
@@ -181,7 +182,7 @@ for full, f in files:
     frame_key = re.sub(r"^(%s)_" % "|".join(CLASSES), "", key)
     try:
         if frame_key in ("idle", "run1", "run2", "jump", "attack", "block", "roll"): player(key, load(path))
-        elif re.match(r"^(crow|crawl|wisp|pod)[12]$", key): enemy(key, load(path))
+        elif re.match(r"^(crow|crawl|wisp|pod|stalker)[12]$", key): enemy(key, load(path))
         elif key in OBST: obstacle(key, load(path))
         elif re.match(r"^bulb_(red|green|blue|yellow|orange|pink|gold)$", key):
             fit_box(key, load(path), 6, 9); manifest[key] = True

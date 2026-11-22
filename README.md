@@ -67,8 +67,9 @@ the menu.
 
 - You run automatically, starting slow and speeding up gradually (tune
   `SPEED_START`, `SPEED_GAIN`, `SPEED_MAX` at the top of `js/game.js`).
-- **Obstacles:** low ones you jump (trash cans, stumps), hanging vines you roll
-  under, enemies you hit or avoid. Spore pods shoot along the ground every few
+- **Obstacles:** crows at head height (roll under, jump over or hit them),
+  stumps you jump, hanging vines you roll under, and Upside Down creatures you
+  hit or avoid. The tall **stalker** takes two hits. Spore pods shoot along the ground every few
   seconds: jump them, flip away, or hit the shot back.
 - **The Upside Down** scores at ×2 (more with upgrades) and its lights count
   double. But the **Dread** meter fills while you're down there. When

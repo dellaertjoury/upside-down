@@ -1,7 +1,7 @@
 # The Upside Down — complete art list (v2)
 
 Everything the game can show, in one list, so you can redo it all and deliver
-it in one go. **128 images: 124 used in the game + 4 reference sheets.**
+it in one go. **129 images: 125 used in the game + 4 reference sheets.**
 Anything you skip keeps its built-in placeholder, so you can also deliver in parts.
 
 ## How to deliver
@@ -97,31 +97,41 @@ same palette, same pixel scale. Facing right.*
 
 ---
 
-## 2. Enemies (9)
+## 2. Enemies (11)
 
-Enemies face **left**, toward the player. Two frames each; frame 2 uses frame 1 as the attached reference.
+Enemies face **left**, toward the player. Two frames each: make frame 1
+first, then frame 2 with *"use the attached image: the exact same creature,
+same size and colours"* plus the pose change. All are original creatures.
+
+### The Upside Down pack (new)
+
+| Key | Prompt ([SPRITE] block first) |
+|---|---|
+| `crawl1` | **Hound.** An original lean, hairless four-legged predator from a dark parallel world, side view facing left, low hunting stance. Ash-grey hide stretched tight over visible ribs and a bony ridge down the spine, long thin legs with hooked black claws, a whip-thin tail. The head is a long narrow eyeless skull with a lipless snarl of needle-like teeth and two small glowing red pits where nostrils would be. Running pose A: front legs reaching forward. |
+| `crawl2` | Same hound as attached, running pose B: legs gathered under the body mid-stride. |
+| `stalker1` | **Stalker** (a tougher enemy that takes two hits). An original tall, gaunt, hunched humanoid creature from a dark parallel world, side view facing left. Wrinkled pale grey-violet hide with dark crimson veins, very long arms hanging past its knees ending in long hooked claws, digitigrade legs. Its head is small and low between its shoulders, crowned with a tangle of black root-like antlers; a narrow shadowed face with two pinpoint glowing red eyes. A ragged mane of dark vines down its back. Walking pose A: one long arm reaching forward. |
+| `stalker2` | Same stalker as attached, walking pose B: the other leg forward, claws raised higher. |
+| `wisp1` | **Flyer.** An original small flying creature from a dark parallel world, side view facing left: a moth-like body covered in dusky grey fuzz, two big tattered wings with dark violet membranes and glowing crimson veins, a long whip-like tail with a barb, two red eyes, a small hooked mouth. Wings raised. |
+| `wisp2` | Same flyer as attached, wings swept down. |
+
+### Others (unchanged)
 
 | Key | Prompt ([SPRITE]) |
 |---|---|
 | `crow1` | A sickly black crow with one glowing white eye flying left, wings up. Ragged feathers, yellow beak. |
 | `crow2` | Same crow as attached, wings down. |
-| `crawl1` | An original low four-legged creature from a dark parallel world, facing left: hunched purple-grey hide, bony spines along the back, beetle-like head, glowing red eyes, small white teeth, thin clawed legs. Walking pose A. |
-| `crawl2` | Same creature as attached, walking pose B (legs swapped). |
-| `wisp1` | A small floating spore ghost facing left: puffy violet body, two red eyes, ragged tentacle tail hanging below, faint crimson glow. Tail curled. |
-| `wisp2` | Same wisp as attached, tail stretched. |
 | `pod1` | A pulsing fleshy spore pod rooted in the ground, crimson and magenta, two small glowing eyes, mouth closed. |
 | `pod2` | Same pod as attached, mouth open, spitting a glowing pink spore to the left. |
 | `shot_spore` | A tiny glowing pink spore ball with a short trail to the left. |
 
 ---
 
-## 3. Obstacles (3)
+## 3. Obstacles (2)
 
 Upside Down obstacles are drawn **upright**, standing on the ground. The game flips them under the floor.
 
 | Key | Prompt ([SPRITE]) |
 |---|---|
-| `trash` | A dented metal garbage can, lid slightly askew. |
 | `stump` | A rotten tree stump wrapped in dark crimson veins with glowing red cracks. |
 | `tendril` | A very tall, narrow bundle of dark organic vines hanging from above, pulsing crimson tips at the bottom. Tall thin image (about 1:5). |
 
@@ -268,13 +278,13 @@ Drawn very small, so keep shapes **bold and simple**: strong outline, 3–4 colo
 | Section | Files |
 |---|---|
 | 1. Characters | 4 reference sheets + 24 frames + 2 projectiles |
-| 2. Enemies | 9 |
-| 3. Obstacles | 3 |
+| 2. Enemies | 11 |
+| 3. Obstacles | 2 |
 | 4. Christmas lights | 9 |
 | 5. Environment | 3 + 2 + 18 + 12 = 35 |
 | 6. Menu UI | 34 |
 | 7. HUD | 8 |
-| **Total** | **128 (124 in the game)** |
+| **Total** | **129 (125 in the game)** |
 
 Ranger, Rogue and Wizard are still locked in the game. Their art goes in now
 and shows on the character sheet as soon as each class is unlocked.

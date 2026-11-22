@@ -24,14 +24,14 @@
   // h0..h1 = vertical extent measured AWAY from the floor surface.
   const TYPES = {
     // normal world
-    trash:     { side: 0, w: 11, h0: 0,  h1: 16 },
-    crow:      { side: 0, w: 12, h0: 15, h1: 22, enemy: true, vx: -45, after: 250 },
+    crow:      { side: 0, w: 12, h0: 9,  h1: 17, enemy: true, vx: -45, after: 250 }, // head height: roll under, jump over or hit
     // upside down
     stump:     { side: 1, w: 12, h0: 0,  h1: 12 },
     tendril:   { side: 1, w: 14, h0: 12, h1: 107, after: 500 },
     crawler:   { side: 1, w: 16, h0: 0,  h1: 10, enemy: true, vx: -60, after: 250 },
     wisp:      { side: 1, w: 10, h0: 14, h1: 21, enemy: true, vx: -25, bob: true, after: 700 },
     pod:       { side: 1, w: 12, h0: 0,  h1: 12, enemy: true, shooter: true, after: 600 },
+    stalker:   { side: 1, w: 14, h0: 0,  h1: 24, enemy: true, hp: 2, vx: -25, after: 1500 }, // tall, takes 2 hits
     // light crates: smash with a hit to spill Christmas lights
     crate:      { side: 0, w: 14, h0: 0, h1: 14, crate: true },
     crate_dark: { side: 1, w: 14, h0: 0, h1: 14, crate: true },
@@ -39,8 +39,8 @@
   // Christmas-light colours (the run currency). Gold is rare and worth 5.
   const BULBS = [["red", "#ff3d57"], ["green", "#5fd068"], ["blue", "#4da3ff"], ["yellow", "#ffd866"], ["orange", "#ff9a3d"], ["pink", "#ff6bd0"]];
   const POOL = [
-    ["trash", "crow"],
-    ["stump", "tendril", "crawler", "wisp", "pod"],
+    ["crow"],
+    ["stump", "tendril", "crawler", "wisp", "pod", "stalker"],
   ];
 
   // d20 fate roll at the start of every run
@@ -233,6 +233,23 @@
     pop("+" + n + " LIGHTS", "#ffd866", o.x + 7, sy(o.side, 26));
     G.onLight && G.onLight("#ffd866");
   }
+  // Hit an enemy. Most die at once; tough ones (hp > 1) flinch and get
+  // knocked back first. Returns true when the hit landed.
+  function damage(o, ranged) {
+    if (o.hitCd > 0) return false;           // one swing = one hit
+    const st = G.stats, at = [o.x + o.w / 2, sy(o.side, (o.h0 + o.h1) / 2)];
+    o.hp = (o.hp || 1) - 1;
+    if (o.hp > 0) {
+      o.hitCd = 0.3; o.flash = 0.15; o.x += 14; SFX.thud(); G.shake = 2;
+      burst(at[0], at[1], "#ffffff", 8, 60); pop("TOUGH!", "#ff9fb4", at[0], at[1] - 14);
+      return true;
+    }
+    o.dead = true; G.kills++;
+    G.score += (o.type === "stalker" ? 80 : 30) * (o.side ? st.udMult : 1) * G.fate.f.score;
+    SFX.kill(); G.shake = ranged ? 2 : 3;
+    burst(at[0], at[1], o.side ? "#b0305a" : "#433a52", 18, 90);
+    return true;
+  }
   function parry(o, viaShot) {
     o.dead = true; G.parries++;
     const perfect = !viaShot && P.blkAge < 0.12;
@@ -321,7 +338,7 @@
     const ph0 = P.h, ph1 = P.h + (P.roll > 0 ? ROLL_H : STAND_H), px0 = PX + 3, px1 = PX + 10;
     const st = G.stats || SAVE.runStats();
     for (const o of G.obs) {
-      o.t += dt;
+      o.t += dt; if (o.hitCd > 0) o.hitCd -= dt; if (o.flash > 0) o.flash -= dt;
       o.x -= dx - (o.vx && !o.dead && playing ? o.vx * dt : 0);
       if (o.bob) { o.h0 = TYPES[o.type].h0 + Math.sin(o.t * 4) * 6; o.h1 = o.h0 + 7; }
       if (o.dead || !playing) continue;
@@ -342,9 +359,7 @@
       }
       // bat hit
       if (P.atk > 0 && !ranged() && o.enemy && o.x < PX + 9 + st.reach && o.x + o.w > PX + 6 && o.h0 < P.h + 24 && o.h1 > P.h - 2) {
-        o.dead = true; G.kills++; G.score += 30 * (P.side ? st.udMult : 1) * G.fate.f.score; SFX.kill(); G.shake = 3;
-        burst(o.x + o.w / 2, sy(o.side, (o.h0 + o.h1) / 2), o.side ? "#b0305a" : "#433a52", 18, 90);
-        continue;
+        if (damage(o)) continue;
       }
       if (o.x < px1 && o.x + o.w > px0 && o.h0 < ph1 && o.h1 > ph0) {
         hurt();
@@ -380,10 +395,7 @@
         if (m.x + 6 > o.x && m.x < o.x + o.w && o.h0 < m.h + 10 && o.h1 > m.h - 12) { // same lane as the runner
           m.dead = true;
           if (o.crate) breakCrate(o, true);
-          else {
-            o.dead = true; G.kills++; G.score += 30 * (o.side ? st.udMult : 1) * G.fate.f.score; SFX.kill(); G.shake = 2;
-            burst(o.x + o.w / 2, sy(o.side, (o.h0 + o.h1) / 2), o.side ? "#b0305a" : "#433a52", 18, 90);
-          }
+          else damage(o, true);
           break;
         }
       }
@@ -576,6 +588,15 @@
         }
         break;
       case "crawler": draw(ctx, Math.floor(t * 10) % 2 ? "crawl1" : "crawl2", x, -o.h0); break;
+      case "stalker": {
+        const f = Math.floor(t * 4) % 2;
+        if (SPR.ART.stalker1) { draw(ctx, f ? "stalker1" : "stalker2", x, 0); break; }
+        // placeholder: a tall hunched shape with long arms and red eyes
+        R("#0b0610", x + 2, -25, 11, 19); R("#4a3a52", x + 3, -24, 9, 17);          // body
+        R("#0b0610", x, -28, 8, 6); R("#5b4a62", x + 1, -27, 6, 4); R("#ff3b3b", x + 1, -26, 1, 1); R("#ff3b3b", x + 4, -26, 1, 1);
+        R("#4a3a52", x - 2, -20 + f, 2, 12); R("#4a3a52", x + 12, -20 - f, 2, 12);  // arms
+        R("#2f2236", x + 3, -7, 3, 7 - f); R("#2f2236", x + 9, -7, 3, 7 + f - 1);   // legs
+        break; }
       case "wisp": draw(ctx, Math.floor(t * 8) % 2 ? "wisp1" : "wisp2", x, -o.h0); break;
       case "pod": draw(ctx, o.t < 0.25 ? "pod2" : "pod1", x, 0); break;
       case "crate": case "crate_dark": {
@@ -750,7 +771,8 @@
       drawWires(side);
       for (const k of G.picks) if (k.side === side) drawPick(k);
       for (const o of G.obs) if (o.side === side && !o.dead) {
-        drawOb(o);
+        if (o.flash > 0) ctx.filter = "brightness(3)";
+        drawOb(o); ctx.filter = "none";
         if (o.heart) { // heart crate: a beating heart on the front, always upright
           ctx.save(); ctx.translate(o.x + 7, -7); if (side) ctx.scale(1, -1);
           ctx.globalAlpha = 0.3 + Math.sin(G.t * 6) * 0.15; R("#ff3d57", -6, -6, 12, 11); ctx.globalAlpha = 1;
