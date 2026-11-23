@@ -232,6 +232,12 @@ Tune costs and effects in `js/save.js` (`UPGRADES`, `runStats`).
 
 ## Online leaderboard
 
+Click (or press Enter on) a run to see its details under the list: the hero
+class, date, distance, kills, lights found, best stash and the d20 roll (or how
+many pieces were found). Older runs saved before this have no details. For
+Supabase, run the last line of `supabase.sql` once to add the `info` column
+(scores still post without it).
+
 The board lists the 20 best runs (two columns of ten), not just one per
 player. It picks a backend automatically:
 

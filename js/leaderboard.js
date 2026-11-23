@@ -26,8 +26,8 @@
   // ---- local ----
   const LKEY = "flipside.local.lb";
   function localList() { try { return JSON.parse(localStorage.getItem(LKEY) || "[]"); } catch (e) { return []; } }
-  function localSubmit(name, score) {
-    const l = localList(); l.push({ name, score, ts: Date.now() });
+  function localSubmit(name, score, info) {
+    const l = localList(); l.push({ name, score, ts: Date.now(), info });
     l.sort((a, b) => b.score - a.score);
     try { localStorage.setItem(LKEY, JSON.stringify(l.slice(0, 25))); } catch (e) {}
   }
@@ -39,7 +39,15 @@
     }));
   }
 
-  LB.submit = async function (rawName, score) {
+  // info: how the run went (hero class, distance, kills, lights, best stash, d20), shown when a row is clicked
+  const cleanInfo = i => {
+    if (!i || typeof i !== "object") return null;
+    const n = v => Math.max(0, Math.floor(Number(v) || 0)), o = { cls: String(i.cls || "").replace(/[^a-z]/g, "").slice(0, 10), dist: n(i.dist), kills: n(i.kills), lights: n(i.lights), haul: n(i.haul), pieces: Math.min(6, n(i.pieces)) };
+    if (i.roll) { o.roll = Math.min(20, n(i.roll)); o.mult = Math.round((Number(i.mult) || 0) * 100) / 100; }
+    return o;
+  };
+  LB.submit = async function (rawName, score, info) {
+    info = cleanInfo(info);
     await LB.ready;
     const name = clean(rawName); score = Math.floor(score);
     if (LB.mode === "claude") {
@@ -47,7 +55,7 @@
       const cur = await withTimeout(ref.get());
       const prev = cur.exists ? cur.data() : null;
       // keep each player's 10 best runs (not just the best), so the board can list runs
-      const run = { name, score, ts: Date.now() };
+      const run = { name, score, ts: Date.now(), info };
       const runs = (prev && Array.isArray(prev.runs) ? prev.runs : prev && prev.best ? [{ name: prev.name, score: prev.best, ts: prev.ts || 0 }] : [])
         .concat(run).sort((a, b) => b.score - a.score).slice(0, 10);
       const best = runs[0].score;
@@ -56,11 +64,14 @@
       return { saved: true, best };
     }
     if (LB.mode === "supabase") {
-      const r = await withTimeout(supa("scores", { method: "POST", headers: { Prefer: "return=minimal" }, body: JSON.stringify({ name, score }) }));
-      if (!r.ok) throw new Error("supabase " + r.status);
+      const r = await withTimeout(supa("scores", { method: "POST", headers: { Prefer: "return=minimal" }, body: JSON.stringify({ name, score, info }) }));
+      if (!r.ok) { // an older table without the info column: post the bare score
+        const r2 = await withTimeout(supa("scores", { method: "POST", headers: { Prefer: "return=minimal" }, body: JSON.stringify({ name, score }) }));
+        if (!r2.ok) throw new Error("supabase " + r2.status);
+      }
       return { saved: true };
     }
-    localSubmit(name, score); return { saved: true };
+    localSubmit(name, score, info); return { saved: true };
   };
 
   LB.top = async function (n = 25) {
@@ -70,16 +81,17 @@
       const out = [];
       snap.docs.forEach(d => {
         const v = d.data() || {}, runs = Array.isArray(v.runs) && v.runs.length ? v.runs : [{ name: v.name, score: v.best }];
-        runs.forEach(r => out.push({ name: clean(r.name || v.name), score: Math.floor(Number(r.score) || 0), me: d.id === LB.me }));
+        runs.forEach(r => out.push({ name: clean(r.name || v.name), score: Math.floor(Number(r.score) || 0), me: d.id === LB.me, ts: r.ts || 0, info: cleanInfo(r.info) }));
       });
       return out.sort((a, b) => b.score - a.score).slice(0, n);
     }
     if (LB.mode === "supabase") {
-      const r = await withTimeout(supa("scores?select=name,score&order=score.desc&limit=" + n));
+      let r = await withTimeout(supa("scores?select=name,score,info,created_at&order=score.desc&limit=" + n));
+      if (!r.ok) r = await withTimeout(supa("scores?select=name,score,created_at&order=score.desc&limit=" + n)); // table without info
       if (!r.ok) throw new Error("supabase " + r.status);
-      return (await r.json()).map(row => ({ name: clean(row.name), score: Math.floor(row.score) })); // every run, not one per name
+      return (await r.json()).map(row => ({ name: clean(row.name), score: Math.floor(row.score), ts: Date.parse(row.created_at) || 0, info: cleanInfo(row.info) })); // every run, not one per name
     }
-    return localList().slice(0, n);
+    return localList().slice(0, n).map(r => Object.assign({}, r, { info: cleanInfo(r.info) }));
   };
 
   LB.label = () => ({ claude: "Global · shared with friends", supabase: "Global · online", local: "This device only" })[LB.mode];

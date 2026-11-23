@@ -14,3 +14,6 @@ create policy "read scores" on public.scores for select using (true);
 create policy "insert scores" on public.scores for insert with check (true);
 
 create index if not exists scores_score_idx on public.scores (score desc);
+
+-- run details shown when a row is clicked (hero class, distance, kills, lights, d20)
+alter table public.scores add column if not exists info jsonb;

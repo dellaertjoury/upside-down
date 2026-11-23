@@ -270,12 +270,30 @@
         const b = document.createElement("span"); b.textContent = r.name;
         const c = document.createElement("span"); c.className = "sc"; c.textContent = r.score;
         li.append(a, b, c); list.appendChild(li);
+        li.tabIndex = 0; li.setAttribute("role", "button");
+        const pick = () => { list.querySelectorAll("li.sel").forEach(x => x.classList.remove("sel")); li.classList.add("sel"); showRun(r, i + 1); SFX.ui && SFX.ui(); };
+        li.addEventListener("click", pick);
+        li.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pick(); } });
       });
+      const d = $("#lb-detail"); d.hidden = false; d.innerHTML = `<p class="muted">${esc(t("lb.tap"))}</p>`;
       fitSettings();
     } catch (e) {
       $("#lb-mode").textContent = t("lb." + LB.mode);
       list.innerHTML = `<li class="muted">${esc(t("lb.down"))}</li>`;
     }
+  }
+
+  // one run, in detail: who played it and how it went
+  function showRun(r, rank) {
+    const d = $("#lb-detail"), i = r.info; d.hidden = false;
+    const when = r.ts ? new Date(r.ts).toLocaleDateString(I18N.lang, { day: "numeric", month: "short", year: "numeric" }) : "";
+    const head = `<div class="lb-run-head">${i && i.cls && SPR.ART["ui_class_" + i.cls] ? `<img src="${SPR.ART["ui_class_" + i.cls].src}" alt="">` : "<span></span>"}
+      <div><b>#${rank} ${esc(r.name)}</b><small>${i && i.cls ? esc(t("cls." + i.cls)) : ""}${when ? " · " + esc(when) : ""}</small></div><span class="sc">${r.score}</span></div>`;
+    if (!i) { d.innerHTML = head + `<p class="muted">${esc(t("lb.noInfo"))}</p>`; fitSettings(); return; }
+    const cell = (k, v) => `<span>${esc(t(k))}</span><b>${v}</b>`;
+    d.innerHTML = head + `<div class="lb-run">${cell("over.dist", i.dist + " m")}${cell("over.kills", i.kills)}${cell("over.found", `<i class="bulb"></i> ${i.lights}`)}${cell("over.haul", i.haul)}${
+      i.roll ? cell("d20.title", `${i.roll} → ×${i.mult}`) : cell("over.pieces", i.pieces + "/6")}</div>`;
+    fitSettings();
   }
 
   // ---- settings ----
@@ -429,7 +447,9 @@
     if (r.score <= 0) { msg.textContent = ""; return; }
     msg.textContent = t("lb.posting");
     try {
-      const res = await LB.submit(sheet().name || t("sheet.placeholder"), r.score);
+      const res = await LB.submit(sheet().name || t("sheet.placeholder"), r.score, {
+        cls: sheet().cls, dist: r.dist, kills: r.kills, lights: r.shards, haul: r.bestHaul, pieces: r.pieces || 0,
+        roll: r.rolled ? r.rolled.roll : 0, mult: r.rolled ? r.rolled.mult : 0 });
       msg.textContent = LB.mode === "local" ? t("lb.savedLocal") : res.saved ? t("lb.posted") : t("lb.kept", { n: res.best });
     } catch (e) { msg.textContent = t("lb.fail"); }
   };
