@@ -45,6 +45,7 @@
     if (name === "menu") refreshMenu();
     if (name === "sheet") { renderSheet(); renderUpgrades(); setSheetTab(sheetTab); }
     if (name === "leaderboard") renderBoard();
+    if (name !== "manual" && window.GAME) GAME.showcase = null;
     if (name === "settings") { bindTab = INPUT.padName_ ? "pad" : "key"; renderSettings(); fitSettings(); }
     if (name === "manual") { renderManual(); fitSettings(); }
     document.querySelectorAll(".bank-n").forEach(n => n.textContent = st.shards);
@@ -278,6 +279,7 @@
         const c = document.createElement("span"); c.className = "sc"; c.textContent = r.score;
         li.append(a, b, c); list.appendChild(li);
       });
+      fitSettings();
     } catch (e) {
       $("#lb-mode").textContent = t("lb." + LB.mode);
       list.innerHTML = `<li class="muted">${esc(t("lb.down"))}</li>`;
@@ -299,48 +301,63 @@
   }
   // short screens: scale the settings panel down until it fits (never up)
   function fitSettings() {
-    const el = current === "settings" ? $("#p-settings .settings") : current === "manual" ? $("#p-manual .manual") : current === "sheet" ? $("#p-sheet .sheet-card") : current === "report" ? $("#p-report .rep-wrap") : null; if (!el) return;
+    const el = current === "settings" ? $("#p-settings .settings") : current === "manual" ? $("#p-manual .manual") : current === "sheet" ? $("#p-sheet .sheet-card") : current === "report" ? $("#p-report .rep-wrap") : current === "leaderboard" ? $("#p-leaderboard .lb-card") : null; if (!el) return;
     el.style.zoom = "";
     const frame = el.closest(".frame") || document.body;
-    const avail = Math.min(frame.clientHeight || innerHeight, innerHeight) * 0.97, need = el.getBoundingClientRect().height;
+    const avail = Math.min(frame.clientHeight || innerHeight, innerHeight) * 0.9, need = el.getBoundingClientRect().height;
     if (need > avail) el.style.zoom = (avail / need).toFixed(3);
   }
   addEventListener("resize", fitSettings);
 
   // ---- player manual: heroes, monsters, items and upgrades, each with a picture ----
   // Heroes and monsters bounce in their idle animation (drawn by GAME.preview).
-  let manTab = "heroes", manRAF = 0;
+  // Player manual (hub layout): a grid of picture tiles on the right; the selected one is shown
+  // big in the street scene on the left, in place of the hero (GAME.showcase), with its text below the grid.
+  let manTab = "heroes", manRAF = 0, manSel = 0, manEntries = [];
   const MAN = {
     heroes: () => SAVE.CLASSES.map(c => ({ pv: "hero:" + c.id, name: t("cls." + c.id), d: t("cls." + c.id + ".d"),
       tag: c.locked ? ["lock", t("man.locked")] : ["", t("man.playable")], locked: c.locked })),
-    enemies: () => [["crow", 0], ["crawler", 2], ["wisp", 1], ["pod", 1], ["stalker", 2], ["tendril", 1], ["watcher", 1]].map(([id, side]) => ({
+    enemies: () => [["crow", 0], ["crawler", 2], ["stalker", 2], ["tendril", 1], ["watcher", 1]].map(([id, side]) => ({
       pv: "en:" + id, side: side === 1 ? 1 : 0, name: t("man." + id), d: t("man." + id + ".d"),
       tag: side === 0 ? ["", t("man.town")] : side === 1 ? ["ud", t("man.ud")] : ["", t("man.both")] })),
     items: () => [["bulb"], ["gold"], ["crate"], ["crate10"], ["heart"], ["dark", 1], ["dice"], ["board"], ["revive"]].map(([id, side]) => {
       const it = SAVE.ITEMS.find(x => x.id === id);
-      const icon = it && SPR.ART["ui_up_" + (id === "board" ? "skate" : id)]; // shop items: same icon as in the shop
-      return { pv: icon ? null : "it:" + id, icon, side: side || 0, name: t("man." + id), d: t("man." + id + ".d", { key: INPUT.label("board"), g: t("up.greed") }),
-        tag: it ? ["cost", it.cost, t("man.cost", { n: it.cost })] : null };
+      const iconKey = it && "ui_up_" + (id === "board" ? "skate" : id), icon = iconKey && SPR.ART[iconKey]; // shop items: same icon as in the shop
+      return { pv: icon ? null : "it:" + id, show: icon ? "icon:" + iconKey : "it:" + id, icon, side: side || 0, name: t("man." + id),
+        d: t("man." + id + ".d", { key: INPUT.label("board"), g: t("up.greed") }), tag: it ? ["cost", it.cost, t("man.cost", { n: it.cost })] : null };
     }),
-    upgrades: () => SAVE.UPGRADES.map(u => ({ icon: SPR.ART["ui_up_" + u.id], name: t("up." + u.id), d: t("up." + u.id + ".d") })),
+    upgrades: () => SAVE.UPGRADES.map(u => ({ icon: SPR.ART["ui_up_" + u.id], show: "icon:ui_up_" + u.id, name: t("up." + u.id), d: t("up." + u.id + ".d") })),
   };
+  const tagHtml = e => !e.tag ? "" : e.tag[0] === "cost" ? `<span class="tag cost" title="${esc(e.tag[2])}">${e.tag[1]} <i class="bulb"></i></span>` : `<span class="tag ${e.tag[0]}">${esc(e.tag[1])}</span>`;
+  function selectMan(i) {
+    manSel = i; const e = manEntries[i]; if (!e) return;
+    document.querySelectorAll("#man-list .man-tile").forEach((b, j) => b.classList.toggle("on", j === i));
+    $("#man-name").innerHTML = esc(e.name) + tagHtml(e); $("#man-desc").textContent = e.d;
+    GAME.showcase = { id: e.show || e.pv, side: e.side || 0, t0: performance.now() / 1000 };
+  }
   function renderManual() {
     document.querySelectorAll("[data-mtab]").forEach(b => b.classList.toggle("on", b.dataset.mtab === manTab));
-    $("#man-list").innerHTML = MAN[manTab]().map(e => `<div class="man-row${e.locked ? " locked" : ""}">
+    manEntries = MAN[manTab]();
+    $("#man-list").innerHTML = manEntries.map((e, i) => `<button class="man-tile${e.locked ? " locked" : ""}" data-mi="${i}">
       ${e.pv ? `<canvas width="144" height="120" data-pv="${e.pv}" data-side="${e.side || 0}"></canvas>` : e.icon ? `<img class="man-ic" src="${e.icon.src}" alt="">` : ""}
-      <div><h3>${esc(e.name)}${e.tag ? e.tag[0] === "cost" ? `<span class="tag cost" title="${esc(e.tag[2])}">${e.tag[1]} <i class="bulb"></i></span>` : `<span class="tag ${e.tag[0]}">${esc(e.tag[1])}</span>` : ""}</h3><p>${esc(e.d)}</p></div></div>`).join("");
+      <span>${esc(e.name)}</span></button>`).join("");
+    document.querySelectorAll("#man-list .man-tile").forEach(b => {
+      const i = +b.dataset.mi, go = () => { if (manSel !== i) { SFX.click(); selectMan(i); } };
+      b.addEventListener("focus", go); b.addEventListener("mouseenter", go); b.addEventListener("click", go);
+    });
+    selectMan(Math.min(manSel, manEntries.length - 1));
     document.querySelectorAll("#man-list img").forEach(i => { if (!i.complete) i.addEventListener("load", fitSettings, { once: true }); }); // re-fit once icons have a size
     cancelAnimationFrame(manRAF);
     const cvs = Array.from(document.querySelectorAll("#man-list canvas")), t0 = performance.now();
     const tick = now => {
-      if (current !== "manual") return;
+      if (current !== "manual") { GAME.showcase = null; return; }
       for (const c of cvs) GAME.preview(c, c.dataset.pv, Math.max(0, now - t0) / 1000);
       manRAF = requestAnimationFrame(tick);
     };
     manRAF = requestAnimationFrame(tick);
   }
   document.querySelectorAll("[data-mtab]").forEach(b => {
-    const go = () => { if (manTab === b.dataset.mtab) return; manTab = b.dataset.mtab; SFX.click(); renderManual(); fitSettings(); };
+    const go = () => { if (manTab === b.dataset.mtab) return; manTab = b.dataset.mtab; manSel = 0; SFX.click(); renderManual(); fitSettings(); };
     b.addEventListener("click", go);
     b.addEventListener("focus", go); // arrowing across the tabs flips the page
   });
@@ -507,7 +524,7 @@
   });
 
   // ---- menu art from assets/ ----
-  const CSS_ART = ["ui_button", "ui_button_primary", "ui_panel", "ui_box", "ui_dice", "ui_sheet", "ui_light", "ui_row", "ui_d20"];
+  const CSS_ART = ["ui_button", "ui_button_primary", "ui_panel", "ui_panel_gem", "ui_box", "ui_dice", "ui_sheet", "ui_light", "ui_row", "ui_d20"];
   function applyUiArt() {
     const A = SPR.ART, rt = document.documentElement;
     CSS_ART.forEach(k => { if (A[k]) { rt.style.setProperty("--" + k.replace(/_/g, "-"), `url("${A[k].src}")`); document.body.classList.add("has-" + k.replace(/_/g, "-")); } });

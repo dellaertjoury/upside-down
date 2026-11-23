@@ -129,6 +129,38 @@ def write(key, im, w, h, line=None):
 def by_h(im, h): return q(im.width * h / im.height), q(h)
 def by_w(im, w): return q(w), q(im.height * w / im.width)
 
+# Nine-slice UI frames: (corner size in source px, corner size in CSS px). The corners keep every
+# rivet / bracket / star whole; the edges between them are rebuilt from one plain strip so CSS can
+# stretch them without smearing anything. Images are saved at 2 px per CSS px.
+NINE = {"ui_button": (64, 20), "ui_button_primary": (64, 20), "ui_row": (24, 8),
+        "ui_panel": (100, 44), "ui_sheet": (88, 40), "ui_box": (34, 12)}
+def nine_slice(key, im):
+    c_src, c_css = NINE[key]; extra = None
+    if key == "ui_panel":   # the gem + laurels sit on the top bar: cut them out as their own image
+        a = np.array(im)[:, :, 3] > 40
+        bar = next(y for y in range(a.shape[0]) if a[y].sum() > a.shape[1] * 0.8)
+        xs = np.where(a[:max(1, bar - 2)].any(axis=0))[0]
+        if bar > 4 and len(xs):
+            extra = im.crop((max(0, xs.min() - 4), 0, min(im.width, xs.max() + 5), min(im.height, bar + int(c_src * 0.85))))
+            im = im.crop((0, bar, im.width, im.height))
+    s = 2 * c_css / c_src
+    big = im.resize((max(1, round(im.width * s)), max(1, round(im.height * s))), Image.LANCZOS)
+    c, m = 2 * c_css, 8                              # corner and middle size in output px
+    W, H = big.size
+    out = Image.new("RGBA", (2 * c + m, 2 * c + m), (0, 0, 0, 0))
+    for (sx, sy), (dx, dy) in [((0, 0), (0, 0)), ((W - c, 0), (c + m, 0)), ((0, H - c), (0, c + m)), ((W - c, H - c), (c + m, c + m))]:
+        out.paste(big.crop((sx, sy, sx + c, sy + c)), (dx, dy))
+    plain_x, plain_y = c + 2, c + 2                  # just past the corner: plain border
+    top = big.crop((plain_x, 0, plain_x + 1, c)); bot = big.crop((plain_x, H - c, plain_x + 1, H))
+    lef = big.crop((0, plain_y, c, plain_y + 1)); rig = big.crop((W - c, plain_y, W, plain_y + 1))
+    for i in range(m):
+        out.paste(top, (c + i, 0)); out.paste(bot, (c + i, c + m)); out.paste(lef, (0, c + i)); out.paste(rig, (c + m, c + i))
+    out.paste(big.crop((c, c, W - c, H - c)).resize((m, m), Image.LANCZOS), (c, c))
+    out.save(os.path.join(OUT, key + ".png"), optimize=True); manifest[key] = True
+    if extra is not None:
+        e = extra.resize((max(1, round(extra.width * s)), max(1, round(extra.height * s))), Image.LANCZOS)
+        e.save(os.path.join(OUT, key + "_gem.png"), optimize=True); manifest[key + "_gem"] = True
+
 def fit_box(key, im, bw, bh, stretch=False):
     """UI/HUD: exact canvas size; icons keep aspect, centred."""
     W, H = round(bw * SC), round(bh * SC)
@@ -154,9 +186,9 @@ def player(key, im):
     manifest[key] = [w, h, q(6 - body_x(im) * w / im.width), 0]
 
 ENEMY = {  # base: (size by 'h' or 'w', value, hit_w, hit_h, on_ground, outline)
-    "crow": ("h", 16, 12, 7, False, LIGHT), "crawl": ("w", 26, 16, 10, True, RIM),
+    "crow": ("h", 16, 12, 7, False, DARK), "crawl": ("w", 26, 16, 10, True, DARK),
     "wisp": ("h", 18, 10, 7, False, RIM), "pod": ("h", 18, 12, 12, True, RIM),
-    "stalker": ("h", 44, 16, 44, True, RIM),   # twice the player's height
+    "stalker": ("h", 44, 16, 44, True, DARK),   # twice the player's height
 }
 # new-style enemy frames: <enemy>_<state><n>, e.g. hound_run3, stalker_attack2
 ENEMY2 = {"crow": "crow", "hound": "crawl", "flyer": "wisp", "pod": "pod", "stalker": "stalker"}
@@ -250,6 +282,7 @@ def handle(key, get, path):
     elif key == "backdrop_top": opaque(key, path, 105)
     elif key == "backdrop_bottom": opaque(key, path, 104)
     elif key == "floor": opaque(key, path, 16, crop_black=True)
+    elif key in NINE: nine_slice(key, get())
     elif key in UI_EXACT: fit_box(key, get(), *UI_EXACT[key], stretch=True); manifest[key] = True
     elif key in UI_FIT: fit_box(key, get(), *UI_FIT[key]); manifest[key] = True
     elif ICON32.match(key): fit_box(key, get(), 32, 32); manifest[key] = True

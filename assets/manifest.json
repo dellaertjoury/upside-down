@@ -706,6 +706,7 @@
  "ui_medal_2": true,
  "ui_medal_3": true,
  "ui_panel": true,
+ "ui_panel_gem": true,
  "ui_row": true,
  "ui_sheet": true,
  "ui_stat_cha": true,

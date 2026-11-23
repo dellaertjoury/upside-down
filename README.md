@@ -38,7 +38,6 @@ The mouse only works in the menus, not in the game.
 
 The controls are the same in the Upside Down: ↑ jumps away from the floor,
 ↓ rolls. In the air, roll and flip do a fast-fall first.
-A swing or a slingshot marble also knocks spore shots away.
 
 **Controller:** any standard gamepad (Xbox, PlayStation, Switch Pro in a
 browser that supports it). In menus the D-pad or left stick moves, A selects,
@@ -120,8 +119,7 @@ the menu.
   height and can't be cleared: **attack** them (2 hits) or flip away. Hounds
   and walkers also cross over to the street later in a run (120 m / 350 m).
 - **Obstacles:** hanging vines you roll under. Hounds
-  sometimes lunge forward (still on the ground). Spore pods shoot along the ground every few seconds: jump them, flip away,
-  or hit the shot back.
+  sometimes lunge forward (still on the ground). Bats also fly in the Upside Down.
 - **The Upside Down: Heat and the haul.** Everything you earn down there
   (distance, kills, lights) goes into a **haul**, multiplied by **Heat**:
   x1.5 when you arrive, +0.5 every 2 seconds you stay, up to x4 (more with
@@ -145,7 +143,7 @@ the menu.
 
 | Class | Attack | Perk | Weakness |
 |---|---|---|---|
-| Fighter | Bat: kills in 1 hit, knocks spore shots back | **Trash-can lid** absorbs one hit, recharges in 18 s | Has to get close |
+| Fighter | Bat: kills in 1 hit | **Trash-can lid** absorbs one hit, recharges in 18 s | Has to get close |
 | Ranger *(locked)* | Marble lobbed in an arc to about half the screen | **Roll + attack** = low skipping shot for ground enemies; light magnet ×1.5 | Arc misses low targets unless you skip-shoot |
 | Wizard *(locked)* | Firework straight across the whole screen, pierces 1 enemy | Dread fills **25% slower** | Half damage: 2 hits per enemy (stalker 4) |
 | Rogue *(locked)* | Fast jabs, 1 in 4 crits for double damage | Heat climbs **50% faster** | Short reach |
@@ -155,8 +153,7 @@ the menu.
 The high score is one number made of three parts, shown after each run:
 
 - **Distance:** 1 point per metre (×2 in the Upside Down).
-- **Combat:** points per kill: flyers (crows, flyers) 10, crawlers (hounds,
-  spore pods) 15, walkers (stalkers) 25. In the Upside Down × Heat (banked).
+- **Combat:** points per kill: bats 10, hounds 15, walkers (stalkers) 25. In the Upside Down × Heat (banked).
 - **Lights:** 5 points per light collected.
 
 ## Christmas lights (the currency)

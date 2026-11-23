@@ -70,7 +70,7 @@
   const BULBS = [["red", "#ff3d57"], ["green", "#5fd068"], ["blue", "#4da3ff"], ["yellow", "#ffd866"], ["orange", "#ff9a3d"], ["pink", "#ff6bd0"]];
   const POOL = [
     ["crow", "crawler", "stalker"],               // hounds and walkers cross over to the street later in a run
-    ["tendril", "crawler", "wisp", "pod", "stalker"],
+    ["tendril", "crawler", "crow", "stalker"],       // (the spore wisp and spore pod are retired)
   ];
 
   // d20 fate roll at the start of every run
@@ -1318,7 +1318,7 @@
       }
       ctx.restore();
     }
-    drawPlayer();
+    if (G.mode === "attract" && G.showcase) drawShowcase(); else drawPlayer();
     drawFloor();
     if (P.die) drawDeath();
     for (const o of G.obs) if (o.wall && o.x > W - 4 && Math.floor(G.t * 8) % 2) {
@@ -1371,7 +1371,7 @@
     const P1 = SPR.ART.watcher_1, P2 = SPR.ART.watcher_2, B = SPR.ART.watcher_body, Hd = SPR.ART.watcher_head;
     if (P1) { // two poses that slowly breathe into each other, swaying from the base
       const k = P2 ? (Math.sin(w.t * 0.7) + 1) / 2 : 0;
-      if (lit) ctx.filter = `brightness(${1 + flash * 1.5}) drop-shadow(0 0 2px #ff3d57)`;
+      if (lit) ctx.filter = `brightness(${1 + flash * 1.5}) drop-shadow(2px 0 0 #0b0610) drop-shadow(-2px 0 0 #0b0610) drop-shadow(0 2px 0 #0b0610) drop-shadow(0 -2px 0 #0b0610)`;
       ctx.translate(Math.round(w.x), 0); ctx.rotate(sway * 0.25);
       for (const [img, a] of [[P1, 1 - k], [P2, k]]) {
         if (!img || a <= 0.01) continue;
@@ -1381,7 +1381,7 @@
       ctx.filter = "none";
     } else if (B && Hd) {
       const bs = SPR.SIZE.watcher_body || [80, 70], hs = SPR.SIZE.watcher_head || [40, 34];
-      if (lit) ctx.filter = `brightness(${1 + flash * 1.5}) drop-shadow(0 0 2px #ff3d57)`;
+      if (lit) ctx.filter = `brightness(${1 + flash * 1.5}) drop-shadow(2px 0 0 #0b0610) drop-shadow(-2px 0 0 #0b0610) drop-shadow(0 2px 0 #0b0610) drop-shadow(0 -2px 0 #0b0610)`;
       ctx.drawImage(B, Math.round(w.x - bs[0] / 2), Math.round(-bs[1] + bob), bs[0], bs[1]);
       ctx.translate(Math.round(w.x), Math.round(-bs[1] + bob + 3)); ctx.rotate(sway);
       ctx.drawImage(Hd, -hs[0] / 2, -hs[1], hs[0], hs[1]);
@@ -1437,6 +1437,76 @@
   // same drawing code as the game: 48 x 40 game px, feet on the floor at y 36.
   const PV_W = 48, PV_H = 40, PV_FLOOR = 34;
   const PV_ENEMY = { crow: ["crow", "fly", 15], crawler: ["hound", "run", 0], wisp: ["flyer", "fly", 12], pod: ["pod", "idle", 0], stalker: ["stalker", "walk", 0] };
+  // One manual entry (hero, monster or item) with its feet / base at (cx, 0) in the current ctx.
+  // scene = drawn big in the street (GAME.showcase) instead of in a small manual tile.
+  function drawEntry(kind, what, t, cx, scene) {
+    if (kind === "hero") {
+      // running along the street, with a swing / shot every 2.6 s
+      const run = frames(what, "run"), atk = frames(what, "attack"), at = t % 2.6;
+      if (scene && run.length) { // in the street scene: bouncing on the spot, swinging now and then
+        const idle = frames(what, "idle"), key = atk.length && at > 2.25 ? atk[Math.min(atk.length - 1, Math.floor((at - 2.25) / 0.35 * atk.length))] : idle.length ? idleCyc(idle, t, 4) : run[0];
+        draw(ctx, key, cx - 8, 0);
+      } else if (run.length) {
+        const key = atk.length && at > 2.25 ? atk[Math.min(atk.length - 1, Math.floor((at - 2.25) / 0.35 * atk.length))] : cyc(run, t, run.length > 2 ? 12 : 8);
+        draw(ctx, key, cx - 8, 0);
+      } else { // no art yet: a mystery silhouette, bouncing
+        let f = frames("fighter", "idle"); if (!f.length) f = PLAYER_FALLBACK.idle;
+        ctx.filter = "brightness(0.12)"; draw(ctx, idleCyc(f, t, 4), cx - 7, 0); ctx.filter = "none";
+      }
+    } else if (kind === "en") {
+      if (what === "watcher") {
+        const P1 = ART("watcher_1"), P2 = ART("watcher_2"), m = Math.sin(t * 0.7) * 0.5 + 0.5;
+        ctx.filter = `brightness(${1.8 + Math.max(0, Math.sin(t * 2.3) - 0.85) * 12}) drop-shadow(2px 0 0 #0b0610) drop-shadow(-2px 0 0 #0b0610) drop-shadow(0 2px 0 #0b0610) drop-shadow(0 -2px 0 #0b0610)`; // lit by lightning now and then
+        if (P1) for (const [img, a, key] of [[P1, 1 - m, "watcher_1"], [P2, m, "watcher_2"]]) {
+          if (!img) continue; const sz = SPR.SIZE[key] || [img.width / 9, img.height / 9], s = 46 / Math.max(sz[0], 58);
+          ctx.globalAlpha = a; ctx.drawImage(img, cx - sz[0] * s / 2, -sz[1] * s + Math.sin(t * 1.3), sz[0] * s, sz[1] * s);
+        } else { ctx.save(); ctx.translate(cx, 0); ctx.scale(0.5, 0.5); watcherPlaceholder(0, Math.sin(t * 1.3) * 2, Math.sin(t * 0.6) * 0.16, false, t); ctx.restore(); }
+        ctx.globalAlpha = 1; ctx.filter = "none";
+      } else {
+        const T = TYPES[what] || {}, e = PV_ENEMY[what];
+        const o = { type: what, x: 0, t, side: -1, w: T.w || 12, h0: e ? e[2] : T.h0 || 0, h1: T.h1 || 12, enemy: !!T.enemy, vh: 0 };
+        if (what === "wisp") o.h0 += Math.round(Math.sin(t * 3) * 2);
+        if (what === "pod") o.t = t % 1.6;
+        o.x = Math.round(cx - o.w / 2);
+        const idle = e && frames(e[0], "idle");
+        if (idle && idle.length) draw(ctx, idleCyc(idle, t, 6), o.x, -o.h0);
+        else if (what === "stalker") { ctx.save(); ctx.translate(cx, 0); ctx.scale(0.7, 0.7); ctx.translate(-cx, 0); drawOb(o); ctx.restore(); } // 44 px tall: shrunk to fit
+        else drawOb(o);
+      }
+    } else if (kind === "it") {
+      if (what === "bulb" || what === "gold") {
+        for (let i = 0; i < (what === "gold" ? 1 : 3); i++) {
+          const b = what === "gold" ? ["gold", "#ffd866"] : BULBS[i * 2];
+          drawPick({ x: what === "gold" ? cx - 2 : cx - 14 + i * 12, h: 10 + (what === "gold" ? 0 : Math.sin(i) * 4), name: b[0], col: b[1], gold: what === "gold", ph: i });
+        }
+      } else if (what === "dice") drawPick({ kind: "dice", x: cx - 5, h: 8 });
+      else if (what === "board") drawPick({ kind: "skate", x: cx - 8, h: 8 });
+      else if (what === "revive") { ctx.save(); ctx.translate(cx, -16); ctx.scale(2, 2); heart(-4.5, -4, true, "#5fd0c8"); ctx.restore(); }
+      else { // crates
+        const tier = what === "crate10" ? 10 : 3, w = tier >= 10 ? 13 : 10;
+        drawOb({ type: what === "dark" ? "crate_dark" : "crate", x: Math.round(cx - w / 2), t, w, h0: 0, h1: w, tier, heart: what === "heart", crate: true });
+        if (what === "heart") { ctx.save(); ctx.translate(cx, -w / 2); glow("#ff3d57", 0, -1, 9, 0.5 + Math.sin(t * 6) * 0.2); heart(-4.5, -4, true); ctx.restore(); }
+      }
+    }
+  }
+  // Player manual: the selected entry, drawn twice as big where the hero stands (Upside Down entries
+  // on the Upside Down side), so the art can be seen in detail next to the menu.
+  function drawShowcase() {
+    const sc = G.showcase, [kind, what] = sc.id.split(":"), t = performance.now() / 1000 - sc.t0;
+    if (what === "watcher") { // it looms upright in the Upside Down sky
+      ctx.save(); ctx.translate(PX + 6, FB + 100); ctx.scale(1.8, 1.8); drawEntry(kind, what, t, 0, true); ctx.restore(); return;
+    }
+    local(sc.side);
+    ctx.save(); ctx.translate(PX + 6, 0);
+    if (kind === "icon") { // shop items and upgrades: their icon, floating
+      const img = ART(what); if (img) ctx.drawImage(img, -16, -46 + Math.round(Math.sin(t * 2) * 2), 32, 32);
+    } else {
+      const k = kind === "it" ? 3 : what === "watcher" ? 1.8 : 2;
+      ctx.scale(k, k);
+      drawEntry(kind, what, t, 0, true);
+    }
+    ctx.restore(); ctx.restore();
+  }
   G.preview = function (canvas, id, t) {
     const c2 = canvas.getContext("2d"), main = ctx, gt = G.t, [kind, what] = id.split(":");
     const k = canvas.width / PV_W, dark = canvas.dataset.side === "1";
@@ -1455,52 +1525,7 @@
       tile(F, scroll, PV_FLOOR, F.width * 16 / F.height, 16);
       c2.restore();
       c2.translate(0, PV_FLOOR);
-      const cx = PV_W / 2;
-      if (kind === "hero") {
-        // running along the street, with a swing / shot every 2.6 s
-        const run = frames(what, "run"), atk = frames(what, "attack"), at = t % 2.6;
-        if (run.length) {
-          const key = atk.length && at > 2.25 ? atk[Math.min(atk.length - 1, Math.floor((at - 2.25) / 0.35 * atk.length))] : cyc(run, t, run.length > 2 ? 12 : 8);
-          draw(c2, key, cx - 8, 0);
-        } else { // no art yet: a mystery silhouette, bouncing
-          let f = frames("fighter", "idle"); if (!f.length) f = PLAYER_FALLBACK.idle;
-          c2.filter = "brightness(0.12)"; draw(c2, idleCyc(f, t, 4), cx - 7, 0); c2.filter = "none";
-        }
-      } else if (kind === "en") {
-        if (what === "watcher") {
-          const P1 = ART("watcher_1"), P2 = ART("watcher_2"), m = Math.sin(t * 0.7) * 0.5 + 0.5;
-          c2.filter = `brightness(${1.8 + Math.max(0, Math.sin(t * 2.3) - 0.85) * 12}) drop-shadow(0 0 1px #ff3d57)`; // lit by lightning now and then
-          if (P1) for (const [img, a, key] of [[P1, 1 - m, "watcher_1"], [P2, m, "watcher_2"]]) {
-            if (!img) continue; const sz = SPR.SIZE[key] || [img.width / 9, img.height / 9], s = 46 / Math.max(sz[0], 58);
-            c2.globalAlpha = a; c2.drawImage(img, cx - sz[0] * s / 2, -sz[1] * s + Math.sin(t * 1.3), sz[0] * s, sz[1] * s);
-          } else { c2.save(); c2.translate(cx, 0); c2.scale(0.5, 0.5); watcherPlaceholder(0, Math.sin(t * 1.3) * 2, Math.sin(t * 0.6) * 0.16, false, t); c2.restore(); }
-          c2.globalAlpha = 1; c2.filter = "none";
-        } else {
-          const T = TYPES[what] || {}, e = PV_ENEMY[what];
-          const o = { type: what, x: 0, t, side: -1, w: T.w || 12, h0: e ? e[2] : T.h0 || 0, h1: T.h1 || 12, enemy: !!T.enemy, vh: 0 };
-          if (what === "wisp") o.h0 += Math.round(Math.sin(t * 3) * 2);
-          if (what === "pod") o.t = t % 1.6;
-          o.x = Math.round(cx - o.w / 2);
-          const idle = e && frames(e[0], "idle");
-          if (idle && idle.length) draw(c2, idleCyc(idle, t, 6), o.x, -o.h0);
-          else if (what === "stalker") { c2.save(); c2.translate(cx, 0); c2.scale(0.7, 0.7); c2.translate(-cx, 0); drawOb(o); c2.restore(); } // 44 px tall: shrunk to fit
-          else drawOb(o);
-        }
-      } else if (kind === "it") {
-        if (what === "bulb" || what === "gold") {
-          for (let i = 0; i < (what === "gold" ? 1 : 3); i++) {
-            const b = what === "gold" ? ["gold", "#ffd866"] : BULBS[i * 2];
-            drawPick({ x: what === "gold" ? cx - 2 : cx - 14 + i * 12, h: 10 + (what === "gold" ? 0 : Math.sin(i) * 4), name: b[0], col: b[1], gold: what === "gold", ph: i });
-          }
-        } else if (what === "dice") drawPick({ kind: "dice", x: cx - 5, h: 8 });
-        else if (what === "board") drawPick({ kind: "skate", x: cx - 8, h: 8 });
-        else if (what === "revive") { c2.save(); c2.translate(cx, -16); c2.scale(2, 2); heart(-4.5, -4, true, "#5fd0c8"); c2.restore(); }
-        else { // crates
-          const tier = what === "crate10" ? 10 : 3, w = tier >= 10 ? 13 : 10;
-          drawOb({ type: what === "dark" ? "crate_dark" : "crate", x: Math.round(cx - w / 2), t, w, h0: 0, h1: w, tier, heart: what === "heart", crate: true });
-          if (what === "heart") { c2.save(); c2.translate(cx, -w / 2); glow("#ff3d57", 0, -1, 9, 0.5 + Math.sin(t * 6) * 0.2); heart(-4.5, -4, true); c2.restore(); }
-        }
-      }
+      drawEntry(kind, what, t, PV_W / 2, false);
     } finally { ctx = main; G.t = gt; }
   };
   G.spawn = (type, dx = 0) => addOb(type, W + 10 + dx);

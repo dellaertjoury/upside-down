@@ -76,15 +76,17 @@
     </section>
 
     <!-- LEADERBOARD -->
-    <section class="panel hidden" id="p-leaderboard">
+    <section class="panel hidden hub" id="p-leaderboard">
+     <div class="hub-card lb-card">
       <header class="ph"><h2 data-i18n="lb.title"></h2><span class="mode" id="lb-mode"></span></header>
       <ol class="board" id="lb-list"></ol>
       <button class="btn back" data-go="menu" data-i18n="back"></button>
+     </div>
     </section>
 
     <!-- SETTINGS -->
-    <section class="panel hidden sheet-panel" id="p-settings">
-      <div class="sheet settings">
+    <section class="panel hidden hub" id="p-settings">
+      <div class="hub-card settings">
         <header class="ph"><h2 data-i18n="set.title"></h2><button class="btn back" data-go="menu" data-i18n="back"></button></header>
         <div class="set-grid">
             <section class="set-card set-sound">
@@ -130,8 +132,8 @@
     </section>
 
     <!-- PLAYER MANUAL (from Settings) -->
-    <section class="panel hidden sheet-panel" id="p-manual">
-      <div class="sheet manual">
+    <section class="panel hidden hub" id="p-manual">
+      <div class="hub-card manual">
         <header class="ph"><h2 data-i18n="man.title"></h2><button class="btn back" id="man-back" data-go="menu" data-i18n="back"></button></header>
         <div class="tabs man-tabs" role="tablist">
           <button class="btn tiny tab on" role="tab" data-mtab="heroes" data-i18n="man.heroes"></button>
@@ -140,6 +142,7 @@
           <button class="btn tiny tab" role="tab" data-mtab="upgrades" data-i18n="man.upgrades"></button>
         </div>
         <div class="man-list" id="man-list"></div>
+        <div class="man-info" id="man-info"><h3 id="man-name"></h3><p id="man-desc"></p></div>
       </div>
     </section>
 
@@ -155,8 +158,8 @@
     </section>
 
     <!-- BUG / IDEA REPORTS -->
-    <section class="panel hidden" id="p-report">
-     <div class="rep-wrap">
+    <section class="panel hidden hub" id="p-report">
+     <div class="rep-wrap hub-card">
       <header class="ph"><h2 data-i18n="rep.title"></h2></header>
       <div class="rep-grid">
         <div class="rep-new">
