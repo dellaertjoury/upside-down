@@ -185,24 +185,26 @@
 
     <!-- GAME OVER -->
     <section class="panel hidden" id="p-over">
+     <div class="over-fit">
       <h2 class="over-t" data-i18n="over.title"></h2>
       <div class="over-row">
         <div class="stats" id="over-stats"></div>
         <div class="dicebox" id="over-dice" hidden>
-          <h3 data-i18n="dice.title"></h3>
-          <p class="muted" id="dice-left"></p>
+          <h3 data-i18n="d20.title"></h3>
+          <p class="muted" data-i18n="d20.hint"></p>
           <div class="d20" id="d20"><span>?</span></div>
           <div class="dice-res" id="dice-res"></div>
-          <button class="btn primary" id="dice-roll"></button>
+          <button class="btn primary" id="dice-roll" data-i18n="d20.roll"></button>
         </div>
       </div>
       <p class="muted" id="over-lb"></p>
-      <div class="menu-grid">
+      <div class="menu-grid" id="over-nav">
         <button class="btn primary" data-go="play" data-i18n="over.again"></button>
         <button class="btn" data-go="sheet" data-stab="upgrades" data-i18n="menu.upgrades"></button>
         <button class="btn" data-go="report" data-i18n="menu.report"></button>
         <button class="btn" data-go="menu" data-i18n="pause.quit"></button>
       </div>
+     </div>
     </section>
   </div>
   <div class="toast" id="toast"></div>

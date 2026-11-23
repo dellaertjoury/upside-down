@@ -305,7 +305,6 @@
  "hud_revive": true,
  "hud_shield": true,
  "hud_warning": true,
- "pickup_dice": true,
  "pickup_skate": true,
  "plat_bus": [
   89.66666666666667,

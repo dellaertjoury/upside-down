@@ -21,7 +21,7 @@
     crateEvery: [16, 24],        // seconds between crates
     crateTiers: [[3, 0.65, 0.4], [5, 0.35, 0.6]], // [lights, chance at the start, chance from 2000 m]
     heartCrate: 0.25,            // share of crates holding a heart instead
-    dice: { first: [25, 40], every: [50, 80], down: 0.6 }, // Dice Crates: kept, opened after the run (60% in the Upside Down)
+    dice: { first: [16, 24], every: [18, 28], down: 0.6, pieces: 6 }, // d20 pieces: 6 make a die (one per run), 60% in the Upside Down
     milestoneEvery: 500, milestoneLights: 10, // every 500 m: +10 lights
     lightHeight: [20, 38],       // single lights float this high: jump for them
     platformEvery: [9, 14],      // seconds between cars / dumpsters / buses to jump on
@@ -224,7 +224,7 @@
     for (let i = 0; i <= w - CW + 2; i++) { const hh = surface(o, i + 3, i + CW - 3); if (hh <= 16.6) low.push([i, hh]); } // rests on its middle; a little overhang is fine
     const crateAt = low.length ? low.reduce((b, c) => (c[0] > b[0] ? c : b)) : null;   // the far end (trunk) when there is one
     if (what === "crate" && !crateAt) what = pick(["onto", "off"]);
-    if (G.diceT <= 0 && Math.random() < 0.5) what = "dice";
+    if (G.diceT <= 0 && G.dice < BAL.dice.pieces && Math.random() < 0.6) what = "dice";
     if (what === "onto") { // an arc from the street that lands you on its first high part
       const land = Math.min(w - 4, hi + 4), hl = prof[land];
       const tl = (J + Math.sqrt(Math.max(0, J * J - 2 * GRAV * hl))) / GRAV; // time to come down onto it
@@ -245,8 +245,8 @@
       c.h0 = surface(o, cx - o.x, cx - o.x + c.w); c.h1 = c.h0 + c.w; c.onRoof = true;
     } else if (what === "dice") {
       G.diceT = rand(BAL.dice.every[0], BAL.dice.every[1]);
-      const dx_ = Math.max(4, Math.min(w - 14, hi + 6));
-      G.picks.push({ kind: "dice", side, x: o.x + dx_, h: surface(o, dx_, dx_ + 10), taken: false, ph: 0, col: "#ff3d57" }); // sits on the roof
+      const dx_ = Math.max(4, Math.min(w - 14, hi + 10)), apex = J * J / (2 * GRAV);
+      G.picks.push({ kind: "dice", side, x: o.x + dx_, h: top + apex * 0.92, taken: false, ph: Math.random() * 6, col: "#ff3d57" }); // only reachable with a jump from the roof
     }
     G.obs.push(o);
     return o;
@@ -332,10 +332,15 @@
       if (Math.random() < 0.4) { const q = addPlatform(side, p.x + p.w + rand(30, 60)); return q.x - X + q.w + G.speed * 0.8; } // a second one to hop to
       return p.x - X + p.w + G.speed * 0.8;
     }
-    if (G.diceT <= 0) { // a Dice Crate, more often in the Upside Down; opened after the run
+    if (G.diceT <= 0 && G.dice < BAL.dice.pieces) { // a d20 piece at the very top of a full jump, a hound running under it
       G.diceT = rand(BAL.dice.every[0], BAL.dice.every[1]);
-      G.picks.push({ kind: "dice", side: Math.random() < BAL.dice.down ? 1 : 0, x: X + 20, h: 0, taken: false, ph: 0, col: "#ff3d57" }); // sits on the street
-      return gap * 0.8;
+      const side = Math.random() < BAL.dice.down ? 1 : 0, J = G.stats.jumpV, apex = J * J / (2 * GRAV);
+      G.picks.push({ kind: "dice", side, x: X + 20, h: apex + 4, taken: false, ph: Math.random() * 6, col: "#ff3d57" });
+      if (G.dist > 1500 && allowed("crawler", side)) { // jump over it at the right moment to get both
+        const v = Math.max(60, G.speed), T = (X + 20 - PX - 6) / v; // under you when you are at the top
+        addOb("crawler", PX + T * (v - TYPES.crawler.vx), side);
+      }
+      return gap * 1.2;
     }
     if (r < 0.85) { // an encounter from the director
       for (let tries = 0; tries < 4; tries++) {
@@ -396,15 +401,26 @@
     const bonus = Math.floor(G.score / G.stats.bonusDiv);
     const earned = G.shards + bonus;
     const st = SAVE.state, score = Math.floor(G.score);
-    const newBest = score > st.best;
+    const d20 = G.dice >= BAL.dice.pieces;                          // a complete d20: rolled on the game-over screen
+    const newBest = !d20 && score > st.best;
     st.shards += earned; st.runs += 1; if (newBest) st.best = score;
-    st.dice = (st.dice || 0) + G.dice; SAVE.save();               // Dice Crates wait to be opened
+    SAVE.save();
     G.result = { score, shards: G.shards, bonus, earned, kills: G.kills, parries: G.parries,
       pts: { dist: Math.floor(G.sc.dist), combat: Math.floor(G.sc.combat), lights: Math.floor(G.sc.lights) }, bestHaul: Math.floor(G.bestHaul),
       lostHaul: Math.floor(G.haul.dist + G.haul.combat + G.haul.lights), lostLights: G.haul.n,
-      dist: Math.floor(G.dist / 10), newBest, dice: G.dice };
+      dist: Math.floor(G.dist / 10), newBest, pieces: G.dice, d20 };
   }
 
+  // The completed d20, rolled on the game-over screen: multiplies the run's score.
+  const D20_MULT = r => r === 20 ? 3 : r >= 15 ? 2 : r >= 10 ? 1.5 : r >= 2 ? 1.25 : 1;
+  G.D20_MULT = D20_MULT;
+  G.rollD20 = function () {
+    const r = G.result; if (!r || !r.d20 || r.rolled) return null;
+    const roll = 1 + Math.floor(Math.random() * 20), mult = D20_MULT(roll), st = SAVE.state;
+    r.rolled = { roll, mult, base: r.score }; r.score = Math.floor(r.score * mult);
+    r.newBest = r.score > st.best; if (r.newBest) st.best = r.score; SAVE.save();
+    return r.rolled;
+  };
   function hurt() {
     if (G.debug.god) { G.flash = 0.1; G.flashCol = "#5fd0c8"; return; }
     if (P.skate > 0) return; // invincible on the skateboard
@@ -755,7 +771,7 @@
       if (slid && !k.taken && k.side === slid.side && k.kind !== "skate" && Math.abs(k.x - (PX + 8 + slid.x)) < 10 && Math.abs(k.h - (slid.h + 4)) < 10) {
         k.taken = true; // still grabbing lights while sliding to a stop: they go straight into the bank
         const val = k.kind === "dice" ? 0 : (k.gold ? 5 : 1) + (k.side ? st.sporeBonus : 0), r = G.result;
-        if (k.kind === "dice") { SAVE.state.dice = (SAVE.state.dice || 0) + 1; G.dice++; if (r) r.dice++; SFX.dice(); }
+        if (k.kind === "dice") { gotPiece(k); if (r) { r.pieces = G.dice; r.d20 = G.dice >= BAL.dice.pieces; } }
         else { SAVE.state.shards += val; G.shards += val; if (r) { r.shards += val; r.earned += val; } (k.gold ? SFX.gold : SFX.light)(); pop("+" + val, k.col, k.x, sy(k.side, k.h + 10)); }
         SAVE.save(); burst(k.x, sy(k.side, k.h), k.col, 6, 40); continue;
       }
@@ -769,8 +785,7 @@
         k.x -= ddx * Math.min(1, dt * 10); k.h -= ddh * Math.min(1, dt * 10);
       }
       if (k.side === P.side && P.flip <= 0 && Math.abs(k.x - cx) < 10 && Math.abs(k.h - ch) < 13 && k.kind === "dice") {
-        k.taken = true; G.dice++; SFX.dice(); pop(T_("pop.dice"), "#ff6b8f", k.x, sy(k.side, k.h + 14));
-        G.onLight && G.onLight("#ff3d57"); burst(k.x, sy(k.side, k.h), "#ff3d57", 10, 50); continue;
+        k.taken = true; gotPiece(k); continue;
       }
       if (k.side === P.side && P.flip <= 0 && Math.abs(k.x - cx) < 9 && Math.abs(k.h - ch) < 12 && k.kind === "skate") {
         k.taken = true; P.skate = st.skate; SFX.power(); pop(T_("pop.skate"), "#ffd866");
@@ -1061,9 +1076,43 @@
     R("#1a1124", x, y, w, 3); R("#ff3d57", x + 1, y, w - 2, 2); R("#ffd866", x + 2, y, 2, 1);
     R("#1a1124", x + 2, y + 2, 3, 3); R("#1a1124", x + w - 5, y + 2, 3, 3); R("#ece6d6", x + 3, y + 3, 1, 1); R("#ece6d6", x + w - 4, y + 3, 1, 1);
   }
-  function drawDiceCrate(x, y) { // a small wooden crate with a red d20 painted on it
-    R("#1a1124", x - 1, y - 1, 12, 12); R("#8a5a30", x, y, 10, 10); R("#6b4222", x, y + 4, 10, 1); R("#a8743a", x, y, 10, 1);
-    R("#1a1124", x + 2, y + 2, 6, 6); R("#ff3d57", x + 3, y + 2, 4, 6); R("#ff3d57", x + 2, y + 3, 6, 4); R("#ffd0dc", x + 4, y + 4, 2, 2);
+  // ---- d20 pieces: six wedges of a d20; collect all six in a run for a score multiplier ----
+  function gotPiece(k) {
+    if (G.dice >= BAL.dice.pieces) return;
+    G.dice++; SFX.dice(); burst(k.x, sy(k.side, k.h), "#ff3d57", 12, 60);
+    G.onLight && G.onLight("#ff3d57");
+    if (G.dice >= BAL.dice.pieces) { SFX.gold(); G.flash = 0.25; G.flashCol = "#ff3d57"; pop(T_("pop.d20"), "#ffd866", k.x, sy(k.side, k.h + 16)); }
+    else pop(T_("pop.piece", { n: G.dice, of: BAL.dice.pieces }), "#ff6b8f", k.x, sy(k.side, k.h + 14));
+  }
+  const HEX = i => { const a = -Math.PI / 2 + i * Math.PI / 3; return [Math.cos(a), Math.sin(a)]; };
+  // a d20 seen face-on: a hexagon of six wedges. have = how many wedges are filled in (0..6)
+  function drawD20(cx, cy, r, have = 6, alpha = 1) {
+    const pa = ctx.globalAlpha;
+    ctx.beginPath(); for (let i = 0; i < 6; i++) { const [x, y] = HEX(i); ctx.lineTo(cx + x * (r + 1), cy + y * (r + 1)); } ctx.closePath();
+    ctx.fillStyle = "#1a1124"; ctx.fill();
+    for (let i = 0; i < 6; i++) {
+      const [x0, y0] = HEX(i), [x1, y1] = HEX(i + 1);
+      ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + x0 * r, cy + y0 * r); ctx.lineTo(cx + x1 * r, cy + y1 * r); ctx.closePath();
+      ctx.globalAlpha = pa * (i < have ? alpha : 0.35);
+      ctx.fillStyle = i < have ? (i % 2 ? "#c81e3a" : "#ff3d57") : "#3a2030"; ctx.fill();
+      ctx.globalAlpha = pa;
+      ctx.strokeStyle = "#1a1124"; ctx.lineWidth = 0.5; ctx.stroke();
+    }
+    if (have >= 6) { // the triangle face of a d20, and a shine
+      ctx.beginPath(); for (const i of [0, 2, 4]) { const [x, y] = HEX(i); ctx.lineTo(cx + x * r * 0.55, cy + y * r * 0.55); } ctx.closePath();
+      ctx.strokeStyle = "#ffd0dc"; ctx.lineWidth = 0.6; ctx.stroke();
+    }
+  }
+  // one piece (a wedge) floating in the street, turning slowly
+  function drawPiece(cx, cy, idx, t) {
+    const r = 7, [x0, y0] = HEX(idx), [x1, y1] = HEX(idx + 1);
+    ctx.save(); ctx.translate(cx, cy); ctx.rotate(Math.sin(t * 1.6) * 0.35);
+    ctx.translate(-(x0 + x1) * r / 3, -(y0 + y1) * r / 3); // spin around the wedge's middle
+    ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(x0 * r, y0 * r); ctx.lineTo(x1 * r, y1 * r); ctx.closePath();
+    ctx.lineJoin = "round"; ctx.strokeStyle = "#1a1124"; ctx.lineWidth = 2; ctx.stroke();
+    ctx.fillStyle = idx % 2 ? "#c81e3a" : "#ff3d57"; ctx.fill();
+    ctx.beginPath(); ctx.moveTo(x0 * r * 0.25, y0 * r * 0.25); ctx.lineTo(x0 * r * 0.75, y0 * r * 0.75); ctx.strokeStyle = "#ffd0dc"; ctx.lineWidth = 0.7; ctx.stroke();
+    ctx.restore();
   }
   // Soft round glow (cached radial gradient per colour), centred on cx, cy.
   const GLOWS = {};
@@ -1079,10 +1128,10 @@
     ctx.drawImage(g, cx - r, cy - r, r * 2, r * 2); ctx.globalAlpha = pa;
   }
   function drawPick(k) {
-    if (k.kind === "dice") {
-      const x = Math.round(k.x), y = -Math.round(k.h) - 11, img = ART("pickup_dice"); // standing on the ground / roof, no bobbing
-      glow("#ff3d57", x + 5, y + 5, 11, 0.45 + Math.sin(G.t * 6) * 0.2);
-      if (img) ctx.drawImage(img, x - 1, y - 1, 12, 12); else drawDiceCrate(x, y);
+    if (k.kind === "dice") { // a d20 piece: the next wedge you are missing
+      const x = k.x + 2, y = -k.h + Math.sin(G.t * 3 + (k.ph || 0)) * 1.5;
+      glow("#ff3d57", x, y, 12, 0.5 + Math.sin(G.t * 6) * 0.2);
+      drawPiece(x, y, Math.min(5, G.dice), G.t + (k.ph || 0));
       return;
     }
     if (k.kind === "skate") {
@@ -1336,9 +1385,11 @@
     if (ART("hud_light")) ctx.drawImage(ART("hud_light"), W - 47, 16, 7, 10);
     else { R("#3b3446", W - 45, 16, 3, 2); R("#1a1124", W - 46, 18, 5, 7); R(BULBS[Math.floor(G.t * 2) % 6][1], W - 45, 18, 3, 6); }
     text(String(G.shards), W - 6, 18, "#f3e9dc", "right");
-    if (G.dice > 0) { // Dice Crates found this run
-      if (ART("pickup_dice")) ctx.drawImage(ART("pickup_dice"), W - 48, 29, 9, 9); else { ctx.save(); ctx.translate(W - 48, 29); ctx.scale(0.8, 0.8); drawDiceCrate(0, 0); ctx.restore(); }
-      text(String(G.dice), W - 6, 30, "#ff9fb4", "right");
+    if (G.dice > 0) { // d20 pieces this run: the die fills up wedge by wedge
+      const done = G.dice >= BAL.dice.pieces;
+      if (done) glow("#ffd866", W - 43, 34, 10, 0.4 + Math.sin(G.t * 4) * 0.15);
+      drawD20(W - 43, 34, 5, G.dice);
+      text(done ? "d20" : G.dice + "/" + BAL.dice.pieces, W - 6, 30, done ? "#ffd866" : "#ff9fb4", "right");
     }
 
     const bw = 70, f = G.dread / st.battery, DX = Math.round(W / 2 - bw / 2) - 6; // centred, clear of phone buttons
@@ -1556,7 +1607,7 @@
       } else if (what === "board" || what === "revive") { // shop items: their icon, floating over the street
         const img = ART("ui_item_" + what);
         if (img) ctx.drawImage(img, cx - 12, -30 + Math.round(Math.sin(t * 2) * 1.5), 24, 24);
-      } else if (what === "dice") drawPick({ kind: "dice", x: cx - 5, h: 0 });
+      } else if (what === "dice") { drawD20(cx - 9, -16, 7, 4); drawPiece(cx + 9, -18 + Math.sin(t * 3) * 1.5, 4, t); } // a d20 with two wedges missing, and one of them
       else if (what === "board") drawPick({ kind: "skate", x: cx - 8, h: 8 });
       else if (what === "revive") { ctx.save(); ctx.translate(cx, -16); ctx.scale(2, 2); heart(-4.5, -4, true, "#5fd0c8"); ctx.restore(); }
       else { // crates

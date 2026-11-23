@@ -137,7 +137,7 @@
     }
     if (e.code === "Escape" && current === "report") { e.preventDefault(); return closeReport(); }
     const hubOpen = current === "menu" || current === "over";
-    if (current === "over" && e.code === "Space" && (st.dice > 0 || rolling)) { e.preventDefault(); rollDice(); return; } // open Dice Crates first
+    if (current === "over" && (e.code === "Space" || e.code === "Escape" || e.code === "Enter") && overRes && overRes.d20 && (!overRes.rolled || rolling)) { e.preventDefault(); rollDice(); return; } // roll the d20 first
     if (hubOpen && e.code === "Space" && (GAME.mode === "attract" || GAME.mode === "over")) { e.preventDefault(); startRun(); }
     if (e.code === "Escape" && current && !["menu", "pause", "over"].includes(current)) { e.preventDefault(); show(current === "manual" ? manualFrom : GAME.mode === "pause" ? "pause" : "menu"); }
   });
@@ -196,38 +196,32 @@
     const l = e.target.closest("[data-look]");
     if (l) { sheet()[l.dataset.look] = l.dataset.id; SAVE.save(); applyLook(); renderSheet(); SFX.click(); }
   });
-  // ---- Dice Crates: open them after a run, the d20 sets the odds ----
-  let rolling = false;
-  const pct = x => Math.round(x * 100) + "%";
-  function renderDice(res) {
-    const box = $("#over-dice"), left = st.dice || 0;
-    box.hidden = left <= 0 && !res;
-    if (box.hidden) return;
-    $("#dice-left").textContent = left > 0 ? t("dice.left", { n: left }) : t("dice.none");
-    $("#dice-roll").textContent = left > 0 ? t("dice.roll") : t("dice.done");
-    $("#dice-roll").disabled = rolling || left <= 0;
-    $("#dice-roll").hidden = left <= 0;
-    if (!res) { $("#dice-res").innerHTML = `<small>${esc(t("dice.hint"))}</small>`; return; }
-    const what = res.upgrade ? t("dice.upgrade", { u: t("up." + res.upgrade) }) : t("dice.lights", { n: res.lights });
-    $("#dice-res").innerHTML = `<b style="color:${res.col}">${esc(t("dice.t." + res.tier))}</b>${esc(what)}
-      <br><small>${esc(t("dice.odds", { r: res.roll, rare: pct(res.odds.rare), leg: pct(res.odds.legendary) }))}</small>`;
+  // ---- the d20: six pieces found in the run make one die; rolled here, it multiplies the score ----
+  let rolling = false, overRes = null;
+  function renderDice() {
+    const r = overRes, box = $("#over-dice"), pending = !!(r && r.d20 && !r.rolled);
+    box.hidden = !(r && r.d20);
+    $("#over-nav").hidden = pending;          // roll first, then play again
+    $("#dice-roll").hidden = !pending; $("#dice-roll").disabled = rolling;
+    if (!r || !r.rolled) { $("#dice-res").innerHTML = ""; return; }
+    const R = r.rolled, lab = R.roll === 20 ? "nat20" : R.roll === 1 ? "nat1" : R.mult >= 2 ? "great" : R.mult >= 1.5 ? "good" : "ok";
+    $("#dice-res").innerHTML = `<b>${esc(t("d20.t." + lab))}</b>${esc(t("d20.mult", { m: R.mult, a: R.base, b: r.score }))}`;
   }
   function rollDice() {
-    if (rolling || !(st.dice > 0)) return;
-    rolling = true; renderDice(null); $("#dice-roll").disabled = true;
-    const res = SAVE.openDice(), d = $("#d20");
+    if (rolling || !overRes || !overRes.d20 || overRes.rolled) return;
+    rolling = true; renderDice();
+    const res = GAME.rollD20(), d = $("#d20");
     d.className = "d20 spin"; let n = 0;
     const spin = setInterval(() => {
       d.firstChild.textContent = 1 + Math.floor(Math.random() * 20); SFX.roll20();
-      if (++n < 10) return;
+      if (++n < 12) return;
       clearInterval(spin);
       d.firstChild.textContent = res.roll;
       d.className = "d20" + (res.roll === 20 ? " nat20" : res.roll === 1 ? " nat1" : "");
-      rolling = false; renderDice(res);
-      (res.tier === "legendary" || res.tier === "rare" ? SFX.gold : SFX.buy)();
-      document.querySelectorAll(".bank-n").forEach(b => b.textContent = st.shards);
-      const tot = $("#over-total"); if (tot) tot.textContent = t("over.total", { n: st.shards });
-      if (st.dice <= 0) { const again = $('#p-over [data-go="play"]'); again && again.focus({ preventScroll: true }); }
+      rolling = false; renderOverStats(overRes); renderDice(); fitSettings();
+      (res.mult >= 2 ? SFX.gold : SFX.buy)();
+      postScore(overRes);
+      const again = $('#p-over [data-go="play"]'); again && again.focus({ preventScroll: true });
     }, 80);
   }
   $("#dice-roll").addEventListener("click", rollDice);
@@ -299,7 +293,7 @@
   }
   // short screens: scale the settings panel down until it fits (never up)
   function fitSettings() {
-    const el = current === "settings" ? $("#p-settings .settings") : current === "manual" ? $("#p-manual .manual") : current === "sheet" ? $("#p-sheet .sheet-card") : current === "report" ? $("#p-report .rep-wrap") : current === "leaderboard" ? $("#p-leaderboard .lb-card") : null; if (!el) return;
+    const el = current === "settings" ? $("#p-settings .settings") : current === "manual" ? $("#p-manual .manual") : current === "sheet" ? $("#p-sheet .sheet-card") : current === "report" ? $("#p-report .rep-wrap") : current === "leaderboard" ? $("#p-leaderboard .lb-card") : current === "over" ? $("#p-over .over-fit") : null; if (!el) return;
     el.style.zoom = "";
     const frame = el.closest(".frame") || document.body;
     const avail = Math.min(frame.clientHeight || innerHeight, innerHeight) * 0.9, need = el.getBoundingClientRect().height;
@@ -408,7 +402,7 @@
   }, true);
 
   // ---- game over ----
-  GAME.onOver = async (r) => {
+  function renderOverStats(r) {
     $("#over-stats").innerHTML = `
       <span>${esc(t("over.score"))}</span><b>${r.score}${r.newBest ? " ★ " + esc(t("over.best")) : ""}</b>
       <span>${esc(t("over.dist"))}</span><b>${r.dist} m</b>
@@ -418,13 +412,19 @@
       <span>${esc(t("over.kills"))}</span><b>${r.kills}</b>
       <span>${esc(t("over.haul"))}</span><b>${r.bestHaul}</b>
       ${r.lostHaul > 0 ? `<span>${esc(t("over.lost"))}</span><b style="color:#ff6b8f">−${r.lostHaul}${r.lostLights ? ` · −${r.lostLights} <i class="bulb"></i>` : ""}</b>` : ""}
-      ${r.dice ? `<span>${esc(t("over.dice"))}</span><b style="color:#ff9fb4">${r.dice}</b>` : ""}
+      ${r.rolled ? `<span>${esc(t("d20.title"))}</span><b style="color:#ffd866">${r.rolled.roll} → ×${r.rolled.mult}</b>` : `<span>${esc(t("over.pieces"))}</span><b style="color:#ff9fb4">${r.pieces || 0}/6${r.d20 ? " ✓" : ""}</b>`}
       <span>${esc(t("over.found"))}</span><b>${r.shards}</b>
       <span>${esc(t("over.bonus"))}</span><b>+${r.bonus}</b>
       <span>${esc(t("over.banked"))}</span><b><i class="bulb"></i> ${r.earned} (<span id="over-total">${esc(t("over.total", { n: st.shards }))}</span>)</b>`;
+  }
+  GAME.onOver = (r) => {
+    overRes = r; renderOverStats(r);
     const d = $("#d20"); d.className = "d20"; d.firstChild.textContent = "?";
-    show("over"); renderDice(null);
-    if (st.dice > 0) $("#dice-roll").focus({ preventScroll: true });
+    show("over"); renderDice(); fitSettings();
+    if (r.d20) { $("#dice-roll").focus({ preventScroll: true }); $("#over-lb").textContent = ""; }
+    else postScore(r);
+  };
+  async function postScore(r) {
     const msg = $("#over-lb");
     if (r.score <= 0) { msg.textContent = ""; return; }
     msg.textContent = t("lb.posting");
@@ -499,6 +499,7 @@
   // ---- controller in the menus: D-pad / stick moves focus, A selects, B goes back ----
   INPUT.onMenu = cmd => {
     if (!current || document.body.classList.contains("loading")) return;
+    if (current === "over" && overRes && overRes.d20 && (!overRes.rolled || rolling) && (cmd === "ok" || cmd === "back")) { rollDice(); return; }
     if (cmd === "start" && (current === "menu" || current === "over")) return startRun();
     if (cmd === "start" && current === "pause") { hideAll(); GAME.resume(); return; }
     const panel = $("#p-" + current);

@@ -142,7 +142,19 @@ def nine_slice(key, im):
         bar = next(y for y in range(a.shape[0]) if a[y].sum() > a.shape[1] * 0.8)
         xs = np.where(a[:max(1, bar - 2)].any(axis=0))[0]
         if bar > 4 and len(xs):
-            extra = im.crop((max(0, xs.min() - 4), 0, min(im.width, xs.max() + 5), min(im.height, bar + int(c_src * 0.85))))
+            x0, x1, y1 = max(0, xs.min() - 4), min(im.width, xs.max() + 5), min(im.height, bar + int(c_src * 0.85))
+            extra = im.crop((x0, 0, x1, y1))
+            # keep only the ornament: pixels that look like the plain bar / panel inside at the same height go
+            from scipy import ndimage
+            ea = np.array(extra).astype(int); col = np.array(im)[:extra.height, c_src + 6].astype(int)   # plain bar column
+            diff = np.abs(ea[:, :, :3] - col[:, None, :3]).sum(axis=2)
+            orn = (ea[:, :, 3] > 40) & ((col[:, None, 3] <= 40) | (diff > 60))        # differs from the bar behind it
+            orn = ndimage.binary_closing(orn, iterations=2)
+            orn = ndimage.binary_fill_holes(orn)
+            orn = ndimage.binary_dilation(orn, iterations=2) & (ea[:, :, 3] > 40)   # get the dark outline back
+            lab, n = ndimage.label(orn); sizes = ndimage.sum(orn, lab, range(1, n + 1))
+            orn = np.isin(lab, [i + 1 for i in range(n) if sizes[i] > sizes.max() * 0.05])  # drop specks
+            ea[~orn, 3] = 0; extra = Image.fromarray(ea.astype(np.uint8))
             im = im.crop((0, bar, im.width, im.height))
     s = 2 * c_css / c_src
     big = im.resize((max(1, round(im.width * s)), max(1, round(im.height * s))), Image.LANCZOS)
@@ -264,7 +276,7 @@ def handle(key, get, path):
         w, h = by_h(im, {"dumpster": 18, "car": 21, "cop": 24, "van": 27, "pickup": 23, "bus": 33}[kind])
         write(key, im, w, h, DARK); manifest[key] = [w, h]  # every game sprite gets the dark outline
     elif key == "pickup_dice":
-        manifest[key] = True  # the flat Dice Crate is drawn by tools/make_dice_crate.py
+        manifest.pop(key, None)  # retired: the game draws d20 pieces itself
     elif key in ("hud_light", "ui_light"):
         manifest[key] = True  # made from the bulb sprites by tools/make_light_icons.py (the sheet's bulb hangs upside down)
     elif key in ("hud_shield", "ui_icon_shield"):   # the Fighter's block icon in the HUD

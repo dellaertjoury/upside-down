@@ -108,6 +108,8 @@
   function newSheet() { return { name: "", cls: "fighter", hair: "brown", jacket: "red" }; }
   // old saves: forget the rolled scores
   if (state.sheet) { delete state.sheet.scores; delete state.sheet.dice; delete state.sheet.rerolls; }
+  // Dice Crates are gone (now: d20 pieces in runs): unopened crates are paid out as 15 lights each
+  if (state.dice > 0) { state.shards += state.dice * 15; state.dice = 0; }
   // only unlocked classes can be played (fighter for now)
   if (state.sheet && (CLASSES.find(c => c.id === state.sheet.cls) || {}).locked !== false) state.sheet.cls = "fighter";
 

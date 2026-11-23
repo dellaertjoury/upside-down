@@ -55,7 +55,7 @@ h2{margin:0;font-size:clamp(17px,2.8vw,32px);color:var(--gold);text-shadow:0 3px
 .row h3{margin:0 0 6px;font-size:clamp(11px,1.4vw,16px);color:var(--ink)}
 .row p{margin:0;color:var(--muted);font-size:clamp(10px,1.15vw,13px);line-height:1.6}
 .pips{display:inline-flex;gap:3px;margin-left:8px;vertical-align:middle}
-.pips i{width:8px;height:8px;background:#3a2550}.pips i.on{background:var(--teal)}
+.pips i{width:9px;height:9px;background:#6e5a8c;box-shadow:inset 0 0 0 1px #9a86b8}.pips i.on{background:var(--teal);box-shadow:inset 0 0 0 1px #b8fff6}
 .chars{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;width:min(100%,680px)}
 .char{background:#160d22cc;padding:10px;box-shadow:0 0 0 3px #2b1a3d;display:flex;flex-direction:column;gap:8px;align-items:center}
 .char.sel{box-shadow:0 0 0 3px var(--gold)}
@@ -450,3 +450,4 @@ body.has-ui-panel-gem .hub-card::before{content:"";position:absolute;left:50%;to
 /* character sheet header: the tangled string of lights next to the bank */
 .sheet-card .bank .bulb,body.has-ui-light .sheet-card .bank .bulb{display:none}
 .sheet-card .bank::before{content:"";display:inline-block;width:clamp(60px,6vw,84px);height:clamp(43px,4.3vw,60px);background:url(../assets/ui_lights_string.png) center/contain no-repeat;image-rendering:auto;margin-right:6px}
+.over-fit{display:flex;flex-direction:column;align-items:center;gap:clamp(8px,1.6vw,16px);width:100%}

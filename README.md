@@ -77,24 +77,29 @@ its ability by 2, so the sheet levels up as you buy upgrades:
 | WIS | Flashlight battery |
 | CHA | Light magnet |
 
-## Dice Crates (the d20)
+## The d20 (score multiplier)
 
-The dice live in **Dice Crates**: red-marked crates that turn up about once a
-minute (more often in the Upside Down, sometimes on top of a car). Grab one and
-it's yours for the run, even if you die. After the run you open them on the
-game-over screen: roll the d20 (Space / A), and the roll sets the odds.
+Six **d20 pieces** (red wedges of the die) turn up in every run, one every
+20–30 s while you still need them, 60% in the Upside Down. They are hard to
+reach on purpose: at the very top of a full jump (later with a hound running
+under it at that moment), or high above a car roof so you have to jump from the
+roof. The magnet doesn't pull them. The HUD shows the die filling up wedge by
+wedge.
 
-| Roll | Rare (40–60 lights) | Legendary (a free upgrade level) |
-|---|---|---|
-| 1 | 2.5% | 0% |
-| 10 | 25% | 0% |
-| 16 | 40% | 3% |
-| 19 | 47.5% | 12% |
-| Natural 20 | | 100% |
+Find all six in one run (one die per run) and the game-over screen asks you to
+roll it (Space / A) before anything else. The roll multiplies the run's score,
+and the leaderboard gets the multiplied score:
 
-Otherwise it's uncommon (15–25 lights, 40%) or common (5–10). A legendary pays
-150 lights once every upgrade is maxed. Unopened crates wait for your next
-game-over screen.
+| Roll | Multiplier |
+|---|---|
+| 1 | ×1 (fumble) |
+| 2–9 | ×1.25 |
+| 10–14 | ×1.5 |
+| 15–19 | ×2 |
+| Natural 20 | ×3 |
+
+(The old Dice Crates are gone; any unopened ones in a save were paid out as
+15 lights each.)
 
 ## The Watcher
 
@@ -143,8 +148,8 @@ the menu.
   surface follows its shape: run up the windshield onto the roof and down
   onto the trunk. Each one carries one thing: lights showing the way up
   (jump where the arc starts and you land on it), lights to jump off its end,
-  lights above a wide one to jump for from its roof, a crate, or a Dice
-  Crate. Works in the Upside Down too.
+  lights above a wide one to jump for from its roof, a crate on its
+  low trunk, or a d20 piece high above it. Works in the Upside Down too.
 
 ## Classes and attacks
 
