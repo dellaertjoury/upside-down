@@ -170,7 +170,7 @@
   // Draw in the side's local coordinates (floor at y = 0, up = negative).
   function draw(ctx, side, layerX) {
     for (const c of S.chunks) for (const it of c.items) {
-      const sx = Math.round(it.x - layerX);
+      const sx = Math.round((it.x - layerX) * 3) / 3; // device-pixel steps: smooth at speed
       const k = side ? it.key + "_dark" : it.key, art = SPR.ART[k];
       const [w, h] = art ? size(k) : size(it.key);
       if (sx > W || sx + w < 0) continue;

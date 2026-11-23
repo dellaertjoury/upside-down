@@ -179,6 +179,8 @@
   // scaled to the procedural sprite's box so hitboxes stay the same.
   // A PNG can be drawn bigger via its manifest size; it stays bottom-anchored
   // and centred on the original box, so hitboxes don't change.
+  // positions snap to device pixels (1/3 game px), not whole game px: smooth scrolling at speed
+  const DP = v => Math.round(v * 3) / 3;
   function draw(ctx, key, x, y, w, h) {
     const img = ART[key] || S[key];
     if (!img) return;
@@ -186,10 +188,10 @@
     let bw = w || base.width, bh = h || base.height;
     const sz = ART[key] && SIZE[key];
     if (sz && sz.length >= 4) { // [w, h, ox, oy]: offset from the hitbox box
-      ctx.drawImage(img, Math.round(x) + sz[2], Math.round(y) - sz[1] + sz[3], sz[0], sz[1]); return;
+      ctx.drawImage(img, DP(x) + sz[2], DP(y) - sz[1] + sz[3], sz[0], sz[1]); return;
     }
     if (sz) { x -= (sz[0] - bw) / 2; bw = sz[0]; bh = sz[1]; }
-    ctx.drawImage(img, Math.round(x), Math.round(y - bh), bw, bh);
+    ctx.drawImage(img, DP(x), DP(y - bh), bw, bh);
   }
 
   // ---------- Seeded random for repeatable backgrounds ----------

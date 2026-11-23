@@ -35,7 +35,7 @@
 
   // Run speed: starts gentle and builds up slowly (game px per second)
   const SPEED_START = 70, SPEED_GAIN = 1.2, SPEED_MAX = 320;
-  const RANGED_T = 0.27, RELEASE_T = 0.1; // ranged attack animation length / when the shot leaves
+  const RANGED_T = 0.24, RELEASE_T = 0.085; // ranged attack animation length / when the shot leaves
   const GRAV = 980, FLIP_T = 0.26, STAND_H = 18, ROLL_H = 9;
   const CLUB_X = 10;       // Hellfire Club building: left edge at run start
 
@@ -820,14 +820,15 @@
   // ---------------- Render ----------------
   function tile(img, off, y, tw, th) {
     const w = Math.round(tw || img.width); let x = -(((off % w) + w) % w);
-    for (; x < W; x += w) th ? ctx.drawImage(img, Math.round(x), y, w, th) : ctx.drawImage(img, Math.round(x), y);
+    for (; x < W; x += w) th ? ctx.drawImage(img, DP(x), y, w, th) : ctx.drawImage(img, DP(x), y);
   }
   function local(side) {
     ctx.save();
     if (side === 0) { ctx.beginPath(); ctx.rect(0, 0, W, FT); ctx.clip(); ctx.translate(0, FT); }
     else { ctx.beginPath(); ctx.rect(0, FB, W, H - FB); ctx.clip(); ctx.translate(0, FB); ctx.scale(1, -1); }
   }
-  const R = (c, x, y, w, h) => { ctx.fillStyle = c; ctx.fillRect(Math.round(x), Math.round(y), w, h); };
+  const DP = v => Math.round(v * SCALE) / SCALE; // snap to device pixels (1/3 game px): smooth motion at speed
+  const R = (c, x, y, w, h) => { ctx.fillStyle = c; ctx.fillRect(DP(x), DP(y), w, h); };
   function text(s, x, y, col, align = "left", size = 8) {
     ctx.font = size + "px 'Press Start 2P', monospace"; ctx.textBaseline = "top"; ctx.textAlign = align;
     ctx.fillStyle = "#1a1124"; ctx.fillText(s, x + 1, y + 1);
@@ -930,7 +931,7 @@
   }
 
   function drawOb(o) {
-    const x = Math.round(o.x), t = o.t, img = SPR.ART[o.type];
+    const x = DP(o.x), t = o.t, img = SPR.ART[o.type];
     if (img && o.crate) { // crate art grows with the tier
       const sz = SPR.SIZE[o.type] || [16, 16, -1, 0], k = o.w / 14; // art is drawn for a 14 px crate
       if (o.tier >= 10) glow("#ffd866", x + o.w / 2, -o.w / 2, o.w, 0.45 + Math.sin(t * 6) * 0.15);
@@ -1050,7 +1051,7 @@
   }
   // a car / dumpster / bus you can stand on; placeholder shapes until the art arrives
   function drawPlatform(o) {
-    const x = Math.round(o.x), key = "plat_" + o.kind, img = SPR.ART[o.side ? key + "_dark" : key] || SPR.ART[key];
+    const x = DP(o.x), key = "plat_" + o.kind, img = SPR.ART[o.side ? key + "_dark" : key] || SPR.ART[key];
     if (img) { ctx.drawImage(img, x, -o.drawH, o.w, o.drawH); }
     else {
       const dk = o.side === 1;
@@ -1135,12 +1136,12 @@
       return;
     }
     if (k.kind === "skate") {
-      const x = Math.round(k.x), y = -Math.round(k.h) - 4 + Math.round(Math.sin(G.t * 5) * 2), img = ART("pickup_skate");
+      const x = DP(k.x), y = -Math.round(k.h) - 4 + Math.round(Math.sin(G.t * 5) * 2), img = ART("pickup_skate");
       glow(BULBS[Math.floor(G.t * 8) % 6][1], x + 7, y + 1, 13, 0.5 + Math.sin(G.t * 8) * 0.2);
       if (img) ctx.drawImage(img, x - 2, y - 4, 18, 10); else drawBoard(x - 1, y);
       return;
     }
-    const x = Math.round(k.x), y = -Math.round(k.h) - 4;
+    const x = DP(k.x), y = -DP(k.h) - 4;
     const tw = 0.75 + Math.sin(G.t * 5 + k.ph) * 0.25;
     const img = ART("bulb_" + k.name);
     // glow
@@ -1152,7 +1153,7 @@
     if (k.gold && Math.floor(G.t * 8 + k.ph) % 3 === 0) { R("#ffffff", x - 2, y + 2, 1, 1); R("#ffffff", x + 6, y, 1, 1); }
   }
   function drawShot(s) {
-    const x = Math.round(s.x), y = -s.h - 4, img = ART("shot_spore");
+    const x = DP(s.x), y = -s.h - 4, img = ART("shot_spore");
     if (img && !s.ref) { ctx.drawImage(img, x - 1, y - 1, 6, 6); return; }
     R(s.ref ? "rgba(95,208,200,.4)" : "rgba(255,61,87,.4)", x - 1, y - 1, 6, 6);
     R(s.ref ? "#5fd0c8" : "#ff6b8f", x, y, 4, 4); R("#ffffff", x + 1, y + 1, 1, 1);
@@ -1233,7 +1234,7 @@
         state = "attack"; const af = pframes("attack");
         if (ranged()) { // raise (0.08 s), pull back (until the release), release + hold
           const e = RANGED_T - P.atk, n = af.length;
-          key = n >= 3 ? af[e < 0.045 ? 0 : e < RELEASE_T ? 1 : 2] : af[Math.min(n - 1, Math.floor(e / RANGED_T * n))];
+          key = n >= 3 ? af[e < 0.04 ? 0 : e < RELEASE_T ? 1 : 2] : af[Math.min(n - 1, Math.floor(e / RANGED_T * n))];
         } else key = af[Math.min(af.length - 1, Math.floor((1 - P.atk / 0.2) * af.length))];
       } else if (P.crash > 0 && artFrames("crash").length) { // the board snaps under him, he pitches forward
         state = "crash"; const cf = artFrames("crash"); key = cf[Math.min(cf.length - 1, Math.floor((1 - P.crash / 0.4) * cf.length))];
@@ -1435,7 +1436,7 @@
       for (const s of G.shots) if (s.side === side) drawShot(s);
       for (const m of G.pshots) if (m.side === side) {
         const bolt = m.kind === "bolt", img = ART(bolt ? "wizard_d20" : "ranger_shot"), y = Math.round(-m.h - 3) + (m.kind === "skip" ? Math.round(Math.abs(Math.sin(m.x / 9)) * -2) : 0);
-        if (img) ctx.drawImage(img, Math.round(m.x) - (bolt ? 8 : 6), y - 1, bolt ? 10 : 12, bolt ? 8 : 6);
+        if (img) ctx.drawImage(img, DP(m.x) - (bolt ? 8 : 6), y - 1, bolt ? 10 : 12, bolt ? 8 : 6);
         else if (bolt) { R("#3a1a08", m.x - 1, y - 2, 6, 6); R("#ff9a2e", m.x, y - 1, 4, 4); R("#fff3a0", m.x + 2, y, 2, 2); for (let k = 1; k <= 3; k++) R(k % 2 ? "#ffd23a" : "#ff5a3a", m.x - 2 - k * 3, y + ((k * 7 + Math.round(m.x)) % 3) - 1, 2, 1); }
         else { R("#1a1124", m.x - 1, y - 1, 5, 5); R("#4da3ff", m.x, y, 3, 3); R("#ffffff", m.x, y, 1, 1); }
       }
@@ -1645,12 +1646,19 @@
 
   // ---------------- Loop ----------------
   let last = performance.now();
+  G.perf = { u: 0, r: 0 };
   function loop(now) {
     INPUT.poll();
     const dt = Math.min(0.05, (now - last) / 1000) * G.debug.slow; last = now;
     G.fps = G.fps ? G.fps * 0.95 + (1 / Math.max(0.001, (now - (G._lt || now - 16)) / 1000)) * 0.05 : 60; G._lt = now;
-    if (G.mode !== "pause") update(dt);
+    const t0 = performance.now();
+    if (G.mode !== "pause") { // small fixed steps: collisions and landings stay exact at top speed
+      let rem = dt; while (rem > 1e-6) { const st = Math.min(rem, 1 / 120); update(st); rem -= st; }
+    }
+    const t1 = performance.now();
     render();
+    const t2 = performance.now(); // frame cost (ms), smoothed: GAME.perf for the debug panel
+    G.perf.u = G.perf.u * 0.95 + (t1 - t0) * 0.05; G.perf.r = G.perf.r * 0.95 + (t2 - t1) * 0.05;
     requestAnimationFrame(loop);
   }
   document.addEventListener("visibilitychange", () => { if (document.hidden) G.pause(); });
