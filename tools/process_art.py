@@ -161,13 +161,14 @@ def nine_slice(key, im):
         e = extra.resize((max(1, round(extra.width * s)), max(1, round(extra.height * s))), Image.LANCZOS)
         e.save(os.path.join(OUT, key + "_gem.png"), optimize=True); manifest[key + "_gem"] = True
 
-def fit_box(key, im, bw, bh, stretch=False):
+def fit_box(key, im, bw, bh, stretch=False, line=None):
     """UI/HUD: exact canvas size; icons keep aspect, centred."""
     W, H = round(bw * SC), round(bh * SC)
     if stretch: im.resize((W, H), Image.LANCZOS).save(os.path.join(OUT, key + ".png"), optimize=True); return
     s = min(W / im.width, H / im.height)
     r = im.resize((max(1, round(im.width * s)), max(1, round(im.height * s))), Image.LANCZOS)
     c = Image.new("RGBA", (W, H), (0, 0, 0, 0)); c.paste(r, ((W - r.width) // 2, (H - r.height) // 2), r)
+    if line: c = outline(c, line)
     c.save(os.path.join(OUT, key + ".png"), optimize=True)
 
 DARK, LIGHT, RIM = "#1a1124", "#f3e9dc", "#ff9fb4"
@@ -187,7 +188,7 @@ def player(key, im):
 
 ENEMY = {  # base: (size by 'h' or 'w', value, hit_w, hit_h, on_ground, outline)
     "crow": ("h", 16, 12, 7, False, DARK), "crawl": ("w", 26, 16, 10, True, DARK),
-    "wisp": ("h", 18, 10, 7, False, RIM), "pod": ("h", 18, 12, 12, True, RIM),
+    "wisp": ("h", 18, 10, 7, False, DARK), "pod": ("h", 18, 12, 12, True, DARK),
     "stalker": ("h", 44, 16, 44, True, DARK),   # twice the player's height
 }
 # new-style enemy frames: <enemy>_<state><n>, e.g. hound_run3, stalker_attack2
@@ -219,14 +220,14 @@ OBST = {  # key: (w or None, h, hit_w, stretch)
 def obstacle(key, im):
     fw, fh, hw, stretch = OBST[key]
     w, h = (q(fw), q(fh)) if stretch else by_h(im, fh)
-    write(key, im, w, h, None if stretch else (RIM if key in ("stump", "crate_dark") else DARK))
+    write(key, im, w, h, None if stretch else DARK)
     manifest[key] = [w, h, q((hw - w) / 2), 0]
 
 SET_H = {"set_house": 42, "set_houses": 40, "set_school": 50, "set_police": 46, "set_store": 46,
          "set_arcade": 46, "set_diner": 38, "set_gas": 46, "set_camper": 30, "prop_tree": 54, "prop_lamp": 46,
          "prop_mailbox": 14, "prop_hedge": 12, "prop_phonebooth": 30, "prop_hydrant": 11}
 def scenery(key, im):
-    w, h = by_h(im, SET_H[key.replace("_dark", "")]); write(key, im, w, h); manifest[key] = [w, h]
+    w, h = by_h(im, SET_H[key.replace("_dark", "")]); write(key, im, w, h, DARK if key.startswith("prop_") else None); manifest[key] = [w, h]
 
 def club(key, im):
     w, h = by_h(im, 96); write(key, im, w, h); manifest[key] = [w, h, q(-w / 2), 0]  # door centred
@@ -260,23 +261,23 @@ def handle(key, get, path):
     elif re.match(r"^plat_(dumpster|car|cop|van|pickup|bus)(_dark)?$", key):  # street objects to jump on
         im = get(); kind = key.split("_")[1]
         w, h = by_h(im, {"dumpster": 18, "car": 21, "cop": 24, "van": 27, "pickup": 23, "bus": 33}[kind])
-        write(key, im, w, h, DARK if not key.endswith("_dark") else RIM); manifest[key] = [w, h]
+        write(key, im, w, h, DARK); manifest[key] = [w, h]  # every game sprite gets the dark outline
     elif key == "pickup_dice":
-        fit_box(key, get(), 12, 12); manifest[key] = True
+        fit_box(key, get(), 12, 12, line=DARK); manifest[key] = True
     elif key in ("hud_shield", "ui_icon_shield"):   # the Fighter's block icon in the HUD
         fit_box("hud_shield", get(), 12, 12); manifest["hud_shield"] = True
     elif key in ("pickup_skate", "skate_board"):
-        fit_box(key, get(), *((18, 10) if key == "pickup_skate" else (16, 5))); manifest[key] = True
+        fit_box(key, get(), *((18, 10) if key == "pickup_skate" else (16, 5)), line=DARK); manifest[key] = True
     elif key in ("watcher_1", "watcher_2"):   # whole creature; 0.11 game px per source px keeps both poses at one scale
         im = get(); w, h = q(im.width * 0.11), q(im.height * 0.11)
-        write(key, im, w, h); manifest[key] = [w, h]
+        write(key, im, w, h, DARK); manifest[key] = [w, h]
     elif key in ("watcher_body", "watcher_head"):
         im = get(); w, h = by_h(im, 72 if key == "watcher_body" else 34)
         write(key, im, w, h); manifest[key] = [w, h]
     elif re.match(r"^(crow|crawl|wisp|pod|stalker)[12]$", key): enemy(key, get())
     elif key in OBST: obstacle(key, get())
     elif re.match(r"^bulb_(red|green|blue|yellow|orange|pink|gold)$", key):
-        fit_box(key, get(), 6, 9); manifest[key] = True
+        fit_box(key, get(), 6, 9, line=DARK); manifest[key] = True
     elif key.replace("_dark", "") in SET_H: scenery(key, get())
     elif key in ("club", "club_dark"): club(key, get())
     elif key == "backdrop_top": opaque(key, path, 105)

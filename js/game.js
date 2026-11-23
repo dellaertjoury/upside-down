@@ -888,10 +888,10 @@
         R("#0b0610", x - 1, -13, 14, 13); R("#3a2440", x, -12, 12, 12); R("#7a1f3d", x + 3, -10, 1, 9); R("#7a1f3d", x + 8, -8, 1, 7);
         R("#b0305a", x + 3, -11, 1, 2); R("#3a2440", x - 2, -3, 3, 3); R("#3a2440", x + 11, -2, 3, 2); break;
       case "tendril":
-        for (let i = 0; i < 4; i++) {
-          const bx = x + i * 4;
-          for (let y = -107; y < -12; y += 2) R(i % 2 ? "#5b1b3a" : "#3a1430", bx + Math.round(Math.sin(t * 2 + y * 0.12 + i) * (1 + (y + 107) / 40)), y, 3, 2);
-          R("#b0305a", bx + Math.round(Math.sin(t * 2 - 1.4 + i) * 3), -14, 2, 2);
+        for (const pass of [0, 1]) for (let i = 0; i < 4; i++) { // pass 0: dark outline, pass 1: the vine
+          const bx = x + i * 4, o1 = pass ? 0 : 1;
+          for (let y = -107; y < -12; y += 2) R(pass ? (i % 2 ? "#5b1b3a" : "#3a1430") : "#0b0610", bx + Math.round(Math.sin(t * 2 + y * 0.12 + i) * (1 + (y + 107) / 40)) - o1, y - o1, 3 + 2 * o1, 2 + 2 * o1);
+          R(pass ? "#b0305a" : "#0b0610", bx + Math.round(Math.sin(t * 2 - 1.4 + i) * 3) - o1, -14 - o1, 2 + 2 * o1, 2 + 2 * o1);
         }
         break;
       case "crawler": draw(ctx, enemyKey(o, "hound", o.h0 > 1 ? "jump" : "run", ["crawl1", "crawl2"]), x, -o.h0); break;
