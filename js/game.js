@@ -487,6 +487,7 @@
         P.skate = st.skate; P.roll = 0; SFX.power(); pop(T_("pop.skate"), "#ffd866"); G.flash = 0.2; G.flashCol = "#ffffff";
       }
     }
+    if (P.skate > 0) P.bufAtk = 0; // no attacking while riding the skateboard
     if (P.bufAtk > 0 && P.atkCd <= 0) {
       P.blk = 0; P.bufAtk = 0;
       const atk = attackCfg();

@@ -123,6 +123,8 @@
   };
 
   // Space / Enter at the hub or after a run = start
+  // nothing reacts to keys while the loader is up
+  window.addEventListener("keydown", e => { if (document.body.classList.contains("loading")) { e.preventDefault(); e.stopImmediatePropagation(); } }, true);
   window.addEventListener("keydown", e => {
     if (INPUT.listening) return;
     if (e.target.tagName === "TEXTAREA") return;     // typing a report
@@ -476,7 +478,7 @@
 
   // ---- controller in the menus: D-pad / stick moves focus, A selects, B goes back ----
   INPUT.onMenu = cmd => {
-    if (!current) return;
+    if (!current || document.body.classList.contains("loading")) return;
     if (cmd === "start" && (current === "menu" || current === "over")) return startRun();
     if (cmd === "start" && current === "pause") { hideAll(); GAME.resume(); return; }
     const panel = $("#p-" + current);
@@ -517,7 +519,19 @@
     });
     if (current) show(current);
   }
-  (SPR.ready || Promise.resolve()).then(applyUiArt);
+  // ---- loader: everything stays hidden until the art, the font and the UI art are ready ----
+  const ldSet = f => { const pct = Math.round(f * 100); $("#ld-fill").style.width = pct + "%"; $("#ld-pct").textContent = pct + "%"; $("#loader").setAttribute("aria-valuenow", pct); };
+  SPR.onProgress = (n, total) => ldSet(0.05 + 0.9 * n / Math.max(1, total));
+  const fontReady = document.fonts && document.fonts.load ? document.fonts.load("8px 'Press Start 2P'").catch(() => {}) : Promise.resolve();
+  Promise.all([(SPR.ready || Promise.resolve()).then(applyUiArt), fontReady]).then(() => {
+    ldSet(1);
+    setTimeout(() => {
+      document.body.classList.remove("loading"); GAME.loading = false;
+      $("#loader").classList.add("done"); setTimeout(() => $("#loader").remove(), 500);
+      if (current) show(current); // focus the first button now that it is visible
+    }, 150);
+  });
+  GAME.loading = true;
 
   if (document.fonts && document.fonts.load) document.fonts.load("8px 'Press Start 2P'");
   I18N.apply();

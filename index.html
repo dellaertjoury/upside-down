@@ -9,9 +9,15 @@
 <script>window.__errs=[];addEventListener("error",e=>__errs.push(e.message+" @ "+(e.filename||"").split("/").pop()+":"+e.lineno));</script>
 <script src="js/build.js" onerror="window.BUILD={sha:'local',time:''}"></script>
 </head>
-<body>
+<body class="loading">
 <main class="shell">
   <div class="frame" id="frame">
+    <!-- LOADER: shown until every sprite, the font and the UI art are in -->
+    <div class="loader" id="loader" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+      <div class="ld-title">THE UPSIDE<span>DOWN</span></div>
+      <div class="ld-bar"><i id="ld-fill"></i></div>
+      <div class="ld-txt"><span data-i18n="loading"></span> <b id="ld-pct">0%</b></div>
+    </div>
     <canvas id="game" width="400" height="225"></canvas>
 
     <!-- HUB: outside the Hellfire Club -->

@@ -50,6 +50,9 @@ Music and sound effects (on/off and volume), language (English, Nederlands,
 Français, Deutsch; add more in `js/i18n.js`), full screen, when to show the
 touch buttons, and the controls above. Everything is saved in the browser.
 
+**Loader:** the game shows a loading screen with a progress bar until every
+sprite, the font and the UI art are in, then shows everything at once.
+
 **Player manual** (main menu, or Settings → Open manual during a run): tabs for heroes, monsters, items
 and upgrades, each with a picture and what it does. Heroes and monsters play
 their idle bounce, drawn live with the game's own drawing code
@@ -180,7 +183,7 @@ you use it.
 | Item | Cost | What it does |
 |---|---|---|
 | Second wind | 60 | Survive one fatal hit, used up when it saves you |
-| Skateboard | 30 | Press E (RB) in a run: ride through everything, invincible and faster, for 4 s (more with Better board). Smashes enemies, obstacles and crates; Dread pauses. Jump while riding for a kickflip. The board breaks at the end (crash frames) and the kid rolls off |
+| Skateboard | 30 | Press E (RB) in a run: ride through everything, invincible (no attacking while riding) and faster, for 4 s (more with Better board). Smashes enemies, obstacles and crates; Dread pauses. Jump while riding for a kickflip. The board breaks at the end (crash frames) and the kid rolls off |
 
 The game pauses by itself when you switch tabs or windows.
 

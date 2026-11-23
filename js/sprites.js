@@ -164,10 +164,12 @@
       const raw = await res.json();
       // manifest: ["run1", ...]  or  { "run1": [w, h], "bg_top": true, ... }
       const list = Array.isArray(raw) ? raw.map(k => [k, null]) : Object.entries(raw);
+      let done = 0;
+      const tick = () => { done++; if (SPR.onProgress) SPR.onProgress(done, list.length); };
       await Promise.all(list.map(([key, size]) => new Promise(ok => {
         const img = new Image();
-        img.onload = () => { ART[key] = img; if (Array.isArray(size)) SIZE[key] = size; ok(); };
-        img.onerror = ok;
+        img.onload = () => { ART[key] = img; if (Array.isArray(size)) SIZE[key] = size; tick(); ok(); };
+        img.onerror = () => { tick(); ok(); };
         img.src = "assets/" + key + ".png";
       })));
     } catch (e) { /* no overrides: procedural art only */ }
