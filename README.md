@@ -178,7 +178,7 @@ the menu.
 | Fighter | Bat: kills in 1 hit | **Trash-can lid** absorbs one hit, recharges in 18 s | Has to get close |
 | Ranger | Marble shot straight ahead, about half the screen | **Roll + attack** = low skipping shot for ground enemies; light magnet ×1.5 | Flies at chest height: low targets need the skip shot |
 | Wizard | Firework straight across the whole screen, pierces 1 enemy | Toxicity fills **25% slower** | Half damage: 2 hits per enemy (stalker 4) |
-| Rogue | Fast zapper jabs (blue sparks), 1 in 4 crits for double damage with a big spark burst | Greed climbs **50% faster** | Short reach |
+| Rogue | Zapper jabs: wind-up, held jab, recover (0.3 s, blue sparks), 1 in 4 crits for double damage with a big spark burst | Greed climbs **50% faster** | Short reach |
 
 ## Score
 

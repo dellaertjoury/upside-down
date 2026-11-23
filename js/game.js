@@ -375,7 +375,7 @@
       sc: { dist: 0, combat: 0, lights: 0 }, crateT: rand(8, 12), platT: rand(6, 10), waveT: 0, lastPat: null, nextMile: BAL.milestoneEvery,
       haul: { dist: 0, combat: 0, lights: 0, n: 0 }, dice: 0, diceT: rand(BAL.dice.first[0], BAL.dice.first[1]), udT: 0, heat: 1, banked: 0, bestHaul: 0, shieldT: 0, skateT: rand(8, 12),   // first skateboard early, so you meet it in every run
       obs: [], picks: [], parts: [], shots: [], pshots: [], pops: [], shake: 0, flash: 0,
-      hearts: G.stats.hearts + f.hearts, reviveLeft: G.stats.revive, board: (SAVE.state.items.board || 0) > 0, hadBoard: (SAVE.state.items.board || 0) > 0, maxHearts: G.stats.hearts + f.hearts, dread: 0, overT: 0,
+      hearts: G.stats.hearts + f.hearts, reviveLeft: G.stats.revive, board: (SAVE.state.items.board || 0) > 0, hadBoard: (SAVE.state.items.board || 0) > 0, maxHearts: G.stats.hearts + f.hearts, dread: 0, vineBack: false, overT: 0,
       fate: { roll: 0, f, t: 99 } });
     G.scroll0 = G.scroll; SCN.reset(); G.crateHint = false;
     SFX.music.setMode("play");
@@ -593,7 +593,7 @@
       if (atk.type !== "melee") { // ranged: raise, pull back, then the shot leaves on the release frame
         P.atk = RANGED_T; P.shotDue = RELEASE_T;
         P.shotKind = atk.type === "arc" && perk().skipShot && P.roll > 0 ? "skip" : atk.type;
-      } else { P.atk = 0.2; SFX.swing(); }
+      } else { P.atk = atk.swing || 0.2; P.atkLen = P.atk; SFX.swing(); }
     }
     if (P.shotDue > 0 && (P.shotDue -= dt) <= 0) { // the marble / firework leaves the hand now
       P.shotDue = 0; SFX.sling(); const atk = attackCfg();
@@ -630,8 +630,11 @@
     if (G.mode === "play") {
       if (P.side === 1) {
         if (!G.debug.noDread && !(P.skate > 0)) G.dread += dt * G.fate.f.dread * BAL.dreadRate * (perk().dread || 1);
-        if (G.dread >= st.battery) { G.dread = st.battery; startFlip(true); toxicHit(); } // full: thrown out AND a heart lost
-      } else G.dread = Math.max(0, G.dread - dt * 1.6);
+        if (G.dread >= st.battery) { G.dread = st.battery; startFlip(true); toxicHit(); G.vineBack = true; } // full: thrown out AND a heart lost
+      } else { // the vine pulls back in Hawkins; fast right after it got you
+        G.dread = Math.max(0, G.dread - dt * (G.vineBack ? st.battery / 0.9 : 1.6));
+        if (G.dread <= 0) G.vineBack = false;
+      }
     }
   }
 
@@ -1255,7 +1258,11 @@
         if (ranged()) { // raise (0.08 s), pull back (until the release), release + hold
           const e = RANGED_T - P.atk, n = af.length;
           key = n >= 3 ? af[e < 0.04 ? 0 : e < RELEASE_T ? 1 : 2] : n === 2 ? af[e < RELEASE_T ? 0 : 1] : af[0]; // 2 frames: pull back, release
-        } else key = af[Math.min(af.length - 1, Math.floor((1 - P.atk / 0.2) * af.length))];
+        } else { // melee: windup / hit / recover, timed by the class (the Rogue holds the jab longest)
+          const e = 1 - P.atk / (P.atkLen || 0.2), wts = attackCfg().swingW || af.map(() => 1), tot = wts.reduce((a, b) => a + b, 0);
+          let i = 0, acc = wts[0] / tot; while (i < af.length - 1 && e >= acc) { i++; acc += (wts[i] || 1) / tot; }
+          key = af[i];
+        }
       } else if (P.crash > 0 && artFrames("crash").length) { // the board snaps under him, he pitches forward
         state = "crash"; const cf = artFrames("crash"); key = cf[Math.min(cf.length - 1, Math.floor((1 - P.crash / 0.4) * cf.length))];
       } else if (P.skate > 0 && !P.grounded && artFrames("kick").length) { // kickflip: pop, flip, catch, land

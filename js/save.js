@@ -20,7 +20,7 @@
     { id: "ranger",  name: "Ranger",  desc: "Shoots slingshot marbles straight ahead.", bonus: { DEX: 2, WIS: 1 }, locked: false, ranged: true,
       attack: { type: "arc", dmg: 1, cd: 0.3 }, perk: { skipShot: true, magnet: 1.5 } }, // roll + attack = low skipping shot
     { id: "rogue",   name: "Rogue",   desc: "Fast zapper jabs, sneaky crits.", bonus: { DEX: 2, CHA: 1 }, locked: false,
-      attack: { type: "melee", dmg: 1, cd: 0.24, crit: 0.25 }, perk: { heatGrowth: 1.5 } },
+      attack: { type: "melee", dmg: 1, cd: 0.3, crit: 0.25, swing: 0.3, swingW: [1, 1.6, 0.9] }, perk: { heatGrowth: 1.5 } },
     { id: "wizard",  name: "Wizard",  desc: "Straight fireworks, half damage.", bonus: { INT: 2, WIS: 1 }, locked: false, ranged: true,
       attack: { type: "bolt", dmg: 0.5, cd: 0.4 }, perk: { pierce: 1, dread: 0.75 } },
   ];
