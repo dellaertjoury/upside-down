@@ -39,13 +39,13 @@
   };
 
   const UPGRADES = [
-    { id: "heart",   name: "Extra heart",        desc: "Take one more hit per run.",                         costs: [40, 120, 300] },
-    { id: "reach",   name: "Longer bat",         desc: "Your melee hit reaches further.",                    costs: [30, 80, 180] },
-    { id: "battery", name: "Flashlight battery", desc: "Stay in the Upside Down 2s longer.",                 costs: [25, 60, 140, 300] },
-    { id: "magnet",  name: "Light magnet",       desc: "Pull Christmas lights in from further away.",                  costs: [35, 90, 200] },
-    { id: "greed",   name: "Dark greed",         desc: "+0.5x score while upside down, +1 per Upside Down light.", costs: [60, 150, 350] },
-    { id: "skate",   name: "Better board",       desc: "Skateboard rides last longer: 6 / 8 / 10 s.", costs: [80, 180, 350] },
-    { id: "djump",   name: "Double jump",        desc: "Jump again in mid-air.",                             costs: [150] },
+    { id: "heart",   name: "Extra heart",        desc: "Take one more hit per run.",                         costs: [150, 400, 900, 1800, 3500] },
+    { id: "reach",   name: "Longer bat",         desc: "Your melee hit reaches further.",                    costs: [100, 250, 600, 1200, 2400] },
+    { id: "battery", name: "Flashlight battery", desc: "Stay in the Upside Down 2s longer.",                 costs: [80, 200, 500, 1000, 2000] },
+    { id: "magnet",  name: "Light magnet",       desc: "Pull Christmas lights in from further away.",                  costs: [120, 300, 700, 1400, 2800] },
+    { id: "greed",   name: "Dark greed",         desc: "+0.5x score while upside down, +1 per Upside Down light.", costs: [200, 500, 1100, 2200, 4000] },
+    { id: "skate",   name: "Better board",       desc: "Skateboard rides last longer: 6 / 8 / 10 s.", costs: [250, 600, 1200] },
+    { id: "djump",   name: "Double jump",        desc: "Jump again in mid-air.",                             costs: [500] },
   ];
 
   // Abilities are no longer rolled: everyone starts at 10 (+ class bonus) and
@@ -86,8 +86,8 @@
 
   // Items: bought in the shop for the next run, one of each at a time, used up when used
   const ITEMS = [
-    { id: "revive", cost: 60 },   // Second wind: survive one fatal hit
-    { id: "board",  cost: 30 },   // Skateboard: ride on a key press, breaks afterwards
+    { id: "revive", cost: 180 },   // Second wind: survive one fatal hit
+    { id: "board",  cost: 90 },   // Skateboard: ride on a key press, breaks afterwards
   ];
   const fresh = () => ({ shards: 0, best: 0, runs: 0, dice: 0, muted: false, music: true, up: {}, items: {}, sheet: null });
   function load() {
@@ -126,12 +126,12 @@
     const m = a => mod(10 + (clsOf(sheet).bonus[a] || 0)); // upgrades are added below, not twice
     return {
       hearts: 2 + Math.max(0, Math.floor(m("CON") / 2)) + lvl("heart"), // everyone starts with 2
-      reach: Math.max(10, 16 + m("STR") * 2) + lvl("reach") * 6,
+      reach: Math.max(10, 16 + m("STR") * 2) + lvl("reach") * 5,
       jumpV: 320 * (1 + m("DEX") * 0.03),
       block: 0.32 + Math.max(0, m("DEX")) * 0.03 + lvl("lid") * 0.12,
       battery: Math.max(3, 5 + m("WIS") * 0.5) + lvl("battery") * 2,
       bonusDiv: Math.max(120, 250 - m("INT") * 25),
-      magnet: Math.round((Math.max(6, 10 + m("CHA") * 4) + lvl("magnet") * 14) * (((CLASSES.find(c => c.id === sheet.cls) || {}).perk || {}).magnet || 1)),
+      magnet: Math.round((Math.max(6, 10 + m("CHA") * 4) + lvl("magnet") * 12) * (((CLASSES.find(c => c.id === sheet.cls) || {}).perk || {}).magnet || 1)),
       heatMax: 4 + lvl("greed") * 0.5,          // top Heat multiplier in the Upside Down
       sporeBonus: lvl("greed"),
       djump: lvl("djump") > 0,

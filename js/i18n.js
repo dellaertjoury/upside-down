@@ -78,7 +78,7 @@
       "over.ptsDist": "Distance points", "over.ptsCombat": "Combat points", "over.ptsLights": "Light points",
       "over.combo": "Best combo", "d.range": "Slingshot range", "d.bolt": "Firework", "d.boltVal": "full screen, 2 hits",
       "hud.heat": "GREED", "pop.bank": "BANKED +{p} · +{n} LIGHTS", "pop.lost": "DRAGGED OUT! KEPT +{p} · +{n}",
-      "pop.edge": "CLOSE CALL! +25%", "pop.shield": "BLOCKED", "pop.shieldUp": "LID READY",
+      "pop.edge": "CLOSE CALL! +25%", "pop.shield": "BLOCKED", "pop.shieldUp": "BLOCK READY",
       "over.haul": "Best haul", "over.lost": "Lost in the Upside Down",
     },
     nl: {
@@ -156,7 +156,7 @@
       "over.ptsDist": "Afstandspunten", "over.ptsCombat": "Gevechtspunten", "over.ptsLights": "Lichtpunten",
       "over.combo": "Beste combo", "d.range": "Bereik katapult", "d.bolt": "Vuurpijl", "d.boltVal": "heel scherm, 2 klappen",
       "hud.heat": "HEBZUCHT", "pop.bank": "BINNEN! +{p} · +{n} LICHTJES", "pop.lost": "ERUIT GESLEURD! +{p} · +{n}",
-      "pop.edge": "OP HET NIPPERTJE! +25%", "pop.shield": "GEBLOKT", "pop.shieldUp": "DEKSEL KLAAR",
+      "pop.edge": "OP HET NIPPERTJE! +25%", "pop.shield": "GEBLOKT", "pop.shieldUp": "BLOK KLAAR",
       "over.haul": "Grootste buit", "over.lost": "Verloren in de Upside Down",
     },    fr: {
       "lang.name": "Français",
@@ -229,7 +229,7 @@
       "touch.roll": "Rouler", "touch.jump": "Sauter", "touch.attack": "Frapper", "touch.flip": "Basculer",
       "pop.crit": "CRITIQUE !", "pop.mile": "{m} m ! +{n} LUMIÈRES",
       "pop.bank": "MIS DE CÔTÉ +{p} · +{n} LUMIÈRES", "pop.lost": "ÉJECTÉ ! GARDÉ +{p} · +{n}",
-      "pop.edge": "DE JUSTESSE ! +25 %", "pop.shield": "BLOQUÉ", "pop.shieldUp": "COUVERCLE PRÊT",
+      "pop.edge": "DE JUSTESSE ! +25 %", "pop.shield": "BLOQUÉ", "pop.shieldUp": "BLOCAGE PRÊT",
     },
     de: {
       "lang.name": "Deutsch",
@@ -302,7 +302,7 @@
       "touch.roll": "Rollen", "touch.jump": "Springen", "touch.attack": "Schlagen", "touch.flip": "Wechseln",
       "pop.crit": "KRITISCH!", "pop.mile": "{m} m! +{n} LICHTER",
       "pop.bank": "GESICHERT +{p} · +{n} LICHTER", "pop.lost": "RAUSGEWORFEN! BEHALTEN +{p} · +{n}",
-      "pop.edge": "KNAPP! +25 %", "pop.shield": "GEBLOCKT", "pop.shieldUp": "DECKEL BEREIT",
+      "pop.edge": "KNAPP! +25 %", "pop.shield": "GEBLOCKT", "pop.shieldUp": "BLOCK BEREIT",
     },
   };
   const I18N = {

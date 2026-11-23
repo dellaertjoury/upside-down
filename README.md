@@ -210,22 +210,22 @@ you use it.
 
 | Item | Cost | What it does |
 |---|---|---|
-| Second wind | 60 | Survive one fatal hit, used up when it saves you |
-| Skateboard | 30 | Press E (RB) in a run: ride through everything, invincible (no attacking while riding) and faster, for 4 s (more with Better board). Smashes enemies, obstacles and crates; Toxicity pauses. Jump while riding for a kickflip. The board breaks at the end (crash frames) and the kid rolls off |
+| Second wind | 180 | Survive one fatal hit, used up when it saves you |
+| Skateboard | 90 | Press E (RB) in a run: ride through everything, invincible (no attacking while riding) and faster, for 4 s (more with Better board). Smashes enemies, obstacles and crates; Toxicity pauses. Jump while riding for a kickflip. The board breaks at the end (crash frames) and the kid rolls off |
 
 The game pauses by itself when you switch tabs or windows.
 
 ## Upgrades
 
-| Upgrade | Levels | Effect |
-|---|---|---|
-| Extra heart | 3 | +1 hit per run |
-| Longer bat | 3 | +6 px melee reach |
-| Flashlight battery | 4 | +2 s in the Upside Down |
-| Light magnet | 3 | Bigger pickup radius |
-| Dark greed | 3 | +0.5 maximum Greed, +1 per Upside Down light |
-| Better board | 3 | Skateboard rides last 6 / 8 / 10 s instead of 4 |
-| Double jump | 1 | Jump again in mid-air |
+| Upgrade | Levels | Cost per level (lights) | Effect |
+|---|---|---|---|
+| Extra heart | 5 | 150 / 400 / 900 / 1800 / 3500 | +1 hit per run |
+| Longer bat | 5 | 100 / 250 / 600 / 1200 / 2400 | +5 px melee reach (Ranger: marbles fly further) |
+| Flashlight battery | 5 | 80 / 200 / 500 / 1000 / 2000 | +2 s in the Upside Down |
+| Light magnet | 5 | 120 / 300 / 700 / 1400 / 2800 | +12 px pickup radius |
+| Dark greed | 5 | 200 / 500 / 1100 / 2200 / 4000 | +0.5 maximum Greed, +1 per Upside Down light |
+| Better board | 3 | 250 / 600 / 1200 | Skateboard rides last 6 / 8 / 10 s instead of 4 |
+| Double jump | 1 | 500 | Jump again in mid-air |
 
 Tune costs and effects in `js/save.js` (`UPGRADES`, `runStats`).
 
