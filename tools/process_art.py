@@ -111,6 +111,16 @@ def body_x(im):
             if a.getpixel((x, y)) > 40: xs.append(x)
     xs.sort(); return xs[len(xs) // 2] if xs else im.width / 2
 
+BOARD_CX = 6  # skateboard centre, in game px from the player's x
+
+def board_x(im):
+    """Centre x of the skateboard: the opaque extent in the bottom 15% of the frame."""
+    a = im.split()[3]; xs = []
+    for y in range(int(im.height * .85), im.height):
+        for x in range(im.width):
+            if a.getpixel((x, y)) > 40: xs.append(x)
+    return (min(xs) + max(xs)) / 2 if xs else im.width / 2
+
 def write(key, im, w, h, line=None):
     out = im.resize((max(1, round(w * SC)), max(1, round(h * SC))), Image.LANCZOS)
     if line: out = outline(out, line)
@@ -369,7 +379,10 @@ def sheet_player_named(cls, kind, rows):
         count[state] = count.get(state, 0) + 1
         key = f"{cls}_{state}{count[state]}"; w, h = q(f.width * s), q(f.height * s)
         write(key, f, w, h, DARK)
-        manifest[key] = [w, h, 0, 0] if state == "roll" else [w, h, q(6 - body_x(f) * s), 0]
+        if state == "roll": manifest[key] = [w, h, 0, 0]
+        elif state == "skate" or (state == "kick" and count[state] in (1, 4)):
+            manifest[key] = [w, h, q(BOARD_CX - board_x(f) * s), 0]  # board stays put between frames
+        else: manifest[key] = [w, h, q(6 - body_x(f) * s), 0]
         keys.append(key)
     return keys
 

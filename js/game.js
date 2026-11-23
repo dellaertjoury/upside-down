@@ -1118,7 +1118,9 @@
       } else if (P.skate > 0 && !P.grounded && artFrames("kick").length) { // kickflip: pop, flip, catch, land
         state = "kick"; const kf = artFrames("kick"), n = kf.length;
         key = P.vh > 0 ? (P.h < 6 ? kf[0] : kf[Math.min(1, n - 1)]) : P.h > 9 ? kf[Math.min(2, n - 1)] : kf[n - 1];
-      } else if (P.skate > 0 && P.grounded) { state = "skate"; key = cyc(pframes("skate"), G.t, 6); }
+      } else if (P.skate > 0 && P.grounded) { // ride pose, with a short fist-pump push every 1.5 s
+        state = "skate"; const sf = pframes("skate"); key = sf.length > 1 && G.t % 1.5 > 1.05 ? sf[1] : sf[0];
+      }
       else if (idle) { state = "idle"; key = idleCyc(pframes("idle"), G.t, 4); }
       else if (!P.grounded && P.flip <= 0) { // jump: first frame rising, last frame falling
         state = "jump"; const jf = pframes("jump"); key = P.vh > 0 ? jf[0] : jf[jf.length - 1];
@@ -1135,14 +1137,37 @@
       if (lampAt && P.roll <= 0 && !SPR.ART[key]) { // the lamp glows on the jacket (painted art has its own)
         ctx.globalAlpha = 0.55 + Math.sin(G.t * 9) * 0.1; R("#fff3b0", lampAt[0] - 1, lampAt[1] - 1, 2, 2); ctx.globalAlpha = 0.25; R("#fff3b0", lampAt[0] - 2, lampAt[1] - 2, 4, 4); ctx.globalAlpha = 1;
       }
-      if (P.atk > 0 && !ranged() && !SPR.ART[key]) {
+      if (P.atk > 0 && !ranged() && !SPR.ART[key]) { // placeholder bat (painted art swings its own)
         const reach = (G.stats || SAVE.runStats()).reach, pr = 1 - P.atk / 0.2, ang = -1.3 + pr * 2.2;
         for (let i = 0; i < reach; i++) R(i < 5 ? "#5a3220" : "#a8743a", PX + 9 + Math.cos(ang) * i, -h - 9 + Math.sin(ang) * i, 2, 2);
-        ctx.fillStyle = "rgba(255,255,255,.5)";
-        for (let a = -1.3; a < ang; a += 0.12) ctx.fillRect(Math.round(PX + 9 + Math.cos(a) * reach), Math.round(-h - 9 + Math.sin(a) * reach), 2, 2);
       }
     }
+    if (!ranged() && G.mode === "play" && P.flip <= 0) drawReach(h);
     ctx.restore();
+  }
+
+  // Melee reach: a faint dotted arc shows how far the bat hits (grows with STR upgrades);
+  // swinging sweeps a bright white crescent along it, like a slash.
+  const REACH_A0 = -1.35, REACH_A1 = 1.0;
+  function drawReach(h) {
+    const reach = (G.stats || SAVE.runStats()).reach, r = reach + 1;
+    const cx = PX + 8, cy = -h - (P.roll > 0 ? 6 : 11);
+    const dot = (a, rr, col) => R(col, Math.round(cx + Math.cos(a) * rr), Math.round(cy + Math.sin(a) * rr), 1, 1);
+    if (P.atk <= 0) {
+      ctx.globalAlpha = 0.28;
+      for (let a = REACH_A0; a <= REACH_A1 + 0.01; a += 0.16) dot(a, r, "#ffffff");
+      ctx.globalAlpha = 1; return;
+    }
+    const pr = 1 - P.atk / 0.2, span = REACH_A1 - REACH_A0;
+    const head = REACH_A0 + Math.min(1, pr / 0.6) * span;           // sweeps in the first 60% of the swing
+    const fade = pr < 0.6 ? 1 : 1 - (pr - 0.6) / 0.4;               // then fades out
+    for (let a = REACH_A0; a <= head; a += 0.03) {
+      const u = (a - REACH_A0) / span, k = (a - REACH_A0) / Math.max(0.001, head - REACH_A0);
+      const th = Math.max(1, Math.round(Math.sin(Math.PI * u) * 5 * (0.4 + 0.6 * k)));  // fat in the middle, sharp tips
+      ctx.globalAlpha = fade * (0.35 + 0.65 * k);
+      for (let i = 0; i < th; i++) dot(a, r - i, i === 0 ? "#ffffff" : "#e8f0ff");
+    }
+    ctx.globalAlpha = 1;
   }
 
   function drawDeath() {
