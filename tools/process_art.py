@@ -154,7 +154,7 @@ def player(key, im):
     manifest[key] = [w, h, q(6 - body_x(im) * w / im.width), 0]
 
 ENEMY = {  # base: (size by 'h' or 'w', value, hit_w, hit_h, on_ground, outline)
-    "crow": ("h", 18, 12, 7, False, LIGHT), "crawl": ("w", 26, 16, 10, True, RIM),
+    "crow": ("h", 16, 12, 7, False, LIGHT), "crawl": ("w", 26, 16, 10, True, RIM),
     "wisp": ("h", 18, 10, 7, False, RIM), "pod": ("h", 18, 12, 12, True, RIM),
     "stalker": ("h", 44, 16, 44, True, RIM),   # twice the player's height
 }
@@ -304,11 +304,32 @@ def slice_sheet(path, drop_short=0.35, gapfrac=0.01):
         if row: out.append(row)
     return out
 
+def slice_components(path):
+    """Frames that overlap side by side (a foot under the next frame): one frame per connected blob,
+    each cut out with only its own pixels; specks join the nearest big blob."""
+    from scipy import ndimage
+    im = load(path); arr = np.array(im); a = arr[:, :, 3] > 40
+    lab, n = ndimage.label(a); sizes = ndimage.sum(a, lab, range(1, n + 1)); objs = ndimage.find_objects(lab)
+    big = [i for i in range(n) if sizes[i] > sizes.max() * 0.2]
+    owner = {i + 1: i + 1 for i in big}
+    for i in range(n):
+        if i in big: continue
+        cy = (objs[i][0].start + objs[i][0].stop) / 2; cx = (objs[i][1].start + objs[i][1].stop) / 2
+        near = min(big, key=lambda j: abs((objs[j][1].start + objs[j][1].stop) / 2 - cx) + abs((objs[j][0].start + objs[j][0].stop) / 2 - cy))
+        owner[i + 1] = near + 1
+    out = []
+    for j in sorted(big, key=lambda j: objs[j][1].start):
+        mask = np.isin(lab, [k for k, o in owner.items() if o == j + 1])
+        f = arr.copy(); f[~mask, 3] = 0
+        part = Image.fromarray(f); out.append(part.crop(part.getbbox()))
+    return [out]
+
 PLAYER_ROWS = [("idle", 3), ("run", 4), ("jump", 2), ("roll", 4), ("attack", 3), ("die", 4), ("skate", 2)]
 ENEMY_ROWS = {"crow": [("fly", 4), ("attack", 2), ("idle", 3)], "hound": [("run", 4), ("jump", 2), ("attack", 2), ("idle", 3)],
               "stalker": [("walk", 4), ("attack", 3), ("idle", 3)], "flyer": [("fly", 4), ("attack", 2), ("idle", 3)], "pod": [("idle", 3), ("attack", 2)]}
 ITEM_SHEETS = {  # sheet name -> keys in reading order (left to right, top to bottom)
     **{"plat_" + k: ["plat_" + k, "plat_" + k + "_dark"] for k in ("dumpster", "car", "cop", "van", "pickup", "bus")},
+    "cars": [k + d for k in ("plat_car", "plat_pickup", "plat_cop", "plat_bus") for d in ("", "_dark")],  # 4 rows: town | Upside Down
     "watcher": ["watcher_1", "watcher_2"],   # two poses of the whole creature (older art: body + head)
     "projectiles": ["shot_spore", "ranger_shot", "wizard_d20"],
     "pickups": ["crate", "crate_dark", "pickup_dice", "pickup_skate", "skate_board"],
@@ -323,7 +344,9 @@ ITEM_SHEETS = {  # sheet name -> keys in reading order (left to right, top to bo
 }
 SHEET_ALIASES = {"ui_sheet_classes": "class_icons_sheet", "ui_sheet_controls": "touch_buttons_sheet", "ui_sheet_hud": "hud_sheet",
     "ui_sheet_medals": "medals_sheet", "ui_sheet_menu": "ui_frames_sheet", "ui_sheet_stats": "stat_icons_sheet",
-    "ui_sheet_upgrades": "upgrade_icons_sheet", "lightbulbs_sheet": "bulbs_sheet", "pickups_sheet_crates_skateboard": "pickups_sheet"}
+    "ui_sheet_upgrades": "upgrade_icons_sheet", "lightbulbs_sheet": "bulbs_sheet", "pickups_sheet_crates_skateboard": "pickups_sheet",
+    "ui_sheet_cars": "cars_sheet", "enemies_sheet_bat": "crow_sheet", "enemies_sheet_dog": "hound_sheet", "enemies_sheet_walker": "stalker_sheet",
+    **{f"{c}_sheet_death": f"{c}_sheet_die" for c in CLASSES}}
 SHEET_RE = re.compile(r"^(.+?)[_-]?(sprite)?sheet$")
 
 def sheet_player(cls, rows):
@@ -478,7 +501,12 @@ for full, f in files:
             if name in CLASSES:
                 rows = slice_sheet(path, 0.3); done += sheet_player(name, rows)
             elif name in ENEMY_ROWS:
-                rows = slice_sheet(path); done += sheet_enemy(name, rows)
+                rows = slice_sheet(path)
+                if rows and len(rows[0]) < ENEMY_ROWS[name][0][1]:   # frames drawn close together: split on smaller gaps
+                    rows = slice_sheet(path, 0.35, 0.002)
+                if rows and len(rows[0]) < ENEMY_ROWS[name][0][1]:   # frames overlapping: one per connected blob
+                    rows = slice_components(path)
+                done += sheet_enemy(name, rows)
             elif name in ITEM_SHEETS:
                 items = [f for row in slice_sheet(path, 0.12) for f in row]; want = ITEM_SHEETS[name]
                 if len(items) < len(want):   # items drawn close together: split on smaller gaps

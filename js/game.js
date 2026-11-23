@@ -1447,16 +1447,25 @@
       const g = c2.createLinearGradient(0, 0, 0, PV_H);
       g.addColorStop(0, dark ? "#1c0812" : "#1d2540"); g.addColorStop(1, dark ? "#4a1630" : "#4a4466");
       c2.fillStyle = g; c2.fillRect(0, 0, PV_W, PV_H);
-      R(dark ? "#2a0f1e" : "#2b2a33", 0, PV_FLOOR, PV_W, PV_H - PV_FLOOR); R(dark ? "#5b1b3a" : "#4c4e5a", 0, PV_FLOOR, PV_W, 1);
+      // the street scrolls by: heroes run right (floor moves left), monsters come at you (floor moves right)
+      const moving = { crow: -34, crawler: -46, wisp: -26, stalker: -18 }, F = SPR.ART.floor || BG.floor;
+      const scroll = kind === "hero" ? t * 52 : kind === "en" ? t * (moving[what] || 0) : 0;
+      c2.save();
+      if (dark) { c2.translate(0, 2 * PV_FLOOR + 16); c2.scale(1, -1); } // Upside Down: the underside of the street
+      tile(F, scroll, PV_FLOOR, F.width * 16 / F.height, 16);
+      c2.restore();
       c2.translate(0, PV_FLOOR);
       const cx = PV_W / 2;
       if (kind === "hero") {
-        let f = frames(what, "idle"), shade = false;
-        if (!f.length) { f = frames("fighter", "idle"); shade = what !== "fighter"; }
-        if (!f.length) f = PLAYER_FALLBACK.idle;
-        if (shade) c2.filter = "brightness(0.12)"; // no art yet: a mystery silhouette
-        draw(c2, idleCyc(f, t, 4), cx - 7, 0);
-        c2.filter = "none";
+        // running along the street, with a swing / shot every 2.6 s
+        const run = frames(what, "run"), atk = frames(what, "attack"), at = t % 2.6;
+        if (run.length) {
+          const key = atk.length && at > 2.25 ? atk[Math.min(atk.length - 1, Math.floor((at - 2.25) / 0.35 * atk.length))] : cyc(run, t, run.length > 2 ? 12 : 8);
+          draw(c2, key, cx - 8, 0);
+        } else { // no art yet: a mystery silhouette, bouncing
+          let f = frames("fighter", "idle"); if (!f.length) f = PLAYER_FALLBACK.idle;
+          c2.filter = "brightness(0.12)"; draw(c2, idleCyc(f, t, 4), cx - 7, 0); c2.filter = "none";
+        }
       } else if (kind === "en") {
         if (what === "watcher") {
           const P1 = ART("watcher_1"), P2 = ART("watcher_2"), m = Math.sin(t * 0.7) * 0.5 + 0.5;

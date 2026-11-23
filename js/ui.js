@@ -318,7 +318,8 @@
       tag: side === 0 ? ["", t("man.town")] : side === 1 ? ["ud", t("man.ud")] : ["", t("man.both")] })),
     items: () => [["bulb"], ["gold"], ["crate"], ["crate10"], ["heart"], ["dark", 1], ["dice"], ["board"], ["revive"]].map(([id, side]) => {
       const it = SAVE.ITEMS.find(x => x.id === id);
-      return { pv: "it:" + id, side: side || 0, name: t("man." + id), d: t("man." + id + ".d", { key: INPUT.label("board"), g: t("up.greed") }),
+      const icon = it && SPR.ART["ui_up_" + (id === "board" ? "skate" : id)]; // shop items: same icon as in the shop
+      return { pv: icon ? null : "it:" + id, icon, side: side || 0, name: t("man." + id), d: t("man." + id + ".d", { key: INPUT.label("board"), g: t("up.greed") }),
         tag: it ? ["cost", it.cost, t("man.cost", { n: it.cost })] : null };
     }),
     upgrades: () => SAVE.UPGRADES.map(u => ({ icon: SPR.ART["ui_up_" + u.id], name: t("up." + u.id), d: t("up." + u.id + ".d") })),
@@ -328,6 +329,7 @@
     $("#man-list").innerHTML = MAN[manTab]().map(e => `<div class="man-row${e.locked ? " locked" : ""}">
       ${e.pv ? `<canvas width="144" height="120" data-pv="${e.pv}" data-side="${e.side || 0}"></canvas>` : e.icon ? `<img class="man-ic" src="${e.icon.src}" alt="">` : ""}
       <div><h3>${esc(e.name)}${e.tag ? e.tag[0] === "cost" ? `<span class="tag cost" title="${esc(e.tag[2])}">${e.tag[1]} <i class="bulb"></i></span>` : `<span class="tag ${e.tag[0]}">${esc(e.tag[1])}</span>` : ""}</h3><p>${esc(e.d)}</p></div></div>`).join("");
+    document.querySelectorAll("#man-list img").forEach(i => { if (!i.complete) i.addEventListener("load", fitSettings, { once: true }); }); // re-fit once icons have a size
     cancelAnimationFrame(manRAF);
     const cvs = Array.from(document.querySelectorAll("#man-list canvas")), t0 = performance.now();
     const tick = now => {
