@@ -30,7 +30,8 @@ def q(v): return round(v * SC) / SC
 
 # Names the art may arrive under -> the game's key
 ALIASES = {"ranger_bullet": "ranger_shot", "rogue_bullet": "rogue_shot", "wizard_bullet": "wizard_d20"}
-for _p in ("tree", "lamp", "mailbox", "hedge", "phonebooth", "hydrant"):
+for _p in ("tree", "lamp", "mailbox", "hedge", "phonebooth", "hydrant",
+           "bench", "bike", "trashcan", "busstop", "welcome", "fence", "pumpkins", "pole"):
     ALIASES["set_" + _p] = "prop_" + _p; ALIASES["set_" + _p + "_dark"] = "prop_" + _p + "_dark"
 
 def key_out_black(im, limit=16):
@@ -202,7 +203,7 @@ def player(key, im):
 ENEMY = {  # base: (size by 'h' or 'w', value, hit_w, hit_h, on_ground, outline)
     "crow": ("h", 16, 12, 7, False, DARK), "crawl": ("w", 26, 16, 10, True, DARK),
     "wisp": ("h", 18, 10, 7, False, DARK), "pod": ("h", 18, 12, 12, True, DARK),
-    "stalker": ("h", 44, 16, 44, True, DARK),   # twice the player's height
+    "stalker": ("h", 52, 16, 52, True, DARK),   # a head and a half taller than twice the player
 }
 # new-style enemy frames: <enemy>_<state><n>, e.g. hound_run3, stalker_attack2
 ENEMY2 = {"crow": "crow", "hound": "crawl", "flyer": "wisp", "pod": "pod", "stalker": "stalker"}
@@ -236,9 +237,14 @@ def obstacle(key, im):
     write(key, im, w, h, None if stretch else DARK)
     manifest[key] = [w, h, q((hw - w) / 2), 0]
 
-SET_H = {"set_house": 42, "set_houses": 40, "set_school": 50, "set_police": 46, "set_store": 46,
-         "set_arcade": 46, "set_diner": 38, "set_gas": 46, "set_camper": 30, "prop_tree": 54, "prop_lamp": 46,
-         "prop_mailbox": 14, "prop_hedge": 12, "prop_phonebooth": 30, "prop_hydrant": 11}
+SET_H = {"set_house": 52, "set_houses": 50, "set_school": 62, "set_police": 58, "set_store": 58,   # buildings +25%
+         "set_arcade": 58, "set_diner": 48, "set_gas": 58, "set_camper": 38, "prop_tree": 54, "prop_lamp": 46,
+         "prop_mailbox": 14, "prop_hedge": 12, "prop_phonebooth": 38, "prop_hydrant": 11,
+         # more town (ART_PROMPTS.md section 8)
+         "set_playground": 40, "set_cornfield": 32, "set_woods": 64, "set_watertower": 80, "set_lab": 54,
+         "set_cinema": 58, "set_church": 66, "set_motel": 44, "set_junkyard": 40, "set_radiotower": 88,
+         "prop_bench": 10, "prop_bike": 12, "prop_trashcan": 12, "prop_busstop": 30, "prop_welcome": 26,
+         "prop_fence": 10, "prop_pumpkins": 8, "prop_pole": 62}
 def scenery(key, im):
     w, h = by_h(im, SET_H[key.replace("_dark", "")]); write(key, im, w, h, DARK if key.startswith("prop_") else None); manifest[key] = [w, h]
 
@@ -273,7 +279,7 @@ def handle(key, get, path):
     elif re.match(r"^(crow|hound|flyer|pod|stalker)_(idle|fly|run|walk|jump|attack)\d$", key): enemy2(key, get())
     elif re.match(r"^plat_(dumpster|car|cop|van|pickup|bus)(_dark)?$", key):  # street objects to jump on
         im = get(); kind = key.split("_")[1]
-        w, h = by_h(im, {"dumpster": 18, "car": 21, "cop": 24, "van": 27, "pickup": 23, "bus": 33}[kind])
+        w, h = by_h(im, {"dumpster": 18, "car": 24, "cop": 27, "van": 27, "pickup": 26, "bus": 37}[kind])
         write(key, im, w, h, DARK); manifest[key] = [w, h]  # every game sprite gets the dark outline
     elif key == "pickup_dice":
         manifest.pop(key, None)  # retired: the game draws d20 pieces itself

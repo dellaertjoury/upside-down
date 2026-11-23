@@ -833,6 +833,60 @@ BACKGROUND: one flat, solid, pure magenta colour (#FF00FF) everywhere behind and
 DO NOT DRAW: any text, letters, numbers, labels, row titles, arrows, grid lines, cell borders or frames around the sprites. Sharp hard pixel edges, no anti-aliasing, no blur.
 ```
 
+## 8. More town: landscapes, playground and props (18 pieces × 2)
+
+The street rolls past behind the runners: one building or landscape every few
+empty stretches, with small props in between. These 18 pieces add variety. Each
+one only joins the street once its art arrives, so you can deliver them in any
+order and in batches.
+
+**Every piece needs two images:** the town version first, then the Upside Down
+twin. Save them as `<key>.png` and `<key>_dark.png` (e.g. `set_playground.png`,
+`set_playground_dark.png`). For the twin, attach the town version and use the
+**Upside Down twin** prompt below, so the outline stays identical.
+
+**Start every prompt with this block:**
+
+```
+16-bit pixel art, crisp hard-edged pixels, no anti-aliasing. Background art for a 2D side-scrolling runner, so keep it calm: muted, slightly desaturated colours, soft shading, no pure black or pure white, nothing brighter than the characters that run in front of it. Strict flat side view (no perspective, no top surface visible), 1980s American small town at dusk, warm window light. Original design. ONE standalone object only: no street, no sidewalk, no neighbours, no people. The ground line is the bottom edge of the object. Flat, solid, pure magenta background (#FF00FF) everywhere around it. No text other than the sign words given. No border, no frame.
+```
+
+**Upside Down twin (attach the town version):**
+
+```
+Use the attached image as the exact reference: the same object, same size, same outline and same position, but rotten in a dark mirror dimension. Dark purple and crimson colours, dull red glow where there was warm light, black and crimson vines creeping over it, cracks, floating ash specks touching the object. Keep it calm and dim, low contrast. Flat, solid, pure magenta background (#FF00FF). No text other than the same sign words, now cracked.
+```
+
+### Landscapes and buildings (10)
+
+| Key | In-game height | Subject (add after the block) |
+|---|---|---|
+| `set_playground` | 40 px | A small public playground, side view: a metal swing set with two swings, a tall slide with a ladder, a seesaw and a little wooden climbing frame on a patch of grass with a sandbox edge. Wide image, about 3:1. |
+| `set_cornfield` | 32 px | The edge of a cornfield: a long row of tall corn stalks with drooping leaves and tassels, a lone scarecrow in a flannel shirt and straw hat in the middle, a low split-rail wooden fence in front. Very wide image, about 4:1. |
+| `set_woods` | 64 px | A dense cluster of tall dark pine trees at the edge of a forest, a few birches in front, ferns and a fallen log at the bottom. Wide image, about 2:1. |
+| `set_watertower` | 80 px | A classic small-town water tower: a round steel tank with a pointed cap on four tall lattice legs with cross braces, a ladder up one leg, a plain painted band on the tank with no letters. Tall narrow image. |
+| `set_lab` | 54 px | A grey concrete government research laboratory: a long low bunker-like building with small dark windows, a satellite dish and ventilation stacks on the flat roof, behind a tall chain-link fence topped with barbed wire, a guard booth at one end. A plain sign reading "LAB". Very wide image, about 3:1. |
+| `set_cinema` | 58 px | A 1980s small-town movie theatre: an art-deco front with a tall vertical sign reading "CINEMA", a lit marquee with rows of small bulbs (marquee letters blank), a glass ticket booth, posters in frames by the doors. |
+| `set_church` | 66 px | A small white wooden chapel with a pointed steeple and a little bell, a round window over the double door, three tall narrow windows, two front steps. Tall image. |
+| `set_motel` | 44 px | A one-storey roadside motel: a long row of doors and windows with numbers as plain shapes only, a covered walkway on thin posts, a tall sign on a pole reading "MOTEL" with a small "VACANCY" neon under it. Very wide image, about 3:1. |
+| `set_junkyard` | 40 px | A junkyard behind a tall wooden plank fence with gaps: stacked rusty car wrecks, piles of tyres, an old fridge and a crane arm peeking over the fence. Wide image, about 3:1. |
+| `set_radiotower` | 88 px | A tall thin steel lattice radio tower with guy wires, a small red warning light on top and one halfway up, a tiny concrete equipment shack at its foot. Very tall narrow image. |
+
+### Props (8)
+
+Props are small and sit between the buildings; they get a dark outline in the game.
+
+| Key | In-game height | Subject (add after the block) |
+|---|---|---|
+| `prop_bench` | 10 px | A wooden park bench with green slats and black cast-iron legs. Wide image. |
+| `prop_bike` | 12 px | A red 1980s BMX bike standing on its kickstand, a small headlamp on the handlebars, a playing card in the spokes. |
+| `prop_trashcan` | 12 px | A dented galvanised metal trash can with its lid slightly open. |
+| `prop_busstop` | 30 px | A small bus stop: a metal pole with a round bus-stop sign (just a simple bus symbol, no letters) and a short bench under it. |
+| `prop_welcome` | 26 px | A painted wooden town welcome sign on two posts with a little flower bed in front, reading "WELCOME". Wide image. |
+| `prop_fence` | 10 px | A stretch of white picket fence, a little weathered. Very wide image, about 5:1. |
+| `prop_pumpkins` | 8 px | A small pile of three orange pumpkins on a bale of straw, one carved with a grin. |
+| `prop_pole` | 62 px | A wooden telephone pole with two cross arms, glass insulators and a transformer box, short cut wire ends. Very tall narrow image. |
+
 ---
 
 ## Checklist
@@ -846,6 +900,7 @@ DO NOT DRAW: any text, letters, numbers, labels, row titles, arrows, grid lines,
 | `watcher_sheet` | 2 |
 | `hud_sheet` 7 · `upgrade_icons_sheet` 8 · `class_icons_sheet` 6 · `stat_icons_sheet` 6 · `touch_buttons_sheet` 4 · `medals_sheet` 3 · `ui_frames_sheet` 6 | 40 |
 | `toxic_vine_sheet` 18 · `toxic_tear_sheet` 6 | 24 |
-| **40 prompts** | **221** |
+| section 8: 10 landscapes / buildings + 8 props, town + Upside Down twin each | 36 |
+| **40 sheet prompts + 18 scenery pieces** | **257** |
 
 Your logo, the scenery, the backdrops and the floor aren't here: you already have them.

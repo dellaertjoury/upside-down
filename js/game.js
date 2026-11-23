@@ -62,7 +62,7 @@
     crawler:   { side: 1, w: 16, h0: 0,  h1: 10, enemy: true, vx: -60, after: 250 },
     wisp:      { side: 1, w: 10, h0: 15, h1: 22, enemy: true, vx: -25, bob: true, after: 700 }, // bobs 12..18: always over a roll
     pod:       { side: 1, w: 12, h0: 0,  h1: 12, enemy: true, shooter: true, after: 600 },
-    stalker:   { side: 1, w: 16, h0: 0,  h1: 120, enemy: true, hp: 2, vx: -25, after: 1500 }, // drawn 44 tall; the hitbox goes above any jump
+    stalker:   { side: 1, w: 16, h0: 0,  h1: 120, enemy: true, hp: 2, vx: -25, after: 1500 }, // drawn 52 tall; the hitbox goes above any jump
     // light crates: smash with a hit to spill Christmas lights
     crate:      { side: 0, w: 13, h0: 0, h1: 13, crate: true }, // hip-high next to the kid; 15 px = 5 lights
     crate_dark: { side: 1, w: 13, h0: 0, h1: 13, crate: true },
@@ -221,7 +221,7 @@
     if (G.crateT <= 0) what = "crate";
     // crates only where a hit from the street still reaches them: the low hood or trunk, never the roof
     const CW = 15, low = [];
-    for (let i = 0; i <= w - CW + 2; i++) { const hh = surface(o, i + 3, i + CW - 3); if (hh <= 16.6) low.push([i, hh]); } // rests on its middle; a little overhang is fine
+    for (let i = 0; i <= w - CW + 2; i++) { const hh = surface(o, i + 3, i + CW - 3); if (hh <= 18.6) low.push([i, hh]); } // rests on its middle; a little overhang is fine
     const crateAt = low.length ? low.reduce((b, c) => (c[0] > b[0] ? c : b)) : null;   // the far end (trunk) when there is one
     if (what === "crate" && !crateAt) what = pick(["onto", "off"]);
     if (G.diceT <= 0 && G.dice < BAL.dice.pieces && Math.random() < 0.6) what = "dice";
@@ -762,7 +762,7 @@
       for (const o of G.obs) {
         if (o.dead || o.side !== m.side || !(o.enemy || o.crate)) continue;
         // the arcing marble hits what it actually touches; the straight bolt covers the runner's lane
-        const hitV = m.kind === "arc" ? (o.h0 < m.h + 5 && o.h1 > m.h - 5) : m.kind === "skip" ? (o.h0 < m.h + 6) : (o.h0 < m.h + 10 && o.h1 > m.h - 12);
+        const hitV = m.kind === "arc" ? (o.h0 < m.h + (o.crate ? 7 : 5) && o.h1 > m.h - 5) : m.kind === "skip" ? (o.h0 < m.h + 6) : (o.h0 < m.h + 10 && o.h1 > m.h - 12);
         if (m.x + 6 > o.x && m.x < o.x + o.w && hitV && !(m.hit && m.hit.includes(o))) {
           if (m.pierce > 0) { m.pierce--; (m.hit = m.hit || []).push(o); } else m.dead = true; // Wizard bolt goes through one
           if (o.crate) breakCrate(o, true);
@@ -1053,7 +1053,7 @@
   // Enemy frame: attack frames when close to the runner (or firing, for pods),
   // otherwise the movement state. Falls back to the older two-frame art.
   function enemyKey(o, prefix, state, fallback) {
-    const near = o.side === P.side && o.x - PX < (o.type === "stalker" ? 46 : 34) && o.x > PX - 10;
+    const near = o.side === P.side && o.x - PX < (o.type === "stalker" ? 50 : 34) && o.x > PX - 10;
     const atk = o.type === "pod" ? o.t < 0.35 : near && state !== "jump";
     let f = atk ? frames(prefix, "attack") : [];
     if (f.length) return f[Math.min(f.length - 1, Math.floor((o.type === "pod" ? o.t / 0.35 : (34 - (o.x - PX)) / 44) * f.length))] || f[0];
@@ -1421,13 +1421,15 @@
     if (G._gl !== lvl) { if (G._gl != null) G._gp = lvl > G._gl ? 0.5 : -0.5; G._gl = lvl; }
     const pulse = G._gp || 0; if (pulse) G._gp = pulse > 0 ? Math.max(0, pulse - 1 / 60) : Math.min(0, pulse + 1 / 60);
     const hot = lvl >= steps, col = pulse < 0 ? "#ff3d57" : hot ? "#ffd866" : lvl > steps / 2 ? "#ffb35a" : "#ff9fb4";
-    // line 1: the stash, with the lights waiting in it
-    textO("+" + hp, rx, y, "#5fd0c8", "right", 8);
-    if (G.haul.n) { const x = rx - (String(hp).length + 1) * 8 - 6, li = ART("ui_lights_string");
-      textO("+" + G.haul.n, x, y + 2, "#f3e9dc", "right", 6);
-      if (li) ctx.drawImage(li, x - String(G.haul.n).length * 6 - 15, y - 1, 13, 9); }
-    // line 2: Greed pips (filled = reached, the next one fills up) and the multiplier
-    const pw = 5, gap = 2, px0 = rx - steps * (pw + gap) + gap, py = y + 12, nxt = (G.udT % H_.every) / H_.every;
+    // centred on cx: the stash on top (with the lights waiting in it), the multiplier and Greed pips under it
+    const cx = rx, sw = (String(hp).length + 1) * 8, lightsW = G.haul.n ? 15 + (String(G.haul.n).length + 1) * 6 + 6 : 0;
+    const x0 = Math.round(cx - (sw + lightsW) / 2);
+    if (G.haul.n) { const li = ART("ui_lights_string"); if (li) ctx.drawImage(li, x0, y - 1, 13, 9);
+      textO("+" + G.haul.n, x0 + 15, y + 2, "#f3e9dc", "left", 6); }
+    textO("+" + hp, x0 + lightsW, y, "#5fd0c8", "left", 8);
+    const pw = 5, gap = 2, mw = 4 * 6 + 4, tot = mw + steps * (pw + gap) - gap, mx = Math.round(cx - tot / 2);
+    const py = y + 12, nxt = (G.udT % H_.every) / H_.every, px0 = mx + mw;
+    textO("x" + G.heat.toFixed(1), mx, py - 1, col, "left", 6);
     for (let i = 0; i < steps; i++) {
       const x = px0 + i * (pw + gap); R("#1a1124", x - 1, py - 1, pw + 2, 6);
       R(i < lvl ? col : "#3a2550", x, py, pw, 4);
@@ -1435,7 +1437,6 @@
       if (i < lvl) R("rgba(255,255,255,.45)", x, py, pw, 1);
     }
     if (pulse > 0) glow(col, px0 + (lvl - 1) * (pw + gap) + 2, py + 2, 8, pulse);
-    textO("x" + G.heat.toFixed(1), px0 - 4, py - 1, col, "right", 6);
   }
   function drawHud() {
     if (G.mode === "attract" || !G.stats) return;
@@ -1444,7 +1445,7 @@
     const mh = G.maxHearts || st.hearts;
     for (let i = 0; i < mh; i++) heart(5 + i * 11, 5, i < G.hearts);
 
-    // ---- top right, one right-aligned column: score, best, lights, d20 and (down there) the stash ----
+    // ---- top right, one right-aligned column: score, best, lights, d20 ----
     const RX = W - 5, done = G.dice >= BAL.dice.pieces;
     textO(String(Math.floor(G.score)).padStart(6, "0"), RX, 5, "#ffd866", "right", 10);
     textO(T_("hud.hi") + " " + String(Math.max(SAVE.state.best, Math.floor(G.score))).padStart(6, "0"), RX, 18, "#c9bcd8", "right", 6);
@@ -1453,7 +1454,8 @@
     if (li) ctx.drawImage(li, RX - String(G.shards).length * 6 - lw + 2, 30 - lh / 2, lw, lh); // the tangled lights, as on the sheet
     if (done) glow("#ffd866", RX - 6, 45, 10, 0.4 + Math.sin(G.t * 4) * 0.15);
     drawD20(RX - 6, 45, 6, G.dice);
-    if (P.side) drawStash(RX, 56);
+    if (P.side) drawStash(W / 2, 5); // top centre, out of the way of what's coming from the right
+
     // ---- bottom left: abilities, stacking up from the corner ----
     const slots = [];
     if (pk_.shield) slots.push(() => [ART("hud_shield"), G.shieldT <= 0, G.shieldT > 0 ? 1 - G.shieldT / pk_.shield : null, "#c9d1dc"]);
@@ -1652,7 +1654,7 @@
         o.x = Math.round(cx - o.w / 2);
         const idle = e && frames(e[0], "idle");
         if (idle && idle.length) draw(ctx, idleCyc(idle, t, 6), o.x, -o.h0);
-        else if (what === "stalker") { ctx.save(); ctx.translate(cx, 0); ctx.scale(0.7, 0.7); ctx.translate(-cx, 0); drawOb(o); ctx.restore(); } // 44 px tall: shrunk to fit
+        else if (what === "stalker") { ctx.save(); ctx.translate(cx, 0); ctx.scale(0.6, 0.6); ctx.translate(-cx, 0); drawOb(o); ctx.restore(); } // 52 px tall: shrunk to fit
         else drawOb(o);
       }
     } else if (kind === "it") {

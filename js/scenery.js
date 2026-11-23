@@ -19,6 +19,18 @@
     prop_tree: [30, 52], prop_lamp: [10, 44], prop_mailbox: [8, 13],
     prop_hedge: [26, 11], prop_phonebooth: [12, 30], prop_hydrant: [7, 10],
   };
+  // More town (ART_PROMPTS.md, section 8): these only join the street once their art is delivered
+  const MORE_BUILDINGS = {
+    set_playground: [120, 40], set_cornfield: [140, 32], set_woods: [130, 64], set_watertower: [44, 80],
+    set_lab: [150, 54], set_cinema: [90, 58], set_church: [60, 66], set_motel: [130, 44],
+    set_junkyard: [120, 40], set_radiotower: [40, 88],
+  };
+  const MORE_PROPS = {
+    prop_bench: [20, 10], prop_bike: [18, 12], prop_trashcan: [9, 12], prop_busstop: [22, 30],
+    prop_welcome: [40, 26], prop_fence: [44, 10], prop_pumpkins: [18, 8], prop_pole: [12, 62],
+  };
+  Object.assign(BUILDINGS, MORE_BUILDINGS); Object.assign(PROPS, MORE_PROPS);
+  const ready = k => !(k in MORE_BUILDINGS || k in MORE_PROPS) || !!SPR.ART[k]; // the drawn placeholders only cover the originals
 
   const BACKGROUND = Object.keys(BUILDINGS); // all buildings are background again (street objects are the platforms)
   const rand = (a, b) => a + Math.random() * (b - a);
@@ -39,7 +51,7 @@
       const n = Math.random() < 0.3 ? 0 : Math.random() < 0.7 ? 1 : 2;
       let cur = c.x + 6;
       for (let i = 0; i < n; i++) { // props side by side, never past the stretch
-        const key = pick(Object.keys(PROPS)), [pw] = size(key);
+        const key = pick(Object.keys(PROPS).filter(ready)), [pw] = size(key);
         const room = c.x + c.w - 6 - pw - cur;
         if (room < 0) break;
         const x = Math.round(cur + Math.random() * room * (n === 1 ? 1 : 0.5));
@@ -48,13 +60,13 @@
     } else {           // a building
       // store, police, diner, arcade, camper and gas station are rooftop platforms in
       // the foreground (js/game.js), so the background keeps the houses and the school
-      const key = pick(BACKGROUND.filter(k => k !== S.last));
+      const key = pick(BACKGROUND.filter(k => k !== S.last && ready(k)));
       S.last = key;
       const [bw] = size(key), pad = Math.round(rand(20, 40));
       c.w = bw + pad * 2;
       c.items.push({ key, x: c.x + pad });
       if (Math.random() < 0.5) { // a tree or lamp next to it
-        const pk = pick(["prop_tree", "prop_lamp", "prop_mailbox"]), [pw] = size(pk);
+        const pk = pick(["prop_tree", "prop_lamp", "prop_mailbox", "prop_bench", "prop_trashcan", "prop_pole"].filter(ready)), [pw] = size(pk);
         c.items.push({ key: pk, x: c.x + pad + bw + 4 }); c.w += pw + 4;
       }
       S.blanks = MIN_BLANKS + Math.floor(Math.random() * (MAX_BLANKS - MIN_BLANKS + 1));

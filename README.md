@@ -83,8 +83,9 @@ No plates or frames: everything sits straight on the scene with a dark outline.
 
 - **Top left:** hearts.
 - **Top right, one right-aligned column:** score, best, lights (the tangled-lights
-  icon), then the d20 block (it fills wedge by wedge; no counter text). In the
-  Upside Down the **stash** sits under it: the points (and lights) you've earned
+  icon), then the d20 block (it fills wedge by wedge; no counter text).
+- **Top centre (Upside Down only), out of the way of what comes from the right:**
+  the **stash**: the points (and lights) you've earned
   down there and not banked yet, and below that the **Greed** pips with the
   multiplier. One pip fills every few seconds you stay down (the next one fills
   up as you go), a hit empties them (they flash red), and they turn gold at the
@@ -277,7 +278,9 @@ The game uses the painted pixel art in `assets/`. Anything without art falls
 back to a built-in placeholder drawn in `js/sprites.js`.
 
 New art goes through **[ART_PROMPTS.md](ART_PROMPTS.md)**: 40 sprite-sheet
-prompts. Players come in 4 sheets each (`fighter_sheet_idle_run.png`,
+prompts, plus 18 extra scenery pieces (section 8: playground, cornfield, woods,
+water tower, lab, cinema, church, motel, junkyard, radio tower and 8 props) that
+join the street as soon as their art arrives. Players come in 4 sheets each (`fighter_sheet_idle_run.png`,
 `_jump_attack`, `_roll_skate` with the skateboard, crash and kickflip, and
 `_die`, 2–3 rows per image for more detail); creatures, vehicles
 and UI sets in one sheet each (`hound_sheet.png`, `plat_car_sheet.png`). Then run
