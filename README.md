@@ -118,6 +118,13 @@ the menu.
   them. Hounds run on the ground: **jump over** them. Walkers are twice your
   height and can't be cleared: **attack** them (2 hits) or flip away. Hounds
   and walkers also cross over to the street later in a run (120 m / 350 m).
+- **Encounters:** enemies come in hand-made patterns from an encounter
+  director (`PATTERNS` in `js/game.js`): singles, then pairs that ask for a
+  sequence (hound then bat = jump, land, roll; bat then walker = roll, then
+  stand and hit), both-world combos you can't dodge by flipping, and late
+  gauntlets. Steps are timed by when they reach you, never closer than you can
+  react to. Difficulty runs in waves (calm, build-up, peak, short breather) and
+  the peak gets harder up to 1000 m.
 - **Obstacles:** hanging vines you roll under. Hounds
   sometimes lunge forward (still on the ground). Bats also fly in the Upside Down.
 - **The Upside Down: Heat and the haul.** Everything you earn down there

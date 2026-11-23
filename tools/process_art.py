@@ -134,6 +134,7 @@ def by_w(im, w): return q(w), q(im.height * w / im.width)
 # stretch them without smearing anything. Images are saved at 2 px per CSS px.
 NINE = {"ui_button": (64, 20), "ui_button_primary": (64, 20), "ui_row": (24, 8),
         "ui_panel": (100, 44), "ui_sheet": (88, 40), "ui_box": (34, 12)}
+GEM = 1.6  # the panel gem + laurels, larger than the frame around them
 def nine_slice(key, im):
     c_src, c_css = NINE[key]; extra = None
     if key == "ui_panel":   # the gem + laurels sit on the top bar: cut them out as their own image
@@ -158,7 +159,7 @@ def nine_slice(key, im):
     out.paste(big.crop((c, c, W - c, H - c)).resize((m, m), Image.LANCZOS), (c, c))
     out.save(os.path.join(OUT, key + ".png"), optimize=True); manifest[key] = True
     if extra is not None:
-        e = extra.resize((max(1, round(extra.width * s)), max(1, round(extra.height * s))), Image.LANCZOS)
+        e = extra.resize((max(1, round(extra.width * s * GEM)), max(1, round(extra.height * s * GEM))), Image.LANCZOS)  # shown GEM x bigger than the frame scale
         e.save(os.path.join(OUT, key + "_gem.png"), optimize=True); manifest[key + "_gem"] = True
 
 def fit_box(key, im, bw, bh, stretch=False, line=None):
@@ -272,7 +273,7 @@ def handle(key, get, path):
         fit_box(key, get(), *((18, 10) if key == "pickup_skate" else (16, 5)), line=DARK); manifest[key] = True
     elif key in ("watcher_1", "watcher_2"):   # whole creature; 0.11 game px per source px keeps both poses at one scale
         im = get(); w, h = q(im.width * 0.11), q(im.height * 0.11)
-        write(key, im, w, h, DARK); manifest[key] = [w, h]
+        write(key, im, w, h); manifest[key] = [w, h]  # no outline: it is mostly dark already
     elif key in ("watcher_body", "watcher_head"):
         im = get(); w, h = by_h(im, 72 if key == "watcher_body" else 34)
         write(key, im, w, h); manifest[key] = [w, h]
@@ -288,9 +289,9 @@ def handle(key, get, path):
     elif key in NINE: nine_slice(key, get())
     elif key in UI_EXACT: fit_box(key, get(), *UI_EXACT[key], stretch=True); manifest[key] = True
     elif key in UI_FIT: fit_box(key, get(), *UI_FIT[key]); manifest[key] = True
-    elif key in ("ui_up_revive", "ui_up_skate"):  # shop icons, also used for the HUD heart and the board pickup
+    elif key in ("ui_item_revive", "ui_item_board"):  # shop item icons, also used for the HUD heart and the board pickup
         im = get(); fit_box(key, im, 32, 32); manifest[key] = True
-        if key == "ui_up_revive": fit_box("hud_revive", im, 9, 9); manifest["hud_revive"] = True
+        if key == "ui_item_revive": fit_box("hud_revive", im, 9, 9); manifest["hud_revive"] = True
         else: fit_box("pickup_skate", im, 18, 10, line=DARK); manifest["pickup_skate"] = True
     elif ICON32.match(key): fit_box(key, get(), 32, 32); manifest[key] = True
     else: return False
@@ -375,7 +376,7 @@ ITEM_SHEETS = {  # sheet name -> keys in reading order (left to right, top to bo
     "pickups": ["crate", "crate_dark", "pickup_dice", "pickup_skate", "skate_board"],
     "bulbs": ["bulb_red", "bulb_green", "bulb_blue", "bulb_yellow", "bulb_orange", "bulb_pink", "bulb_gold"],
     "hud": ["hud_heart_full", "hud_heart_empty", "hud_light", "hud_revive", "hud_warning", "hud_dread_frame", "hud_dread_fill"],
-    "skate_wind": ["ui_up_skate", "ui_up_revive"],  # the newer skateboard + Second wind icons
+    "skate_wind": ["ui_item_board", "ui_item_revive"],  # the newer skateboard + Second wind icons
     "upgrade_icons": ["ui_up_" + k for k in ("heart", "reach", "battery", "magnet", "greed", "skate", "djump", "revive")],
     "class_icons": ["ui_class_fighter", "ui_class_ranger", "ui_class_rogue", "ui_class_wizard", "ui_lock", "ui_d20"],
     "stat_icons": ["ui_stat_" + k for k in ("str", "dex", "con", "int", "wis", "cha")],

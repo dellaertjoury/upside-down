@@ -170,9 +170,8 @@
     $("#abil").innerHTML = SAVE.ABIL.map(a => {
       const cls = SAVE.CLASSES.find(c => c.id === s.cls).bonus[a] || 0;
       const total = SAVE.score(s, a), m = SAVE.mod(total), up = SAVE.fromUpgrades(a);
-      const sic = SPR.ART["ui_stat_" + a.toLowerCase()];
       const bonus = [cls ? t("ab.class", { n: cls }) : "", up ? t("ab.up", { n: up }) : ""].filter(Boolean).join(" · ") || "—";
-      return `<tr><th>${sic ? `<img class="sic" src="${sic.src}" alt="">` : ""}${a}</th><td class="av">${total}</td><td class="am">${sign(m)}</td>
+      return `<tr><th>${a}</th><td class="av">${total}</td><td class="am">${sign(m)}</td>
         <td class="ai">${esc(t("ab." + a))}</td><td class="ab-b">${esc(bonus)}</td></tr>`;
     }).join("");
     const r = SAVE.runStats(s);
@@ -237,17 +236,17 @@
   function renderUpgrades() {
     document.querySelectorAll(".bank-n").forEach(n => n.textContent = st.shards);
     $("#item-list").innerHTML = SAVE.ITEMS.map(it => {
-      const have = (st.items[it.id] || 0) > 0, uic = SPR.ART["ui_up_" + (it.id === "board" ? "skate" : it.id)];
+      const have = (st.items[it.id] || 0) > 0, uic = SPR.ART["ui_item_" + it.id];
       const d = t("item." + it.id + ".d", { key: INPUT.label("board"), s: SAVE.runStats().skate });
       return `<div class="row${uic ? " has-ic" : ""}">${uic ? `<img class="uic" src="${uic.src}" alt="">` : ""}<div><h3>${esc(t("item." + it.id))}</h3><p>${esc(d)}</p></div>
-        <button class="btn tiny${have ? "" : " primary"}" data-item="${it.id}" ${have || st.shards < it.cost ? "disabled" : ""}>${have ? esc(t("item.ready")) : it.cost + ' <i class="bulb"></i>'}</button></div>`;
+        <button class="btn tiny${have ? "" : " primary"}" data-item="${it.id}" ${have || st.shards < it.cost ? "disabled" : ""}>${have ? esc(t("item.ready")) : it.cost}</button></div>`;
     }).join("");
     $("#up-list").innerHTML = SAVE.UPGRADES.map(u => {
       const l = SAVE.lvl(u.id), max = u.costs.length, done = l >= max, cost = u.costs[l];
       const pips = u.costs.map((_, i) => `<i class="${i < l ? "on" : ""}"></i>`).join("");
       const uic = SPR.ART["ui_up_" + u.id];
       return `<div class="row${uic ? " has-ic" : ""}">${uic ? `<img class="uic" src="${uic.src}" alt="">` : ""}<div><h3>${esc(t("up." + u.id))}<span class="pips">${pips}</span></h3><p>${esc(t("up." + u.id + ".d"))}</p></div>
-        <button class="btn tiny${done ? "" : " primary"}" data-buy="${u.id}" ${done || st.shards < cost ? "disabled" : ""}>${done ? esc(t("up.maxed")) : cost + ' <i class="bulb"></i>'}</button></div>`;
+        <button class="btn tiny${done ? "" : " primary"}" data-buy="${u.id}" ${done || st.shards < cost ? "disabled" : ""}>${done ? esc(t("up.maxed")) : cost}</button></div>`;
     }).join("");
   }
   $("#item-list").addEventListener("click", e => {
@@ -321,8 +320,8 @@
       tag: side === 0 ? ["", t("man.town")] : side === 1 ? ["ud", t("man.ud")] : ["", t("man.both")] })),
     items: () => [["bulb"], ["gold"], ["crate"], ["heart"], ["dark", 1], ["dice"], ["board"], ["revive"]].map(([id, side]) => {
       const it = SAVE.ITEMS.find(x => x.id === id);
-      const iconKey = it && "ui_up_" + (id === "board" ? "skate" : id), icon = iconKey && SPR.ART[iconKey]; // shop items: same icon as in the shop
-      return { pv: icon ? null : "it:" + id, show: icon ? "icon:" + iconKey : "it:" + id, icon, side: side || 0, name: t("man." + id),
+      const icon = it && SPR.ART["ui_item_" + id]; // shop items: same icon as in the shop
+      return { pv: "it:" + id, icon, side: side || 0, name: t("man." + id), // shop items float over the street too
         d: t("man." + id + ".d", { key: INPUT.label("board"), g: t("up.greed") }), tag: it ? ["cost", it.cost, t("man.cost", { n: it.cost })] : null };
     }),
     upgrades: () => SAVE.UPGRADES.map(u => ({ icon: SPR.ART["ui_up_" + u.id], show: "icon:ui_up_" + u.id, name: t("up." + u.id), d: t("up." + u.id + ".d") })),

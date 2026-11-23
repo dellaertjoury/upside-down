@@ -175,15 +175,13 @@
     return pick(rest);
   }
   // ---------------- Street objects you can jump on ----------------
-  // Dumpsters, cars, a police car, a van, a pickup and a bus roll by with the
+  // The four painted vehicles (car, police car, pickup, school bus) roll by with the
   // street at real size. Their surface follows their shape (hood, roof, trunk),
   // one-way: you land on them from above and run past their front otherwise.
   // Art: plat_<type> and plat_<type>_dark; the surface is read from the art.
   const PLATS = {   // h = tallest point (game px), w = length; prof(t) = surface height at 0..1 along it
-    dumpster: { w: 34, h: 18, weight: 3, prof: t => (t < 0.04 || t > 0.96 ? 14 : 18) },
     car:      { w: 62, h: 21, weight: 3, prof: t => t < 0.2 ? 12 : t < 0.33 ? 12 + (t - 0.2) / 0.13 * 9 : t < 0.7 ? 21 : t < 0.8 ? 21 - (t - 0.7) / 0.1 * 8 : 13 },
     cop:      { w: 64, h: 24, weight: 1, prof: t => t < 0.2 ? 12 : t < 0.33 ? 12 + (t - 0.2) / 0.13 * 9 : t < 0.7 ? (t > 0.45 && t < 0.58 ? 24 : 21) : t < 0.8 ? 21 - (t - 0.7) / 0.1 * 8 : 13 },
-    van:      { w: 70, h: 27, weight: 2, prof: t => t < 0.12 ? 15 : t < 0.22 ? 15 + (t - 0.12) / 0.1 * 12 : 27 },
     pickup:   { w: 68, h: 23, weight: 2, prof: t => t < 0.22 ? 13 : t < 0.32 ? 13 + (t - 0.22) / 0.1 * 10 : t < 0.55 ? 23 : 14 },
     bus:      { w: 128, h: 33, weight: 1, prof: t => t < 0.04 ? 26 : 33 },
   };
@@ -221,6 +219,11 @@
     let what = pick(["onto", "onto", "off", "off", "over", "crate"]);
     if (what === "over" && w < 60) what = pick(["onto", "off"]);   // only wide ones have room to jump up from
     if (G.crateT <= 0) what = "crate";
+    // crates only where a hit from the street still reaches them: the low hood or trunk, never the roof
+    const CW = 15, low = [];
+    for (let i = 0; i <= w - CW + 2; i++) { const hh = surface(o, i + 3, i + CW - 3); if (hh <= 16.6) low.push([i, hh]); } // rests on its middle; a little overhang is fine
+    const crateAt = low.length ? low.reduce((b, c) => (c[0] > b[0] ? c : b)) : null;   // the far end (trunk) when there is one
+    if (what === "crate" && !crateAt) what = pick(["onto", "off"]);
     if (G.diceT <= 0 && Math.random() < 0.5) what = "dice";
     if (what === "onto") { // an arc from the street that lands you on its first high part
       const land = Math.min(w - 4, hi + 4), hl = prof[land];
@@ -235,7 +238,7 @@
       addLightArc(side, o.x + Math.max(0, hi - 4), pick([2, 3]), top);
     } else if (what === "crate") {
       if (G.crateT <= 0) G.crateT = rand(BAL.crateEvery[0], BAL.crateEvery[1]);
-      const cw = 15, cx = o.x + Math.max(2, Math.min(w - cw - 2, hi + 6));
+      const cx = o.x + crateAt[0];
       addOb(side ? "crate_dark" : "crate", cx);
       const c = G.obs[G.obs.length - 1];
       c.tier = pick([3, 5, 5]); if (c.tier >= 5) c.w = 15;
@@ -255,6 +258,65 @@
     return m;
   }
 
+  // ---------------- Encounter director ----------------
+  // Enemies come in hand-made PATTERNS instead of one at a time, so combinations ask for a
+  // sequence of moves (jump then roll, roll then hit, deal with one world then the other...).
+  // Each step: [type, side, t] — side "a" = the pattern's world, "b" = the other one;
+  // t = seconds after the first one reaches you. Steps on the same side are always far enough
+  // apart to react (>= 0.45 s; an attack + a jump take about that).
+  // The difficulty follows waves: calm -> build-up -> peak -> breather, and the peak gets harder
+  // as the run goes on (cap 1 at the start, 5 from 1000 m).
+  const PATTERNS = [
+    { id: "bat",        diff: 1, steps: [["crow", "a", 0]] },
+    { id: "hound",      diff: 1, steps: [["crawler", "a", 0]] },
+    { id: "vines",      diff: 1, steps: [["tendril", "ud", 0]] },
+    { id: "walker",     diff: 2, steps: [["stalker", "a", 0]] },
+    { id: "hop-duck",   diff: 2, steps: [["crawler", "a", 0], ["crow", "a", 0.85]] },          // jump, land, roll
+    { id: "duck-hop",   diff: 2, steps: [["crow", "a", 0], ["crawler", "a", 0.8]] },           // roll, get up, jump
+    { id: "two worlds", diff: 2, steps: [["crawler", "a", 0], ["crow", "b", 0.5]] },           // flipping won't dodge both
+    { id: "twin hounds",diff: 3, steps: [["crawler", "a", 0], ["crawler", "a", 0.55]] },       // double jump or hit both
+    { id: "bat trio",   diff: 3, steps: [["crow", "a", 0], ["crow", "a", 0.45], ["crow", "a", 0.9]] }, // stay low
+    { id: "guarded",    diff: 3, steps: [["crow", "a", 0], ["stalker", "a", 0.75]] },          // roll, then stand and hit
+    { id: "vine gate",  diff: 3, steps: [["tendril", "ud", 0], ["crawler", "ud", 0.75]] },
+    { id: "pincer",     diff: 4, steps: [["stalker", "a", 0], ["stalker", "b", 0.25]] },       // no escaping by flipping: fight
+    { id: "gauntlet",   diff: 4, steps: [["crawler", "a", 0], ["crow", "a", 0.75], ["crawler", "a", 1.5]] },
+    { id: "walker push",diff: 4, steps: [["stalker", "a", 0], ["crawler", "a", 0.7]] },        // hit twice, then jump
+    { id: "crossfire",  diff: 4, steps: [["crow", "a", 0], ["crawler", "b", 0.35], ["crow", "a", 0.8]] },
+    { id: "stampede",   diff: 5, steps: [["crawler", "a", 0], ["crawler", "a", 0.5], ["crow", "a", 1.1], ["stalker", "a", 1.75]] },
+    { id: "siege",      diff: 5, steps: [["stalker", "a", 0], ["crow", "b", 0.4], ["stalker", "a", 1.0], ["crawler", "b", 1.3]] },
+  ];
+  const WAVE = [[10, 1, "calm"], [10, -1, "build"], [8, 0, "peak"], [4, null, "breather"]]; // [seconds, cap offset, name]
+  function waveNow() {
+    const cyc = WAVE.reduce((a, w) => a + w[0], 0), tt = (G.waveT || 0) % cyc;
+    let acc = 0; for (const w of WAVE) { acc += w[0]; if (tt < acc) return w; } return WAVE[0];
+  }
+  function allowed(type, side) { return ((side === 0 && TOP_AFTER[type]) || TYPES[type].after || 0) <= G.dist && (side === 1 || type !== "tendril"); }
+  function pickPattern() {
+    const w = waveNow(); if (w[1] === null) return null;                     // breather: lights and crates only
+    const cap = 1 + Math.min(4, Math.floor(G.dist / 10 / 250));                // 1 at the start, 5 from 1000 m
+    const target = w[2] === "calm" ? 1 : Math.max(1, cap + w[1]);
+    const opts = PATTERNS.filter(pt => pt.diff <= target && pt.id !== G.lastPat);
+    if (!opts.length) return null;
+    const weights = opts.map(pt => 1 / (1 + 1.5 * (target - pt.diff)));       // mostly near the target difficulty
+    let r = Math.random() * weights.reduce((a, b) => a + b, 0);
+    for (let i = 0; i < opts.length; i++) { r -= weights[i]; if (r <= 0) return opts[i]; }
+    return opts[opts.length - 1];
+  }
+  // places a pattern so every step reaches the runner at its own time; returns its length (px), or -1
+  function spawnPattern(pt, X) {
+    const a = Math.random() < 0.6 ? P.side : 1 - P.side;
+    const steps = pt.steps.map(([type, sd, t]) => [type, sd === "ud" ? 1 : sd === "a" ? a : 1 - a, t]);
+    if (!steps.every(([type, side]) => allowed(type, side))) return -1;
+    const T0 = (X - PX) / Math.max(60, G.speed);
+    let far = X;
+    for (const [type, side, t] of steps) {
+      const v = Math.max(60, G.speed) - (TYPES[type].vx || 0);              // closing speed
+      const x = PX + (T0 + t) * v;
+      addOb(type, x, side); far = Math.max(far, x);
+    }
+    G.lastPat = pt.id;
+    return (far - X) * Math.max(60, G.speed) / (Math.max(60, G.speed) + 45);    // in street distance
+  }
   function spawnChunk() {
     const d = Math.min(1, G.dist / 9000);
     const X = W + 16, r = Math.random();
@@ -275,16 +337,14 @@
       G.picks.push({ kind: "dice", side: Math.random() < BAL.dice.down ? 1 : 0, x: X + 20, h: 0, taken: false, ph: 0, col: "#ff3d57" }); // sits on the street
       return gap * 0.8;
     }
-    if (r < 0.5) {
-      const s = Math.random() < 0.5 ? 0 : 1;
-      addOb(typeFor(s, d), X, s);
-      if (Math.random() < 0.35) addLightArc(Math.random() < BAL.lightsDown ? 1 : 0, X + rand(30, 70), pick([1, 2, 3]));
-      return gap;
-    }
-    if (r < 0.78) {
-      addOb(typeFor(0, d), X, 0);
-      addOb(typeFor(1, d), X + rand(60, 110), 1);
-      return gap + 60;
+    if (r < 0.85) { // an encounter from the director
+      for (let tries = 0; tries < 4; tries++) {
+        const pt = pickPattern(); if (!pt) break;
+        const len = spawnPattern(pt, X);
+        if (len < 0) continue;
+        if (pt.diff <= 2 && Math.random() < 0.35) addLightArc(Math.random() < BAL.lightsDown ? 1 : 0, X + rand(30, 70), pick([1, 2, 3]));
+        return len + gap + G.speed * 0.25 * pt.diff;                                // a breath after a hard one
+      }
     }
     const s = Math.random() < 0.5 ? 0 : 1;
     if (G.crateT <= 0) { // a crate every ~20 s: 3, 5 or 10 lights, or a heart
@@ -298,7 +358,6 @@
       c.tier = c.heart ? 5 : (c.tier || 3);
       if (c.tier >= 5) { c.w = 15; c.h1 = c.w; } // bigger crate, bigger haul
     } else addLightArc(Math.random() < BAL.lightsDown ? 1 : 0, X, pick([2, 3]));
-    if (G.dist > 400) addOb(typeFor(1 - s, d), X + 50, 1 - s);
     return gap;
   }
 
@@ -308,7 +367,7 @@
     G.stats = SAVE.runStats();
     const f = FATE[2]; // the start-of-run fate roll is gone: no random head start or handicap
     Object.assign(G, { mode: "play", t: 0, speed: SPEED_START, dist: 0, score: 0, shards: 0, kills: 0, parries: 0, nextAt: 420,
-      sc: { dist: 0, combat: 0, lights: 0 }, crateT: rand(8, 12), platT: rand(6, 10), nextMile: BAL.milestoneEvery,
+      sc: { dist: 0, combat: 0, lights: 0 }, crateT: rand(8, 12), platT: rand(6, 10), waveT: 0, lastPat: null, nextMile: BAL.milestoneEvery,
       haul: { dist: 0, combat: 0, lights: 0, n: 0 }, dice: 0, diceT: rand(BAL.dice.first[0], BAL.dice.first[1]), udT: 0, heat: 1, banked: 0, bestHaul: 0, shieldT: 0, skateT: rand(8, 12),   // first skateboard early, so you meet it in every run
       obs: [], picks: [], parts: [], shots: [], pshots: [], pops: [], shake: 0, flash: 0,
       hearts: G.stats.hearts + f.hearts, reviveLeft: G.stats.revive, board: (SAVE.state.items.board || 0) > 0, dread: 0, overT: 0,
@@ -575,7 +634,7 @@
       }
       if (G.shieldT > 0) { G.shieldT -= dt; if (G.shieldT <= 0) pop(T_("pop.shieldUp"), "#c9d1dc"); }
       G.crateT -= dt;
-      G.platT -= dt; G.skateT -= dt; G.diceT -= dt;
+      G.platT -= dt; G.skateT -= dt; G.diceT -= dt; G.waveT = (G.waveT || 0) + dt;
       if (P.skate > 0) {
         P.skate -= dt;
         if (Math.random() < 0.5) G.parts.push({ x: PX - 2, y: sy(P.side, P.h + rand(2, 14)), vx: -rand(40, 90), vy: rand(-10, 10), life: 0.35, col: BULBS[Math.floor(Math.random() * 6)][1], s: 1 });
@@ -938,22 +997,27 @@
   }
 
   const ART = k => SPR.ART[k];
-  function drawWires(side) { // the cord between the bulbs of one string, sagging a little
+  function drawWires(side) { // the cord between the bulbs of one string
     const groups = {};
     for (const k of G.picks) if (k.side === side && k.group && !k.fly && !k.taken) (groups[k.group] = groups[k.group] || []).push(k);
-    ctx.strokeStyle = side ? "#3a1428" : "#1f2a22"; ctx.lineWidth = 0.7; ctx.lineCap = "round";
-    for (const g in groups) {
-      const l = groups[g].sort((a, b) => a.idx - b.idx);
-      if (l.length < 2) continue;
+    for (const g in groups) drawCord(groups[g].sort((a, b) => a.idx - b.idx));
+  }
+  // A sagging cable through the sockets of the bulbs (in order), like the bulb art: dark edge, grey core.
+  function drawCord(l) {
+    if (l.length < 2) return;
+    const cap = k => [k.x + 2, -k.h - 6]; // the socket on top of the bulb
+    const path = () => {
       ctx.beginPath();
-      const cap = k => [k.x + 2, -k.h - 6]; // the socket on top of the bulb
-      let [x0, y0] = cap(l[0]); ctx.moveTo(x0 - 4, y0 - 1.5); ctx.lineTo(x0, y0);
+      let [x0, y0] = cap(l[0]); ctx.moveTo(x0 - 4, y0 - 2); ctx.lineTo(x0, y0);
       for (let i = 1; i < l.length; i++) {
         const [x1, y1] = cap(l[i]), sag = Math.min(6, 2 + Math.abs(x1 - x0) * 0.08);
         ctx.quadraticCurveTo((x0 + x1) / 2, (y0 + y1) / 2 + sag, x1, y1); [x0, y0] = [x1, y1];
       }
-      ctx.lineTo(x0 + 4, y0 - 1.5); ctx.stroke();
-    }
+      ctx.lineTo(x0 + 4, y0 - 2);
+    };
+    ctx.lineCap = "round"; ctx.lineJoin = "round";
+    path(); ctx.strokeStyle = "#141018"; ctx.lineWidth = 1.6; ctx.stroke();
+    path(); ctx.strokeStyle = "#5a5560"; ctx.lineWidth = 0.7; ctx.stroke();
   }
   // Enemy frame: attack frames when close to the runner (or firing, for pods),
   // otherwise the movement state. Falls back to the older two-frame art.
@@ -1379,7 +1443,7 @@
     const P1 = SPR.ART.watcher_1, P2 = SPR.ART.watcher_2, B = SPR.ART.watcher_body, Hd = SPR.ART.watcher_head;
     if (P1) { // two poses that slowly breathe into each other, swaying from the base
       const k = P2 ? (Math.sin(w.t * 0.7) + 1) / 2 : 0;
-      if (lit) ctx.filter = `brightness(${1 + flash * 1.5}) drop-shadow(2px 0 0 #0b0610) drop-shadow(-2px 0 0 #0b0610) drop-shadow(0 2px 0 #0b0610) drop-shadow(0 -2px 0 #0b0610)`;
+      if (lit) ctx.filter = `brightness(${1 + flash * 1.5}) drop-shadow(0 0 2px #ff3d57)`;
       ctx.translate(Math.round(w.x), 0); ctx.rotate(sway * 0.25);
       for (const [img, a] of [[P1, 1 - k], [P2, k]]) {
         if (!img || a <= 0.01) continue;
@@ -1389,7 +1453,7 @@
       ctx.filter = "none";
     } else if (B && Hd) {
       const bs = SPR.SIZE.watcher_body || [80, 70], hs = SPR.SIZE.watcher_head || [40, 34];
-      if (lit) ctx.filter = `brightness(${1 + flash * 1.5}) drop-shadow(2px 0 0 #0b0610) drop-shadow(-2px 0 0 #0b0610) drop-shadow(0 2px 0 #0b0610) drop-shadow(0 -2px 0 #0b0610)`;
+      if (lit) ctx.filter = `brightness(${1 + flash * 1.5}) drop-shadow(0 0 2px #ff3d57)`;
       ctx.drawImage(B, Math.round(w.x - bs[0] / 2), Math.round(-bs[1] + bob), bs[0], bs[1]);
       ctx.translate(Math.round(w.x), Math.round(-bs[1] + bob + 3)); ctx.rotate(sway);
       ctx.drawImage(Hd, -hs[0] / 2, -hs[1], hs[0], hs[1]);
@@ -1464,7 +1528,7 @@
     } else if (kind === "en") {
       if (what === "watcher") {
         const P1 = ART("watcher_1"), P2 = ART("watcher_2"), m = Math.sin(t * 0.7) * 0.5 + 0.5;
-        ctx.filter = `brightness(${1.8 + Math.max(0, Math.sin(t * 2.3) - 0.85) * 12}) drop-shadow(2px 0 0 #0b0610) drop-shadow(-2px 0 0 #0b0610) drop-shadow(0 2px 0 #0b0610) drop-shadow(0 -2px 0 #0b0610)`; // lit by lightning now and then
+        ctx.filter = `brightness(${1.8 + Math.max(0, Math.sin(t * 2.3) - 0.85) * 12}) drop-shadow(0 0 1px #ff3d57)`; // lit by lightning now and then
         if (P1) for (const [img, a, key] of [[P1, 1 - m, "watcher_1"], [P2, m, "watcher_2"]]) {
           if (!img) continue; const sz = SPR.SIZE[key] || [img.width / 9, img.height / 9], s = 46 / Math.max(sz[0], 58);
           ctx.globalAlpha = a; ctx.drawImage(img, cx - sz[0] * s / 2, -sz[1] * s + Math.sin(t * 1.3), sz[0] * s, sz[1] * s);
@@ -1483,10 +1547,15 @@
       }
     } else if (kind === "it") {
       if (what === "bulb" || what === "gold") {
+        const l = [];
         for (let i = 0; i < (what === "gold" ? 1 : 3); i++) {
           const b = what === "gold" ? ["gold", "#ffd866"] : BULBS[i * 2];
-          drawPick({ x: what === "gold" ? cx - 2 : cx - 14 + i * 12, h: 10 + (what === "gold" ? 0 : Math.sin(i) * 4), name: b[0], col: b[1], gold: what === "gold", ph: i });
+          l.push({ x: what === "gold" ? cx - 2 : cx - 14 + i * 12, h: 10 + (what === "gold" ? 0 : Math.sin(i) * 4), name: b[0], col: b[1], gold: what === "gold", ph: i });
         }
+        drawCord(l); l.forEach(drawPick); // a string of three, on its cord
+      } else if (what === "board" || what === "revive") { // shop items: their icon, floating over the street
+        const img = ART("ui_item_" + what);
+        if (img) ctx.drawImage(img, cx - 12, -30 + Math.round(Math.sin(t * 2) * 1.5), 24, 24);
       } else if (what === "dice") drawPick({ kind: "dice", x: cx - 5, h: 0 });
       else if (what === "board") drawPick({ kind: "skate", x: cx - 8, h: 8 });
       else if (what === "revive") { ctx.save(); ctx.translate(cx, -16); ctx.scale(2, 2); heart(-4.5, -4, true, "#5fd0c8"); ctx.restore(); }
@@ -1537,5 +1606,5 @@
   SPR.ready = SPR.loadOverrides();
   requestAnimationFrame(loop);
   window.GAME = G;
-  G._P = P; G._TYPES = TYPES; G._hurt = hurt; G._meleeHits = meleeHits; G._addLightArc = addLightArc;
+  G._P = P; G._TYPES = TYPES; G._hurt = hurt; G._meleeHits = meleeHits; G._addLightArc = addLightArc; G._wave = () => waveNow()[2];
 })();
