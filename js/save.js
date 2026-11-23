@@ -19,9 +19,9 @@
       attack: { type: "melee", dmg: 1, cd: 0.32 }, perk: { shield: 18 } },   // trash-can lid absorbs a hit, recharges in 18 s
     { id: "ranger",  name: "Ranger",  desc: "Shoots slingshot marbles straight ahead.", bonus: { DEX: 2, WIS: 1 }, locked: false, ranged: true,
       attack: { type: "arc", dmg: 1, cd: 0.3 }, perk: { skipShot: true, magnet: 1.5 } }, // roll + attack = low skipping shot
-    { id: "rogue",   name: "Rogue",   desc: "Fast jabs, sneaky crits.", bonus: { DEX: 2, CHA: 1 }, locked: true,
+    { id: "rogue",   name: "Rogue",   desc: "Fast zapper jabs, sneaky crits.", bonus: { DEX: 2, CHA: 1 }, locked: false,
       attack: { type: "melee", dmg: 1, cd: 0.24, crit: 0.25 }, perk: { heatGrowth: 1.5 } },
-    { id: "wizard",  name: "Wizard",  desc: "Straight fireworks, half damage.", bonus: { INT: 2, WIS: 1 }, locked: true, ranged: true,
+    { id: "wizard",  name: "Wizard",  desc: "Straight fireworks, half damage.", bonus: { INT: 2, WIS: 1 }, locked: false, ranged: true,
       attack: { type: "bolt", dmg: 0.5, cd: 0.4 }, perk: { pierce: 1, dread: 0.75 } },
   ];
 
@@ -110,7 +110,7 @@
   if (state.sheet) { delete state.sheet.scores; delete state.sheet.dice; delete state.sheet.rerolls; }
   // Dice Crates are gone (now: d20 pieces in runs): unopened crates are paid out as 15 lights each
   if (state.dice > 0) { state.shards += state.dice * 15; state.dice = 0; }
-  // only unlocked classes can be played (fighter for now)
+  // only unlocked classes can be played
   if (state.sheet && (CLASSES.find(c => c.id === state.sheet.cls) || {}).locked !== false) state.sheet.cls = "fighter";
 
   const clsOf = sheet => CLASSES.find(c => c.id === sheet.cls) || CLASSES[0];

@@ -64,8 +64,9 @@ tabs: **Hero** (name, class, abilities) and **Upgrades** (the item shop and
 the permanent upgrades).
 
 No dice rolls for stats: everyone starts with every ability at 10, plus the
-class bonus. Playable: the Fighter (bat, STR +2, CON +1) and the Ranger
-(slingshot, DEX +2, WIS +1). Rogue and Wizard are locked until their art is done. Each upgrade level raises
+class bonus. All four are playable: the Fighter (bat, STR +2, CON +1), the Ranger
+(slingshot, DEX +2, WIS +1), the Rogue (a homemade zapper, DEX +2, CHA +1) and the
+Wizard (fireworks, INT +2, WIS +1). Each upgrade level raises
 its ability by 2, so the sheet levels up as you buy upgrades:
 
 | Ability | Grows with |
@@ -176,8 +177,8 @@ the menu.
 |---|---|---|---|
 | Fighter | Bat: kills in 1 hit | **Trash-can lid** absorbs one hit, recharges in 18 s | Has to get close |
 | Ranger | Marble shot straight ahead, about half the screen | **Roll + attack** = low skipping shot for ground enemies; light magnet ×1.5 | Flies at chest height: low targets need the skip shot |
-| Wizard *(locked)* | Firework straight across the whole screen, pierces 1 enemy | Toxicity fills **25% slower** | Half damage: 2 hits per enemy (stalker 4) |
-| Rogue *(locked)* | Fast jabs, 1 in 4 crits for double damage | Greed climbs **50% faster** | Short reach |
+| Wizard | Firework straight across the whole screen, pierces 1 enemy | Toxicity fills **25% slower** | Half damage: 2 hits per enemy (stalker 4) |
+| Rogue | Fast zapper jabs (blue sparks), 1 in 4 crits for double damage with a big spark burst | Greed climbs **50% faster** | Short reach |
 
 ## Score
 

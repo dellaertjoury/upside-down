@@ -333,17 +333,48 @@ def _runs(mask, gap, minlen=1):
         else: merged.append(r)
     return [r for r in merged if r[1] - r[0] >= minlen]
 
-def slice_sheet(path, drop_short=0.35, gapfrac=0.01):
+def _split_wide(runs, cover, typical, need, limit=1.45):
+    """Frames (or rows) that touch come out as one run two or three frames wide.
+    Add `need` more cuts: each goes to the widest run that is clearly too wide,
+    at its thinnest point near even spacing."""
+    runs = [list(r) for r in runs]; parts = [1] * len(runs)
+    for _ in range(need):
+        i = max(range(len(runs)), key=lambda i: (runs[i][1] - runs[i][0]) / (parts[i] + 1))
+        if (runs[i][1] - runs[i][0]) / parts[i] <= typical * limit: break
+        parts[i] += 1
+    out = []
+    for (x0, x1), k in zip(runs, parts):
+        w = x1 - x0; cuts = [x0]
+        for j in range(1, k):
+            c = x0 + w * j / k; r = int(w / k * 0.3)
+            lo, hi = int(c - r), int(c + r) + 1
+            cuts.append(lo + int(np.argmin(cover[lo:hi])))
+        cuts.append(x1)
+        out += [[cuts[i], cuts[i + 1]] for i in range(k)]
+    return out
+
+def slice_sheet(path, drop_short=0.35, gapfrac=0.01, expect=None):
+    """expect: frames per row (named player sheets). Rows or frames that touch
+    are then cut apart at their thinnest point."""
     im = load(path, crop=False); A = np.array(im)[:, :, 3] > 40
     H, W = A.shape
     rows = _runs(A.any(axis=1), max(4, int(H * 0.012)), max(3, int(H * 0.01)))
     if rows:  # stray text lines / specks are much shorter than real rows
         med = sorted(r[1] - r[0] for r in rows)[len(rows) // 2]
         rows = [r for r in rows if r[1] - r[0] >= med * drop_short]
+    if expect and rows and len(rows) < len(expect):   # rows that touch: cut the tall ones
+        tall = sorted(r[1] - r[0] for r in rows)[0]
+        rows = _split_wide(rows, A.sum(axis=1), tall, len(expect) - len(rows), 1.3)
+    if expect:   # typical frame width over the whole sheet, for frames that touch
+        allc = [c for y0, y1 in rows for c in _runs(A[y0:y1].any(axis=0), max(3, int(W * gapfrac)), 2) if c[1] - c[0] > W * 0.03]
+        typical = sorted(c[1] - c[0] for c in allc)[len(allc) // 3] if allc else 0
     out = []
-    for y0, y1 in rows:
+    for ri, (y0, y1) in enumerate(rows):
         band = A[y0:y1]
         cols = _runs(band.any(axis=0), max(3, int(W * gapfrac)), 2)
+        big = len([c for c in cols if c[1] - c[0] > W * 0.03])
+        if expect and ri < len(expect) and big < expect[ri]:
+            cols = _split_wide(cols, band.sum(axis=0), typical, expect[ri] - big)
         if len(cols) > 1:  # fold slivers (motion lines, dust) into their nearest neighbour
             med = sorted(c[1] - c[0] for c in cols)[len(cols) // 2]
             i = 0
@@ -402,7 +433,7 @@ ITEM_SHEETS = {  # sheet name -> keys in reading order (left to right, top to bo
     "medals": ["ui_medal_1", "ui_medal_2", "ui_medal_3"],
     "ui_frames": ["ui_button", "ui_button_primary", "ui_row", "ui_panel", "ui_sheet", "ui_box"],
 }
-SHEET_ALIASES = {"ui_sheet_skate_wind": "skate_wind_sheet", "ui_sheet_classes": "class_icons_sheet", "ui_sheet_controls": "touch_buttons_sheet", "ui_sheet_hud": "hud_sheet",
+SHEET_ALIASES = {"hud_vines_1": "toxic_vine_sheet", "hud_vines_2": "toxic_tear_sheet", "ui_sheet_skate_wind": "skate_wind_sheet", "ui_sheet_classes": "class_icons_sheet", "ui_sheet_controls": "touch_buttons_sheet", "ui_sheet_hud": "hud_sheet",
     "ui_sheet_medals": "medals_sheet", "ui_sheet_menu": "ui_frames_sheet", "ui_sheet_stats": "stat_icons_sheet",
     "ui_sheet_upgrades": "upgrade_icons_sheet", "lightbulbs_sheet": "bulbs_sheet", "pickups_sheet_crates_skateboard": "pickups_sheet",
     "ui_sheet_cars": "cars_sheet", "enemies_sheet_bat": "crow_sheet", "enemies_sheet_dog": "hound_sheet", "enemies_sheet_walker": "stalker_sheet",
@@ -445,7 +476,20 @@ NAMED_SHEETS = {
     "die":         ([[("die", 3)], [("die", 4)]], ("die", "w", 29)),
 }
 NAMED_RE = re.compile(r"^(%s)[_-]sheet[_-](idle_run|jump_attack|roll_skate|die)$" % "|".join(CLASSES))
+def drop_edge_slivers(f, frac=0.03):
+    """A cut between touching frames can leave a sliver of the neighbour (a spark,
+    a shoe tip) on the frame's edge: drop small blobs that touch the left or right edge."""
+    from scipy import ndimage
+    a = np.array(f); m = a[:, :, 3] > 40
+    lab, n = ndimage.label(m)
+    if n < 2: return f
+    sizes = ndimage.sum(m, lab, range(1, n + 1)); big = sizes.max()
+    for i, o in enumerate(ndimage.find_objects(lab)):
+        if sizes[i] < big * frac and (o[1].start <= 1 or o[1].stop >= m.shape[1] - 1): a[lab == i + 1, 3] = 0
+    g = Image.fromarray(a); return g.crop(g.getbbox())
+
 def sheet_player_named(cls, kind, rows):
+    rows = [[drop_edge_slivers(f) for f in row] for row in rows]
     layout, (anchor, how, size) = NAMED_SHEETS[kind]
     frames = []   # (state, image)
     for want, row in zip(layout, rows):
@@ -526,6 +570,23 @@ for full, f in files:
     key, path = f[:-4].lower(), os.path.join(SRC, f)
     key = ALIASES.get(key, SHEET_ALIASES.get(key, key)); path = full
     if key.endswith("_ref") or key in CLASSES: continue  # reference sheets are only for ChatGPT
+    if key == "toxic_vine_sheet":  # 3 rows (green, orange, red) x (2 body tiles + 4 bud frames), one scale for all
+        rows = slice_sheet(path, 0.3)
+        body = [f for row in rows for f in row[:2]]
+        s = 12 / sorted(f.height for f in body)[len(body) // 2]   # the stem fills most of the 16 px street
+        for c, row in zip("gor", rows):
+            if len(row) != 6: print(f"  note: vine row {c}: {len(row)} items, expected 6")
+            for i, f in enumerate(row[:6]):
+                k = f"vine_{c}_body{i + 1}" if i < 2 else f"vine_{c}_tip{i - 1}"
+                w, h = q(f.width * s), q(f.height * s); write(k, f, w, h); manifest[k] = [w, h]; done.append(k)
+        continue
+    if key == "toxic_tear_sheet":  # 6 frames of the street tearing open; frame 1 is only the slab
+        fr = [f for row in slice_sheet(path, 0.1) for f in row]
+        if len(fr) != 6: print(f"  note: tear: {len(fr)} frames, expected 6")
+        s = 16 / fr[0].height   # the slab is as tall as the street between the worlds
+        for i, f in enumerate(fr[:6]):
+            k = f"tear{i + 1}"; w, h = q(f.width * s), q(f.height * s); write(k, f, w, h); manifest[k] = [w, h]; done.append(k)
+        continue
     if key == "ui_medals":  # gold, silver, bronze in one image: split on the gaps
         im = load(path); a = np.array(im)[:, :, 3] > 40; cols = a.any(axis=0)
         runs, x = [], 0
@@ -541,7 +602,7 @@ for full, f in files:
         continue
     mn = NAMED_RE.match(key)
     if mn:
-        try: done += sheet_player_named(mn.group(1), mn.group(2), slice_sheet(path, 0.3))
+        try: done += sheet_player_named(mn.group(1), mn.group(2), slice_sheet(path, 0.3, expect=[sum(n for _, n in r) for r in NAMED_SHEETS[mn.group(2)][0]]))
         except Exception as e: skipped.append(f"{f} ({e})")
         continue
     mp = PART_RE.match(key)

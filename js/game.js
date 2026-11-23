@@ -423,6 +423,7 @@
   };
   // Toxicity full: always costs a heart (the lid can't block it), on top of being thrown out
   function toxicHit() {
+    G.tearT = 0.66; // the street tears open under you (art: tear1..6)
     if (G.debug.god || P.dead) return;
     G.hearts -= 1; G.shake = 7; G.flash = 0.35; G.flashCol = "#7dd34a"; SFX.hurt();
     burst(PX + 6, FT + 4, "#7dd34a", 18, 80);
@@ -521,7 +522,10 @@
     if (o.hitCd > 0) return false;           // one swing = one hit
     const st = G.stats, at = [o.x + o.w / 2, sy(o.side, (o.h0 + o.h1) / 2)];
     const atk = attackCfg();
-    if (how === "melee" && atk.crit && Math.random() < atk.crit) { amount *= 2; pop(T_("pop.crit"), "#ffd866", at[0], at[1] - 22); }
+    const zap = how === "melee" && SAVE.state.sheet && SAVE.state.sheet.cls === "rogue"; // the Rogue's zapper: blue sparks on every hit
+    if (zap) burst(at[0], at[1], "#7fd4ff", 6, 70);
+    if (how === "melee" && atk.crit && Math.random() < atk.crit) { amount *= 2; pop(T_("pop.crit"), "#ffd866", at[0], at[1] - 22);
+      if (zap) { burst(at[0], at[1], "#ffffff", 10, 110); burst(at[0], at[1], "#4da3ff", 12, 90); G.flash = 0.08; G.flashCol = "#bfe6ff"; } }
     o.hp = (o.hp || 1) - amount;
     if (o.hp > 0.001) {
       o.hitCd = 0.3; o.flash = 0.15; o.x += 14 + G.speed * 0.4; SFX.thud(); G.shake = 2; // room for the 2nd hit at any speed
@@ -826,6 +830,7 @@
     for (const a of DUST) { a.x -= dx * 0.5 + a.v * dt; if (a.x < -2) { a.x = W + 2; a.y = rand(10, FT - 4); } }
     G.shake = Math.max(0, G.shake - dt * 30);
     G.flash = Math.max(0, G.flash - dt);
+    if (G.tearT > 0) G.tearT = Math.max(0, G.tearT - dt);
     updateWatcher(dt);
     G.boltT -= dt;
     if (G.boltT <= 0) { G.boltT = G.watch ? rand(1.6, 3.2) : rand(2.5, 6); G.bolt = { x: rand(40, W - 40), life: 0.25, seed: Math.random() * 1000 }; }
@@ -1387,7 +1392,35 @@
   const VINE = { g: ["#2f5a17", "#7ad63a", "#d8ffb0"], o: ["#7a3e0e", "#f0902a", "#ffd49a"], r: ["#6a1212", "#e2463f", "#ffb0a8"] };
   // Toxicity vine: grows from the left edge; its tip reaches your feet (PX) when the meter is full.
   // Green -> orange (40%) -> red (75%), pulsing near the end. The pattern is rooted in the scrolling street.
+  // the Toxicity vine, from the art (vine_<g|o|r>_body1-2 tiles + tip1-4 bud frames)
+  function drawVineArt(f) {
+    const c = f < 0.4 ? "g" : f < 0.75 ? "o" : "r", b1 = ART(`vine_${c}_body1`), b2 = ART(`vine_${c}_body2`);
+    if (!b1 || !b2) return false;
+    if (f <= 0.01) return true;
+    const mid = (FT + FB) / 2, len = Math.round((PX + 4) * f);
+    const fps = f > 0.75 ? 9 : f > 0.4 ? 5 : 3, tk = `vine_${c}_tip${[1, 2, 3, 2][Math.floor(G.t * fps) % 4]}`, tip = ART(tk);
+    const [tw, th] = SPR.SIZE[tk] || [14, 10], tx = len - tw;
+    ctx.globalAlpha = 0.14 + (f > 0.75 ? Math.sin(G.t * 10) * 0.06 : 0); R(c === "g" ? "#7ad63a" : c === "o" ? "#f0902a" : "#e2463f", 0, FT + 1, len, FB - FT - 2); ctx.globalAlpha = 1;
+    // body tiles, rooted in the scrolling street, up to where the bud starts
+    ctx.save(); ctx.beginPath(); ctx.rect(0, FT - 4, Math.max(0, tx + 3), FB - FT + 8); ctx.clip();
+    const s1 = SPR.SIZE[`vine_${c}_body1`], s2 = SPR.SIZE[`vine_${c}_body2`], pair = s1[0] + s2[0] - 2;
+    let x = -(((G.scroll % pair) + pair) % pair);
+    for (let i = 0; x < tx + 3; i++) { const [img, sz] = i % 2 ? [b2, s2] : [b1, s1];
+      ctx.drawImage(img, DP(x), DP(mid + 6 - sz[1]), sz[0], sz[1]); x += sz[0] - 1; }
+    ctx.restore();
+    if (f > 0.75) glow("#ff3d57", tx + tw / 2, mid, 9, 0.35 + Math.sin(G.t * 12) * 0.15);
+    if (tip) ctx.drawImage(tip, DP(tx), DP(mid + 6 - th), tw, th);
+    if (f > 0.75 && P.side) heart(PX + 7, mid - 4, Math.floor(G.t * 6) % 2 === 0, null); // what it costs when it arrives
+    return true;
+  }
+  function drawTear() {
+    if (!(G.tearT > 0)) return;
+    const n = Math.min(6, 1 + Math.floor((0.66 - G.tearT) / 0.11)), k = "tear" + n, img = ART(k);
+    if (!img) return;
+    const [w, h] = SPR.SIZE[k]; ctx.drawImage(img, DP(PX + 8 - w / 2), FB - h, w, h);
+  }
   function drawVine(f) {
+    if (drawVineArt(f)) return;
     if (f <= 0.01) return;
     const len = Math.round((PX + 4) * f), mid = Math.round((FT + FB) / 2), ph = Math.floor(G.scroll);
     const c = VINE[f < 0.4 ? "g" : f < 0.75 ? "o" : "r"], O = "#1a1124", hot = f >= 0.9 && Math.floor(G.t * 8) % 2;
@@ -1504,6 +1537,7 @@
     }
     drawPlayer();
     drawFloor();
+    if (G.tearT > 0) { drawTear(); drawPlayer(); } // the kid is thrown out in front of the tear
     if (P.die) drawDeath();
     for (const o of G.obs) if (o.wall && o.x > W - 4 && Math.floor(G.t * 8) % 2) {
       const y = o.side ? FB + 40 : FT - 50;
