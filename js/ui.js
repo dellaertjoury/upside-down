@@ -319,7 +319,7 @@
     enemies: () => [["crow", 0], ["crawler", 2], ["stalker", 2], ["tendril", 1], ["watcher", 1]].map(([id, side]) => ({
       pv: "en:" + id, side: side === 1 ? 1 : 0, name: t("man." + id), d: t("man." + id + ".d"),
       tag: side === 0 ? ["", t("man.town")] : side === 1 ? ["ud", t("man.ud")] : ["", t("man.both")] })),
-    items: () => [["bulb"], ["gold"], ["crate"], ["crate10"], ["heart"], ["dark", 1], ["dice"], ["board"], ["revive"]].map(([id, side]) => {
+    items: () => [["bulb"], ["gold"], ["crate"], ["heart"], ["dark", 1], ["dice"], ["board"], ["revive"]].map(([id, side]) => {
       const it = SAVE.ITEMS.find(x => x.id === id);
       const iconKey = it && "ui_up_" + (id === "board" ? "skate" : id), icon = iconKey && SPR.ART[iconKey]; // shop items: same icon as in the shop
       return { pv: icon ? null : "it:" + id, show: icon ? "icon:" + iconKey : "it:" + id, icon, side: side || 0, name: t("man." + id),

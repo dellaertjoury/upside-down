@@ -19,7 +19,7 @@
     lightsDown: 0.75,            // share of loose lights that spawn in the Upside Down
     // lights economy
     crateEvery: [16, 24],        // seconds between crates
-    crateTiers: [[3, 0.6, 0.3], [5, 0.3, 0.4], [10, 0.1, 0.3]], // [lights, chance at the start, chance from 2000 m]
+    crateTiers: [[3, 0.65, 0.4], [5, 0.35, 0.6]], // [lights, chance at the start, chance from 2000 m]
     heartCrate: 0.25,            // share of crates holding a heart instead
     dice: { first: [25, 40], every: [50, 80], down: 0.6 }, // Dice Crates: kept, opened after the run (60% in the Upside Down)
     milestoneEvery: 500, milestoneLights: 10, // every 500 m: +10 lights
@@ -35,6 +35,7 @@
 
   // Run speed: starts gentle and builds up slowly (game px per second)
   const SPEED_START = 70, SPEED_GAIN = 1.2, SPEED_MAX = 320;
+  const RANGED_T = 0.42, RELEASE_T = 0.17; // ranged attack animation length / when the shot leaves
   const GRAV = 980, FLIP_T = 0.26, STAND_H = 18, ROLL_H = 9;
   const CLUB_X = 10;       // Hellfire Club building: left edge at run start
 
@@ -232,7 +233,7 @@
       const cw = 13, cx = o.x + Math.max(2, Math.min(w - cw - 2, hi + 6));
       addOb(side ? "crate_dark" : "crate", cx);
       const c = G.obs[G.obs.length - 1];
-      c.tier = pick([3, 5, 5, 10]); if (c.tier >= 5) { c.w = c.tier >= 10 ? 13 : 11; }
+      c.tier = pick([3, 5, 5]); if (c.tier >= 5) c.w = 11;
       c.h0 = surface(o, cx - o.x, cx - o.x + c.w); c.h1 = c.h0 + c.w; c.onRoof = true;
     } else if (what === "dice") {
       G.diceT = rand(BAL.dice.every[0], BAL.dice.every[1]);
@@ -326,7 +327,7 @@
     if (artFrames("die").length >= 5) { // painted death: knocked forward, hits the ground, slides to a stop
       P.die = { slide: true, h: P.h, vh: 90, t: 0, side: P.side, x: 0, vx: 70 + G.speed * 0.15 }; G.overT = 2.0; // slides forward on screen
     }
-    P.skate = 0; P.roll = 0; P.atk = 0; P.flip = 0;
+    P.skate = 0; P.roll = 0; P.atk = 0; P.flip = 0; P.shotDue = 0;
     G.shake = 8; burst(PX + 6, sy(P.side, P.h + 9), "#ff3d57", 22, 90);
     const bonus = Math.floor(G.score / G.stats.bonusDiv);
     const earned = G.shards + bonus;
@@ -492,16 +493,16 @@
       P.blk = 0; P.bufAtk = 0;
       const atk = attackCfg();
       P.atkCd = atk.cd;
-      if (atk.type === "arc" && perk().skipShot && P.roll > 0) { // Ranger perk: roll + attack = low skipping shot
-        P.atk = 0.22; SFX.sling();
-        G.pshots.push({ kind: "skip", side: P.side, x: PX + 16, h: P.h + 3, x0: PX + 16, vx: BAL.skip.vx, vh: 0, dmg: atk.dmg, dead: false });
-      } else if (atk.type === "arc") { // Ranger: a marble lobbed in an arc; reach upgrades throw it further
-        P.atk = 0.22; SFX.sling();
-        G.pshots.push({ kind: "arc", side: P.side, x: PX + 16, h: P.h + 11, vx: BAL.arc.vx + (st.reach - 16) * BAL.arc.perReach, vh: BAL.arc.vh, dmg: atk.dmg, dead: false });
-      } else if (atk.type === "bolt") { // Wizard: straight bolt, half damage
-        P.atk = 0.22; SFX.sling();
-        G.pshots.push({ kind: "bolt", side: P.side, x: PX + 16, h: P.h + 11, vx: BAL.bolt.vx, vh: 0, dmg: atk.dmg, pierce: perk().pierce || 0, dead: false });
+      if (atk.type !== "melee") { // ranged: raise, pull back, then the shot leaves on the release frame
+        P.atk = RANGED_T; P.shotDue = RELEASE_T;
+        P.shotKind = atk.type === "arc" && perk().skipShot && P.roll > 0 ? "skip" : atk.type;
       } else { P.atk = 0.2; SFX.swing(); }
+    }
+    if (P.shotDue > 0 && (P.shotDue -= dt) <= 0) { // the marble / firework leaves the hand now
+      P.shotDue = 0; SFX.sling(); const atk = attackCfg();
+      if (P.shotKind === "skip") G.pshots.push({ kind: "skip", side: P.side, x: PX + 16, h: P.h + 3, x0: PX + 16, vx: BAL.skip.vx, vh: 0, dmg: atk.dmg, dead: false });
+      else if (P.shotKind === "arc") G.pshots.push({ kind: "arc", side: P.side, x: PX + 16, h: P.h + 11, vx: BAL.arc.vx + (st.reach - 16) * BAL.arc.perReach, vh: BAL.arc.vh, dmg: atk.dmg, dead: false });
+      else G.pshots.push({ kind: "bolt", side: P.side, x: PX + 16, h: P.h + 11, vx: BAL.bolt.vx, vh: 0, dmg: atk.dmg, pierce: perk().pierce || 0, dead: false });
     }
     P.atk = Math.max(0, P.atk - dt);
     if (P.crash > 0) { P.crash -= dt; if (P.crash <= 0) { P.crash = 0; P.roll = 0.45; SFX.roll(); } } // board broke: fall, then roll
@@ -1112,8 +1113,11 @@
     } else {
       let key, state;
       if (P.atk > 0) { // attack frames spread over the swing, legs keep running in the art
-        state = "attack"; const af = pframes("attack"), dur = ranged() ? 0.22 : 0.2;
-        key = af[Math.min(af.length - 1, Math.floor((1 - P.atk / dur) * af.length))];
+        state = "attack"; const af = pframes("attack");
+        if (ranged()) { // raise (0.08 s), pull back (until the release), release + hold
+          const e = RANGED_T - P.atk, n = af.length;
+          key = n >= 3 ? af[e < 0.08 ? 0 : e < RELEASE_T ? 1 : 2] : af[Math.min(n - 1, Math.floor(e / RANGED_T * n))];
+        } else key = af[Math.min(af.length - 1, Math.floor((1 - P.atk / 0.2) * af.length))];
       } else if (P.crash > 0 && artFrames("crash").length) { // the board snaps under him, he pitches forward
         state = "crash"; const cf = artFrames("crash"); key = cf[Math.min(cf.length - 1, Math.floor((1 - P.crash / 0.4) * cf.length))];
       } else if (P.skate > 0 && !P.grounded && artFrames("kick").length) { // kickflip: pop, flip, catch, land

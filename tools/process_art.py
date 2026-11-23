@@ -263,7 +263,7 @@ def handle(key, get, path):
         w, h = by_h(im, {"dumpster": 18, "car": 21, "cop": 24, "van": 27, "pickup": 23, "bus": 33}[kind])
         write(key, im, w, h, DARK); manifest[key] = [w, h]  # every game sprite gets the dark outline
     elif key == "pickup_dice":
-        fit_box(key, get(), 12, 12, line=DARK); manifest[key] = True
+        manifest[key] = True  # the flat Dice Crate is drawn by tools/make_dice_crate.py
     elif key in ("hud_shield", "ui_icon_shield"):   # the Fighter's block icon in the HUD
         fit_box("hud_shield", get(), 12, 12); manifest["hud_shield"] = True
     elif key in ("pickup_skate", "skate_board"):
