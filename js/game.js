@@ -1146,18 +1146,14 @@
     ctx.restore();
   }
 
-  // Melee reach: a faint dotted arc shows how far the bat hits (grows with STR upgrades);
-  // swinging sweeps a bright white crescent along it, like a slash.
+  // Melee reach: each swing sweeps a bright white crescent at exactly the bat's reach
+  // (grows with STR upgrades), like a slash.
   const REACH_A0 = -1.35, REACH_A1 = 1.0;
   function drawReach(h) {
     const reach = (G.stats || SAVE.runStats()).reach, r = reach + 1;
     const cx = PX + 8, cy = -h - (P.roll > 0 ? 6 : 11);
     const dot = (a, rr, col) => R(col, Math.round(cx + Math.cos(a) * rr), Math.round(cy + Math.sin(a) * rr), 1, 1);
-    if (P.atk <= 0) {
-      ctx.globalAlpha = 0.28;
-      for (let a = REACH_A0; a <= REACH_A1 + 0.01; a += 0.16) dot(a, r, "#ffffff");
-      ctx.globalAlpha = 1; return;
-    }
+    if (P.atk <= 0) return;
     const pr = 1 - P.atk / 0.2, span = REACH_A1 - REACH_A0;
     const head = REACH_A0 + Math.min(1, pr / 0.6) * span;           // sweeps in the first 60% of the swing
     const fade = pr < 0.6 ? 1 : 1 - (pr - 0.6) / 0.4;               // then fades out
@@ -1241,8 +1237,12 @@
     }
     if (perk().shield) { // the Fighter's lid: bright when ready, dim while recharging
       const ok = G.shieldT <= 0;
-      R("#1a1124", hx, 6, 9, 9); R(ok ? "#c9d1dc" : "#4c4e5a", hx + 1, 7, 7, 7); R(ok ? "#9a9caa" : "#3b3446", hx + 3, 9, 3, 3);
-      if (!ok) R("#5fd0c8", hx, 16, Math.round(9 * (1 - G.shieldT / perk().shield)), 1);
+      const sh = ART("hud_shield");
+      if (sh) { // your shield icon: full colour when ready, greyed and dim while recharging
+        if (!ok) { ctx.filter = "grayscale(1) brightness(.55)"; ctx.globalAlpha = 0.8; }
+        ctx.drawImage(sh, hx - 1, 5, 11, 11); ctx.filter = "none"; ctx.globalAlpha = 1;
+      } else { R("#1a1124", hx, 6, 9, 9); R(ok ? "#c9d1dc" : "#4c4e5a", hx + 1, 7, 7, 7); R(ok ? "#9a9caa" : "#3b3446", hx + 3, 9, 3, 3); }
+      if (!ok) R("#5fd0c8", hx, 17, Math.round(9 * (1 - G.shieldT / perk().shield)), 1);
     }
     if (perk().shield) hx += 13;
     if (G.board && !(P.skate > 0)) { // the skateboard you bought, with its key

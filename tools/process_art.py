@@ -231,6 +231,8 @@ def handle(key, get, path):
         write(key, im, w, h, DARK if not key.endswith("_dark") else RIM); manifest[key] = [w, h]
     elif key == "pickup_dice":
         fit_box(key, get(), 12, 12); manifest[key] = True
+    elif key in ("hud_shield", "ui_icon_shield"):   # the Fighter's block icon in the HUD
+        fit_box("hud_shield", get(), 12, 12); manifest["hud_shield"] = True
     elif key in ("pickup_skate", "skate_board"):
         fit_box(key, get(), *((18, 10) if key == "pickup_skate" else (16, 5))); manifest[key] = True
     elif key in ("watcher_1", "watcher_2"):   # whole creature; 0.11 game px per source px keeps both poses at one scale
