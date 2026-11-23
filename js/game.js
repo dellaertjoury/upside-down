@@ -1393,24 +1393,33 @@
   // Toxicity vine: grows from the left edge; its tip reaches your feet (PX) when the meter is full.
   // Green -> orange (40%) -> red (75%), pulsing near the end. The pattern is rooted in the scrolling street.
   // the Toxicity vine, from the art (vine_<g|o|r>_body1-2 tiles + tip1-4 bud frames)
-  function drawVineArt(f) {
-    const c = f < 0.4 ? "g" : f < 0.75 ? "o" : "r", b1 = ART(`vine_${c}_body1`), b2 = ART(`vine_${c}_body2`);
-    if (!b1 || !b2) return false;
-    if (f <= 0.01) return true;
-    const mid = (FT + FB) / 2, len = Math.round((PX + 4) * f);
-    const fps = f > 0.75 ? 9 : f > 0.4 ? 5 : 3, tk = `vine_${c}_tip${[1, 2, 3, 2][Math.floor(G.t * fps) % 4]}`, tip = ART(tk);
+  // the Toxicity vine, from the art (vine_<g|o|r>_body1-2 tiles + tip1-4 bud frames).
+  // The whole vine (stem and bud) moves as one piece: the tiles are laid back from the bud,
+  // so it creeps forward as the meter fills. Colours cross-fade green -> orange -> red.
+  function vineLayer(c, f, a) {
+    const b1 = ART(`vine_${c}_body1`), b2 = ART(`vine_${c}_body2`); if (!b1 || !b2 || a <= 0) return;
+    const mid = (FT + FB) / 2, len = (PX + 4) * f;
+    const fps = 1.2 + f * 2.2, tk = `vine_${c}_tip${[1, 2, 3, 2][Math.floor(G.t * fps) % 4]}`, tip = ART(tk);
     const [tw, th] = SPR.SIZE[tk] || [14, 10], tx = len - tw;
-    ctx.globalAlpha = 0.14 + (f > 0.75 ? Math.sin(G.t * 10) * 0.06 : 0); R(c === "g" ? "#7ad63a" : c === "o" ? "#f0902a" : "#e2463f", 0, FT + 1, len, FB - FT - 2); ctx.globalAlpha = 1;
-    // body tiles, rooted in the scrolling street, up to where the bud starts
+    ctx.globalAlpha = a;
     ctx.save(); ctx.beginPath(); ctx.rect(0, FT - 4, Math.max(0, tx + 3), FB - FT + 8); ctx.clip();
-    const s1 = SPR.SIZE[`vine_${c}_body1`], s2 = SPR.SIZE[`vine_${c}_body2`], pair = s1[0] + s2[0] - 2;
-    let x = -(((G.scroll % pair) + pair) % pair);
-    for (let i = 0; x < tx + 3; i++) { const [img, sz] = i % 2 ? [b2, s2] : [b1, s1];
-      ctx.drawImage(img, DP(x), DP(mid + 6 - sz[1]), sz[0], sz[1]); x += sz[0] - 1; }
+    const s1 = SPR.SIZE[`vine_${c}_body1`], s2 = SPR.SIZE[`vine_${c}_body2`];
+    let x = tx + 3;   // lay the stem back from the bud, so both move together
+    for (let i = 0; x > 0; i++) { const [img, sz] = i % 2 ? [b1, s1] : [b2, s2]; x -= sz[0] - 1;
+      ctx.drawImage(img, DP(x), DP(mid + 6 - sz[1]), sz[0], sz[1]); }
     ctx.restore();
-    if (f > 0.75) glow("#ff3d57", tx + tw / 2, mid, 9, 0.35 + Math.sin(G.t * 12) * 0.15);
     if (tip) ctx.drawImage(tip, DP(tx), DP(mid + 6 - th), tw, th);
-    if (f > 0.75 && P.side) heart(PX + 7, mid - 4, Math.floor(G.t * 6) % 2 === 0, null); // what it costs when it arrives
+    ctx.globalAlpha = 1;
+  }
+  function drawVineArt(f) {
+    if (!ART("vine_g_body1")) return false;
+    if (f <= 0.01) return true;
+    const sm = (e0, e1) => Math.min(1, Math.max(0, (f - e0) / (e1 - e0))), go = sm(0.3, 0.45), or = sm(0.65, 0.8);
+    // smooth fades: green over orange over red, each layer fully drawn under the next
+    if (go < 1) vineLayer("g", f, 1);
+    if (go > 0 && or < 1) vineLayer("o", f, go < 1 ? go : 1);
+    if (or > 0) vineLayer("r", f, or);
+    if (f > 0.75 && P.side) heart(PX + 7, (FT + FB) / 2 - 4, Math.floor(G.t * 4) % 2 === 0, null); // what it costs when it arrives
     return true;
   }
   function drawTear() {

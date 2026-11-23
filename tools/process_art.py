@@ -578,6 +578,7 @@ for full, f in files:
             if len(row) != 6: print(f"  note: vine row {c}: {len(row)} items, expected 6")
             for i, f in enumerate(row[:6]):
                 k = f"vine_{c}_body{i + 1}" if i < 2 else f"vine_{c}_tip{i - 1}"
+                g = np.array(f); g[g[:, :, 3] < 170, 3] = 0; f = Image.fromarray(g); f = f.crop(f.getbbox())  # no soft glow: the game draws none
                 w, h = q(f.width * s), q(f.height * s); write(k, f, w, h); manifest[k] = [w, h]; done.append(k)
         continue
     if key == "toxic_tear_sheet":  # 6 frames of the street tearing open; frame 1 is only the slab
