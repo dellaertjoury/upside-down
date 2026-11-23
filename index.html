@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>The Upside Down</title>
 <link rel="preload" href="fonts/press-start-2p-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/ui_logo.png" as="image" fetchpriority="high">
 <link rel="stylesheet" href="css/style.css">
 <script>window.__errs=[];addEventListener("error",e=>__errs.push(e.message+" @ "+(e.filename||"").split("/").pop()+":"+e.lineno));</script>
 <script src="js/build.js" onerror="window.BUILD={sha:'local',time:''}"></script>
@@ -14,7 +15,7 @@
   <div class="frame" id="frame">
     <!-- LOADER: shown until every sprite, the font and the UI art are in -->
     <div class="loader" id="loader" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
-      <div class="ld-title">THE UPSIDE<span>DOWN</span></div>
+      <img class="ld-logo" src="assets/ui_logo.png" fetchpriority="high" alt="The Upside Down" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'ld-title',innerHTML:'THE UPSIDE<span>DOWN</span>'}))">
       <div class="ld-bar"><i id="ld-fill"></i></div>
       <div class="ld-txt"><span data-i18n="loading"></span> <b id="ld-pct">0%</b></div>
     </div>

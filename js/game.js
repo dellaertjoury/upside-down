@@ -237,7 +237,7 @@
     } else if (what === "dice") {
       G.diceT = rand(BAL.dice.every[0], BAL.dice.every[1]);
       const dx_ = Math.max(4, Math.min(w - 14, hi + 6));
-      G.picks.push({ kind: "dice", side, x: o.x + dx_, h: surface(o, dx_, dx_ + 10) + 6, taken: false, ph: 0, col: "#ff3d57" });
+      G.picks.push({ kind: "dice", side, x: o.x + dx_, h: surface(o, dx_, dx_ + 10), taken: false, ph: 0, col: "#ff3d57" }); // sits on the roof
     }
     G.obs.push(o);
     return o;
@@ -266,7 +266,7 @@
     }
     if (G.diceT <= 0) { // a Dice Crate, more often in the Upside Down; opened after the run
       G.diceT = rand(BAL.dice.every[0], BAL.dice.every[1]);
-      G.picks.push({ kind: "dice", side: Math.random() < BAL.dice.down ? 1 : 0, x: X + 20, h: 7, taken: false, ph: 0, col: "#ff3d57" });
+      G.picks.push({ kind: "dice", side: Math.random() < BAL.dice.down ? 1 : 0, x: X + 20, h: 0, taken: false, ph: 0, col: "#ff3d57" }); // sits on the street
       return gap * 0.8;
     }
     if (r < 0.5) {
@@ -703,7 +703,7 @@
       }
       const cx = PX + 6, ch = P.h + 8;
       const ddx = k.x - cx, ddh = k.h - ch, dist = Math.hypot(ddx, ddh);
-      if (k.side === P.side && P.flip <= 0 && dist < st.magnet + 12) {
+      if (k.side === P.side && P.flip <= 0 && dist < st.magnet + 12 && k.kind !== "dice") { // crates are too heavy for the magnet
         k.x -= ddx * Math.min(1, dt * 10); k.h -= ddh * Math.min(1, dt * 10);
       }
       if (k.side === P.side && P.flip <= 0 && Math.abs(k.x - cx) < 10 && Math.abs(k.h - ch) < 13 && k.kind === "dice") {
@@ -1011,7 +1011,7 @@
   }
   function drawPick(k) {
     if (k.kind === "dice") {
-      const x = Math.round(k.x), y = -Math.round(k.h) - 6 + Math.round(Math.sin(G.t * 4) * 1.5), img = ART("pickup_dice");
+      const x = Math.round(k.x), y = -Math.round(k.h) - 11, img = ART("pickup_dice"); // standing on the ground / roof, no bobbing
       glow("#ff3d57", x + 5, y + 5, 11, 0.45 + Math.sin(G.t * 6) * 0.2);
       if (img) ctx.drawImage(img, x - 1, y - 1, 12, 12); else drawDiceCrate(x, y);
       return;
@@ -1479,7 +1479,7 @@
           const b = what === "gold" ? ["gold", "#ffd866"] : BULBS[i * 2];
           drawPick({ x: what === "gold" ? cx - 2 : cx - 14 + i * 12, h: 10 + (what === "gold" ? 0 : Math.sin(i) * 4), name: b[0], col: b[1], gold: what === "gold", ph: i });
         }
-      } else if (what === "dice") drawPick({ kind: "dice", x: cx - 5, h: 8 });
+      } else if (what === "dice") drawPick({ kind: "dice", x: cx - 5, h: 0 });
       else if (what === "board") drawPick({ kind: "skate", x: cx - 8, h: 8 });
       else if (what === "revive") { ctx.save(); ctx.translate(cx, -16); ctx.scale(2, 2); heart(-4.5, -4, true, "#5fd0c8"); ctx.restore(); }
       else { // crates
