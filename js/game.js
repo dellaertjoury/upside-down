@@ -506,7 +506,7 @@
     if (P.shotDue > 0 && (P.shotDue -= dt) <= 0) { // the marble / firework leaves the hand now
       P.shotDue = 0; SFX.sling(); const atk = attackCfg();
       if (P.shotKind === "skip") G.pshots.push({ kind: "skip", side: P.side, x: PX + 16, h: P.h + 3, x0: PX + 16, vx: BAL.skip.vx, vh: 0, dmg: atk.dmg, dead: false });
-      else if (P.shotKind === "arc") G.pshots.push({ kind: "arc", side: P.side, x: PX + 16, x0: PX + 16, h: P.h + 8, vx: BAL.arc.vx, range: BAL.arc.range + (st.reach - 16) * BAL.arc.perReach, vh: 0, dmg: atk.dmg, dead: false });
+      else if (P.shotKind === "arc") G.pshots.push({ kind: "arc", side: P.side, x: PX + 16, x0: PX + 16, h: P.h + 13, vx: BAL.arc.vx, range: BAL.arc.range + (st.reach - 16) * BAL.arc.perReach, vh: 0, dmg: atk.dmg, dead: false });
       else G.pshots.push({ kind: "bolt", side: P.side, x: PX + 16, h: P.h + 11, vx: BAL.bolt.vx, vh: 0, dmg: atk.dmg, pierce: perk().pierce || 0, dead: false });
     }
     P.atk = Math.max(0, P.atk - dt);
