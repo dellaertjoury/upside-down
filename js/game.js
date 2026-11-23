@@ -781,8 +781,10 @@
       }
       const cx = PX + 6, ch = P.h + 8;
       const ddx = k.x - cx, ddh = k.h - ch, dist = Math.hypot(ddx, ddh);
-      if (k.side === P.side && P.flip <= 0 && dist < st.magnet + 12 && k.kind !== "dice") { // crates are too heavy for the magnet
-        k.x -= ddx * Math.min(1, dt * 10); k.h -= ddh * Math.min(1, dt * 10);
+      if (k.x < cx - 8) k.missed = true; // fell behind you: it stays where it is (no bulbs chasing you)
+      if (k.side === P.side && P.flip <= 0 && !k.missed && dist < st.magnet + 12 && k.kind !== "dice") { // the d20 pieces are too heavy for the magnet
+        if (ddx > 0) k.x -= ddx * Math.min(1, dt * 10); // only pulled from in front: once level with you it is yours or gone
+        k.h -= ddh * Math.min(1, dt * 10);
       }
       if (k.side === P.side && P.flip <= 0 && Math.abs(k.x - cx) < 10 && Math.abs(k.h - ch) < 13 && k.kind === "dice") {
         k.taken = true; gotPiece(k); continue;
@@ -1234,7 +1236,7 @@
         state = "attack"; const af = pframes("attack");
         if (ranged()) { // raise (0.08 s), pull back (until the release), release + hold
           const e = RANGED_T - P.atk, n = af.length;
-          key = n >= 3 ? af[e < 0.04 ? 0 : e < RELEASE_T ? 1 : 2] : af[Math.min(n - 1, Math.floor(e / RANGED_T * n))];
+          key = n >= 3 ? af[e < 0.04 ? 0 : e < RELEASE_T ? 1 : 2] : n === 2 ? af[e < RELEASE_T ? 0 : 1] : af[0]; // 2 frames: pull back, release
         } else key = af[Math.min(af.length - 1, Math.floor((1 - P.atk / 0.2) * af.length))];
       } else if (P.crash > 0 && artFrames("crash").length) { // the board snaps under him, he pitches forward
         state = "crash"; const cf = artFrames("crash"); key = cf[Math.min(cf.length - 1, Math.floor((1 - P.crash / 0.4) * cf.length))];
