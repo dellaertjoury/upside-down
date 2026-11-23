@@ -1368,11 +1368,13 @@
     ctx.globalAlpha = 1;
   }
 
-  // ---- HUD: two plates in the sky corners, the Toxicity meter in the street between the worlds ----
-  function plate(x, y, w, h) {
-    ctx.globalAlpha = 0.78; R("#120a1a", x, y, w, h); ctx.globalAlpha = 1;
-    R("#3a2550", x, y, w, 1); R("#3a2550", x, y + h - 1, w, 1); R("#3a2550", x, y, 1, h); R("#3a2550", x + w - 1, y, 1, h);
-    R("#5a3f7a", x + 1, y + 1, w - 2, 1);
+  // ---- HUD (option C): no plates. Hearts top-left, score + d20 top-right, abilities stacked in the
+  // bottom-left corner, and Toxicity as a vine creeping through the street towards your feet ----
+  function textO(s, x, y, col, align = "left", size = 8) { // outlined text that reads on any background
+    ctx.font = size + "px 'Press Start 2P', monospace"; ctx.textBaseline = "top"; ctx.textAlign = align;
+    ctx.fillStyle = "#1a1124";
+    for (const [dx, dy] of [[-1, 0], [1, 0], [0, -1], [0, 1], [1, 1]]) ctx.fillText(s, x + dx, y + dy);
+    ctx.fillStyle = col; ctx.fillText(s, x, y);
   }
   // one ability slot: icon, dimmed when not ready, optional fill bar (0..1) and key badge
   function slot(x, y, img, on, bar, barCol, key) {
@@ -1382,50 +1384,68 @@
     if (bar != null) { R("#120a1a", x + 1, y + 11, 12, 2); R(barCol || "#5fd0c8", x + 1, y + 11, Math.max(0, Math.round(12 * bar)), 2); }
     if (key) { const kw = Math.max(10, key.length * 6 + 4); R("#1a1124", x + 16 - kw, y + 7, kw + 1, 9); R("#ffd866", x + 17 - kw, y + 8, kw - 1, 7); ctx.font = "6px 'Press Start 2P', monospace"; ctx.textAlign = "center"; ctx.textBaseline = "top"; ctx.fillStyle = "#1a1124"; ctx.fillText(key, x + 16 - kw / 2, y + 9); }
   }
+  const VINE = { g: ["#2f5a17", "#7ad63a", "#d8ffb0"], o: ["#7a3e0e", "#f0902a", "#ffd49a"], r: ["#6a1212", "#e2463f", "#ffb0a8"] };
+  // Toxicity vine: grows from the left edge; its tip reaches your feet (PX) when the meter is full.
+  // Green -> orange (40%) -> red (75%), pulsing near the end. The pattern is rooted in the scrolling street.
+  function drawVine(f) {
+    if (f <= 0.01) return;
+    const len = Math.round((PX + 4) * f), mid = Math.round((FT + FB) / 2), ph = Math.floor(G.scroll);
+    const c = VINE[f < 0.4 ? "g" : f < 0.75 ? "o" : "r"], O = "#1a1124", hot = f >= 0.9 && Math.floor(G.t * 8) % 2;
+    const yAt = x => Math.round(mid + Math.sin((x + ph) / 9) * 3);
+    const y2 = x => Math.round(mid + Math.sin((x + ph) / 6 + 2.2) * 4);
+    ctx.globalAlpha = 0.16 + (f > 0.75 ? Math.sin(G.t * 10) * 0.07 : 0); R(c[1], 0, FT + 1, len + 4, FB - FT - 2); ctx.globalAlpha = 1;
+    // outlines first so the two strands braid without black seams
+    for (let x = 0; x < len; x++) { R(O, x, yAt(x) - 3, 1, 7); R(O, x, y2(x) - 2, 1, 4); }
+    for (let x = 0; x < len; x++) { const y = y2(x); R(c[0], x, y - 1, 1, 2); }                  // thin dark tendril
+    for (let x = 0; x < len; x++) { const y = yAt(x), w = x + ph;                                   // thick main stem
+      R(c[0], x, y - 2, 1, 5); R(c[1], x, y - 2, 1, 3); if (w % 4 === 0) R(c[2], x, y - 2, 1, 1); if (w % 7 === 3) R(c[0], x, y, 1, 1); }
+    for (let x = 2; x < len - 5; x++) { // leaves and thorns, rooted in the scrolling street
+      const w = x + ph, y = yAt(x);
+      if (w % 18 === 0) { const up = Math.floor(w / 18) % 2 ? -1 : 1, b0 = up < 0 ? y - 3 : y + 3;     // pointed leaf
+        R(O, x - 1, b0 + (up < 0 ? -4 : 0), 5, 5); R(O, x + 3, b0 + (up < 0 ? -5 : 3), 2, 2);
+        R(c[1], x, b0 + (up < 0 ? -3 : 0), 3, 3); R(c[1], x + 3, b0 + (up < 0 ? -4 : 3), 1, 1); R(c[2], x, b0 + (up < 0 ? -1 : 0), 1, 1); }
+      else if (w % 11 === 5) { const up = Math.floor(w / 11) % 2; R(O, x, up ? y - 5 : y + 3, 1, 2); R(O, x + 1, up ? y - 6 : y + 5, 1, 1); } // thorn
+    }
+    // the growing tip: a bud that throbs faster as it closes in
+    const ty = yAt(len), pu = Math.sin(G.t * (f > 0.75 ? 14 : 5)) > 0 ? 1 : 0, col = hot ? c[2] : c[1];
+    glow(c[1], len + 2, ty, 7 + pu * 2, 0.35 + f * 0.35);
+    R(O, len - 1, ty - 3 - pu, 6 + pu, 7 + pu * 2); R(O, len + 5 + pu, ty - 1, 2, 3);
+    R(col, len, ty - 2 - pu, 4 + pu, 5 + pu * 2); R(col, len + 4 + pu, ty, 1, 1); R(c[2], len + 1, ty - 1, 2, 2);
+    if (f > 0.75 && P.side) heart(PX + 7, mid - 4, Math.floor(G.t * 6) % 2 === 0, null); // what it costs when it arrives
+  }
   function drawHud() {
     if (G.mode === "attract" || !G.stats) return;
     const st = G.stats, pk_ = perk();
-    // ---- top left: hearts, then the abilities you have this run ----
+    // ---- top left: hearts only ----
+    const mh = G.maxHearts || st.hearts;
+    for (let i = 0; i < mh; i++) heart(5 + i * 11, 5, i < G.hearts);
+
+    // ---- top right: score, best and lights; the d20 block to the right of them ----
+    const done = G.dice >= BAL.dice.pieces, dx = W - 11, sx = W - 22;
+    textO(String(Math.floor(G.score)).padStart(6, "0"), sx, 5, "#ffd866", "right", 10);
+    textO(T_("hud.hi") + " " + String(Math.max(SAVE.state.best, Math.floor(G.score))).padStart(6, "0"), sx, 18, "#c9bcd8", "right", 6);
+    textO(String(G.shards), sx, 28, "#f3e9dc", "right", 6);
+    if (ART("hud_light")) ctx.drawImage(ART("hud_light"), sx - String(G.shards).length * 6 - 10, 26, 7, 10);
+    if (done) glow("#ffd866", dx, 12, 11, 0.4 + Math.sin(G.t * 4) * 0.15);
+    drawD20(dx, 12, 7, G.dice);
+
+    // ---- bottom left: abilities, stacking up from the corner ----
     const slots = [];
-    if (st.revive) slots.push(() => [ART("ui_item_revive") || ART("hud_revive"), !!G.reviveLeft]);
     if (pk_.shield) slots.push(() => [ART("hud_shield"), G.shieldT <= 0, G.shieldT > 0 ? 1 - G.shieldT / pk_.shield : null, "#c9d1dc"]);
     if (G.hadBoard) slots.push(() => P.skate > 0 ? [ART("ui_item_board"), true, P.skate / st.skate, BULBS[Math.floor(G.t * 8) % 6][1]]
       : [ART("ui_item_board"), !!G.board, null, null, G.board ? INPUT.label("board") : null]);
-    const mh = G.maxHearts || st.hearts;
-    const lw = Math.max(mh * 11 + 5, slots.length * 18 + 5, 30), lh = slots.length ? 37 : 18;
-    plate(3, 3, lw, lh);
-    for (let i = 0; i < mh; i++) heart(6 + i * 11, 6, i < G.hearts);
-    slots.forEach((f, i) => { const [img, on, bar, col, key] = f(); slot(6 + i * 18, 19, img, on, bar, col, key); });
+    if (st.revive) slots.push(() => [ART("ui_item_revive") || ART("hud_revive"), !!G.reviveLeft]);
+    slots.forEach((fn, i) => { const [img, on, bar, col, key] = fn(); slot(4, H - 18 - i * 17, img, on, bar, col, key); });
 
-    // ---- top right: score (big), best, then d20 pieces and lights ----
-    const rw = 100, rx = W - 3 - rw;
-    plate(rx, 3, rw, 42);
-    text(String(Math.floor(G.score)).padStart(6, "0"), W - 7, 6, "#ffd866", "right", 10);
-    text(T_("hud.hi") + " " + String(Math.max(SAVE.state.best, Math.floor(G.score))).padStart(6, "0"), W - 7, 19, "#a998b8", "right", 6);
-    R("#3a2550", rx + 4, 27, rw - 8, 1);
-    if (ART("hud_light")) ctx.drawImage(ART("hud_light"), W - 40, 31, 7, 10);
-    text(String(G.shards), W - 7, 33, "#f3e9dc", "right");
-    const done = G.dice >= BAL.dice.pieces;
-    if (done) glow("#ffd866", rx + 11, 36, 10, 0.4 + Math.sin(G.t * 4) * 0.15);
-    drawD20(rx + 11, 36, 5, G.dice);
-    text(done ? "d20!" : G.dice + "/" + BAL.dice.pieces, rx + 19, 33, done ? "#ffd866" : G.dice ? "#ff9fb4" : "#6a5a80");
-
-    // ---- the street between the worlds: Toxicity (fills in the Upside Down; full = thrown out and -1 heart) ----
-    const f = Math.min(1, G.dread / st.battery), bx = 128, bw = 144, by = FT + 4;
-    ctx.globalAlpha = 0.72; R("#0b0610", 0, FT + 1, W, FB - FT - 2); ctx.globalAlpha = 1;
-    text(T_("hud.dread"), bx - 4, by, f > 0.75 ? "#ff6b8f" : "#9fe07a", "right", 6);
-    R("#1a1124", bx - 1, by - 1, bw + 2, 8); R("#26331f", bx, by, bw, 6);
-    const col = f < 0.5 ? "#7dd34a" : f < 0.75 ? "#ffd23a" : (Math.floor(G.t * 8) % 2 ? "#ff3d57" : "#ffd0dc");
-    if (f > 0) { R(col, bx, by, Math.round(bw * f), 6); R("rgba(255,255,255,.35)", bx, by, Math.round(bw * f), 1); }
-    for (let i = 1; i < 4; i++) R("#1a1124", bx + Math.round(bw * i / 4), by, 1, 6);   // quarter marks
-    heart(bx + bw + 4, by - 1, f < 1, f > 0.75 ? null : "#6a5a80");                       // what it costs when full
-    text("-1", bx + bw + 15, by, f > 0.75 ? "#ff3d57" : "#6a5a80", "left", 6);
-    if (P.side) { // Upside Down: Heat and the haul waiting to be banked
+    // ---- the street between the worlds: the Toxicity vine, plus Heat / haul on the right ----
+    drawVine(Math.min(1, G.dread / st.battery));
+    const by = FT + 5;
+    if (P.side) {
       const hp = Math.round(G.haul.dist + G.haul.combat + G.haul.lights);
-      text(T_("hud.heat") + " x" + G.heat.toFixed(1), 6, by, G.heat >= 3 ? "#ffd866" : "#ff6b8f", "left", 6);
-      text("+" + hp + (G.haul.n ? " •" + G.haul.n : ""), W - 6, by, "#5fd0c8", "right", 6);
+      textO(T_("hud.heat") + " x" + G.heat.toFixed(1), W - 70, by, G.heat >= 3 ? "#ffd866" : "#ff9fb4", "right", 6);
+      textO("+" + hp + (G.haul.n ? " •" + G.haul.n : ""), W - 6, by, "#5fd0c8", "right", 6);
     }
-    if (P.flipLock > 0) text(T_("hud.locked"), W - 6, by, "#ff3d57", "right", 6);
+    if (P.flipLock > 0) textO(T_("hud.locked"), W - 6, by, "#ff3d57", "right", 6);
     drawFate();
   }
 

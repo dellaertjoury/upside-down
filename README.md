@@ -79,13 +79,20 @@ its ability by 2, so the sheet levels up as you buy upgrades:
 
 ## HUD
 
-- **Top left:** hearts, then one slot per ability you have this run: Second
-  wind, the Fighter's lid (with its recharge bar) and the skateboard (with its
-  key; a timer bar while riding). Used or recharging slots are greyed out.
-- **Top right:** score, best, d20 pieces (the die fills up) and lights.
-- **In the street between the worlds:** the **Toxicity** meter. It fills in the
-  Upside Down and drains in Hawkins; when it's full you are thrown out and lose
-  a heart. In the Upside Down the Heat (left) and the haul (right) sit next to it.
+No plates or frames: everything sits straight on the scene with a dark outline.
+
+- **Top left:** hearts.
+- **Top right:** score, best and lights, with the d20 to the right of them (it
+  fills wedge by wedge; no counter text).
+- **Bottom left:** one slot per ability you have this run, stacking up from the
+  corner: the Fighter's lid (recharge bar), the skateboard (its key; a timer bar
+  while riding) and Second wind. Used or recharging slots are greyed out.
+- **In the street between the worlds:** the **Toxicity vine**. It creeps in from
+  the left edge while you're in the Upside Down and pulls back in Hawkins. Green,
+  then orange (40%), then red (75%), when a blinking heart under your feet shows
+  what it will cost. When the tip reaches your feet you're thrown out and lose a
+  heart. In the Upside Down the Heat and the haul sit on the right of the street.
+  The vine is drawn in code for now (`drawVine`); vine art can replace it later.
 
 ## The d20 (score multiplier)
 
