@@ -1425,7 +1425,8 @@
     textO(String(Math.floor(G.score)).padStart(6, "0"), sx, 5, "#ffd866", "right", 10);
     textO(T_("hud.hi") + " " + String(Math.max(SAVE.state.best, Math.floor(G.score))).padStart(6, "0"), sx, 18, "#c9bcd8", "right", 6);
     textO(String(G.shards), sx, 28, "#f3e9dc", "right", 6);
-    if (ART("hud_light")) ctx.drawImage(ART("hud_light"), sx - String(G.shards).length * 6 - 10, 26, 7, 10);
+    const li = ART("ui_lights_string") || ART("hud_light"), lw = li === ART("ui_lights_string") ? 18 : 7, lh = li === ART("ui_lights_string") ? 13 : 10;
+    if (li) ctx.drawImage(li, sx - String(G.shards).length * 6 - lw + 2, 30 - lh / 2, lw, lh); // the tangled lights, as on the sheet
     if (done) glow("#ffd866", dx, 12, 11, 0.4 + Math.sin(G.t * 4) * 0.15);
     drawD20(dx, 12, 7, G.dice);
 

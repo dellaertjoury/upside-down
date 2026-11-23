@@ -795,6 +795,44 @@ BACKGROUND: one flat, solid, pure magenta colour (#FF00FF) everywhere behind and
 DO NOT DRAW: any text, letters, numbers, labels, row titles, arrows, grid lines, cell borders or frames around the sprites. Effects (sparks, slash lines, motion lines) must touch the body or the weapon, never float on their own. Sharp hard pixel edges, no anti-aliasing, no blur.
 ```
 
+## 7. Toxicity vine (2 sheets)
+
+The Toxicity meter is a vine that creeps along the street between the two worlds, from the left edge towards the player's feet. It changes colour as it grows: **green** (just flipped), **orange** (40%), **red** (75%, about to throw you out). In the game it is about 12 px tall, so keep it chunky and readable. Strict **side view**, growing to the **right**. The game mirrors it in the Upside Down, so draw it upright.
+
+Make the green row first; then attach it and ask for the same sheet in all three colours, so the shapes stay identical. The tiles don't need to be perfectly seamless: the processor blends the ends.
+
+### Vine → `toxic_vine_sheet.png` (3 rows × 6 items)
+
+```
+Create ONE image: a pixel-art sprite sheet. Detailed 16-bit pixel art (late SNES / arcade quality) for a 2D side-scrolling endless runner: crisp hard-edged pixels, bold saturated colours, a dark 1-pixel outline (#1a1124) around every sprite, 1980s small-town horror mood.
+
+SUBJECT: a creeping, thorny Upside Down vine lying horizontally along cracked asphalt, strict side view, growing towards the RIGHT. A thick twisted main stem braided with a thinner dark tendril, fleshy veined leaves, small hooked thorns and short root hairs clutching the ground. Organic and slightly fleshy, like the vines of the Upside Down.
+
+LAYOUT (very important): 3 rows in a landscape image, the SAME drawings in every row, only the colour changes. Each row, left to right: (1) and (2) two long straight horizontal vine segments, each about 4 times wider than tall, flat ends cut straight on the left and right so they can be placed end to end; (3) to (6) the growing TIP of the vine in 4 animation frames: a swollen bud at the front of a short stem piece that pulses (closed, swelling, opening like a small toothy mouth, closing again), each about 2 times wider than tall, the stem entering from the left edge.
+ROW 1 colours: toxic green (#7ad63a main, #2f5a17 shadow, #d8ffb0 highlights).
+ROW 2 colours: rotten orange (#f0902a main, #7a3e0e shadow, #ffd49a highlights).
+ROW 3 colours: blood red (#e2463f main, #6a1212 shadow, #ffb0a8 highlights), with a faint glow around the bud.
+Leave wide empty space between all items: nothing touches or overlaps another item.
+
+BACKGROUND: one flat, solid, pure magenta colour (#FF00FF) everywhere behind and between the sprites. No gradient, no floor, no ground shadows, no checkerboard, no scenery.
+
+DO NOT DRAW: any text, letters, numbers, labels, row titles, arrows, grid lines, cell borders or frames around the sprites. Sharp hard pixel edges, no anti-aliasing, no blur.
+```
+
+### Vine tear → `toxic_tear_sheet.png` (6 frames)
+
+```
+Create ONE image: a pixel-art sprite sheet. Detailed 16-bit pixel art (late SNES / arcade quality) for a 2D side-scrolling endless runner: crisp hard-edged pixels, bold saturated colours, a dark 1-pixel outline (#1a1124) around every sprite, 1980s small-town horror mood.
+
+SUBJECT: the moment the Toxicity vine throws the player out: a short stretch of asphalt street tearing open from the middle, strict side view. Red Upside Down light pours out of the crack and blood-red vines burst upward, then sink back.
+
+LAYOUT (very important): 1 row, 6 animation frames of the same size, each about 3 times wider than tall: (1) a thin red crack appears; (2) the crack splits wider, red light; (3) vines burst up out of it; (4) vines at full height, spores flying; (5) vines falling back; (6) only a glowing crack left. Leave wide empty space between all frames.
+
+BACKGROUND: one flat, solid, pure magenta colour (#FF00FF) everywhere behind and between the sprites. No gradient, no floor, no ground shadows, no checkerboard, no scenery.
+
+DO NOT DRAW: any text, letters, numbers, labels, row titles, arrows, grid lines, cell borders or frames around the sprites. Sharp hard pixel edges, no anti-aliasing, no blur.
+```
+
 ---
 
 ## Checklist
@@ -807,6 +845,7 @@ DO NOT DRAW: any text, letters, numbers, labels, row titles, arrows, grid lines,
 | `pickups_sheet` 5 · `bulbs_sheet` 7 · `projectiles_sheet` 3 | 15 |
 | `watcher_sheet` | 2 |
 | `hud_sheet` 7 · `upgrade_icons_sheet` 8 · `class_icons_sheet` 6 · `stat_icons_sheet` 6 · `touch_buttons_sheet` 4 · `medals_sheet` 3 · `ui_frames_sheet` 6 | 40 |
-| **38 prompts** | **197** |
+| `toxic_vine_sheet` 18 · `toxic_tear_sheet` 6 | 24 |
+| **40 prompts** | **221** |
 
 Your logo, the scenery, the backdrops and the floor aren't here: you already have them.

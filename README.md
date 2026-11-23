@@ -271,7 +271,7 @@ python3 tools/unpack_reports.py upside-down-reports-<date>.json
 The game uses the painted pixel art in `assets/`. Anything without art falls
 back to a built-in placeholder drawn in `js/sprites.js`.
 
-New art goes through **[ART_PROMPTS.md](ART_PROMPTS.md)**: 38 sprite-sheet
+New art goes through **[ART_PROMPTS.md](ART_PROMPTS.md)**: 40 sprite-sheet
 prompts. Players come in 4 sheets each (`fighter_sheet_idle_run.png`,
 `_jump_attack`, `_roll_skate` with the skateboard, crash and kickflip, and
 `_die`, 2–3 rows per image for more detail); creatures, vehicles
