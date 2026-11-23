@@ -28,14 +28,14 @@
     skate: { every: [35, 60], speed: 1.7 }, // skateboard power-up (unlocked in the shop)
     roofHeight: [24, 34],        // roof height in game px (a jump reaches ~50)
     // ranged attacks
-    arc: { vx: 200, perReach: 5, vh: 90, g: 380 }, // Ranger marble (reach upgrades add speed = range)
+    arc: { vx: 240, range: 190, perReach: 8 }, // Ranger marble: flies straight; reach upgrades add range
     skip: { vx: 230, range: 120 },                 // Ranger low shot (roll + attack): skims the ground
     bolt: { vx: 300 },                             // Wizard firework
   };
 
   // Run speed: starts gentle and builds up slowly (game px per second)
   const SPEED_START = 70, SPEED_GAIN = 1.2, SPEED_MAX = 320;
-  const RANGED_T = 0.42, RELEASE_T = 0.17; // ranged attack animation length / when the shot leaves
+  const RANGED_T = 0.27, RELEASE_T = 0.1; // ranged attack animation length / when the shot leaves
   const GRAV = 980, FLIP_T = 0.26, STAND_H = 18, ROLL_H = 9;
   const CLUB_X = 10;       // Hellfire Club building: left edge at run start
 
@@ -64,8 +64,8 @@
     pod:       { side: 1, w: 12, h0: 0,  h1: 12, enemy: true, shooter: true, after: 600 },
     stalker:   { side: 1, w: 16, h0: 0,  h1: 120, enemy: true, hp: 2, vx: -25, after: 1500 }, // drawn 44 tall; the hitbox goes above any jump
     // light crates: smash with a hit to spill Christmas lights
-    crate:      { side: 0, w: 10, h0: 0, h1: 10, crate: true }, // knee-high next to the kid; 11 px = 5 lights, 13 px = 10
-    crate_dark: { side: 1, w: 10, h0: 0, h1: 10, crate: true },
+    crate:      { side: 0, w: 13, h0: 0, h1: 13, crate: true }, // hip-high next to the kid; 15 px = 5 lights
+    crate_dark: { side: 1, w: 13, h0: 0, h1: 13, crate: true },
   };
   // Christmas-light colours (the run currency). Gold is rare and worth 5.
   const BULBS = [["red", "#ff3d57"], ["green", "#5fd068"], ["blue", "#4da3ff"], ["yellow", "#ffd866"], ["orange", "#ff9a3d"], ["pink", "#ff6bd0"]];
@@ -158,10 +158,15 @@
   // so one well-timed jump collects them all. base = floor or roof height.
   function addLightArc(side, x, n, base = 0, tEnd) {
     const J = (G.stats || SAVE.runStats()).jumpV, T = tEnd || 2 * J / GRAV, v = Math.max(60, G.speed);
+    const pts = [];
     for (let i = 0; i < n; i++) {
       const tt = T * (n === 1 ? 0.5 : (i + 1) / (n + 1));
-      G.picks.push(bulb(side, x + v * tt, base + J * tt - GRAV * tt * tt / 2 + 6, null, i));
+      pts.push([x + v * tt, base + J * tt - GRAV * tt * tt / 2 + 6]);
     }
+    // never on top of lights that are already there (a single bulb inside a string, two strings overlapping)
+    if (pts.some(([px, ph]) => G.picks.some(k => !k.taken && k.side === side && Math.abs(k.x - px) < 18 && Math.abs(k.h - ph) < 18))) return;
+    const group = n > 1 ? ++groupId : null; // two or more: they hang on one string
+    pts.forEach(([px, ph], i) => G.picks.push(bulb(side, px, ph, group, i)));
   }
   function typeFor(side, d) {
     const pool = POOL[side].filter(t => ((side === 0 && TOP_AFTER[t]) || TYPES[t].after || 0) <= G.dist);
@@ -230,10 +235,10 @@
       addLightArc(side, o.x + Math.max(0, hi - 4), pick([2, 3]), top);
     } else if (what === "crate") {
       if (G.crateT <= 0) G.crateT = rand(BAL.crateEvery[0], BAL.crateEvery[1]);
-      const cw = 13, cx = o.x + Math.max(2, Math.min(w - cw - 2, hi + 6));
+      const cw = 15, cx = o.x + Math.max(2, Math.min(w - cw - 2, hi + 6));
       addOb(side ? "crate_dark" : "crate", cx);
       const c = G.obs[G.obs.length - 1];
-      c.tier = pick([3, 5, 5]); if (c.tier >= 5) c.w = 11;
+      c.tier = pick([3, 5, 5]); if (c.tier >= 5) c.w = 15;
       c.h0 = surface(o, cx - o.x, cx - o.x + c.w); c.h1 = c.h0 + c.w; c.onRoof = true;
     } else if (what === "dice") {
       G.diceT = rand(BAL.dice.every[0], BAL.dice.every[1]);
@@ -291,7 +296,7 @@
       let r2 = Math.random() * BAL.crateTiers.reduce((a, t) => a + t[1] * (1 - p) + t[2] * p, 0);
       for (const t of BAL.crateTiers) { r2 -= t[1] * (1 - p) + t[2] * p; if (r2 <= 0) { c.tier = t[0]; break; } }
       c.tier = c.heart ? 5 : (c.tier || 3);
-      if (c.tier >= 5) { c.w = c.tier >= 10 ? 13 : 11; c.h1 = c.w; } // bigger crate, bigger haul
+      if (c.tier >= 5) { c.w = 15; c.h1 = c.w; } // bigger crate, bigger haul
     } else addLightArc(Math.random() < BAL.lightsDown ? 1 : 0, X, pick([2, 3]));
     if (G.dist > 400) addOb(typeFor(1 - s, d), X + 50, 1 - s);
     return gap;
@@ -501,7 +506,7 @@
     if (P.shotDue > 0 && (P.shotDue -= dt) <= 0) { // the marble / firework leaves the hand now
       P.shotDue = 0; SFX.sling(); const atk = attackCfg();
       if (P.shotKind === "skip") G.pshots.push({ kind: "skip", side: P.side, x: PX + 16, h: P.h + 3, x0: PX + 16, vx: BAL.skip.vx, vh: 0, dmg: atk.dmg, dead: false });
-      else if (P.shotKind === "arc") G.pshots.push({ kind: "arc", side: P.side, x: PX + 16, h: P.h + 11, vx: BAL.arc.vx + (st.reach - 16) * BAL.arc.perReach, vh: BAL.arc.vh, dmg: atk.dmg, dead: false });
+      else if (P.shotKind === "arc") G.pshots.push({ kind: "arc", side: P.side, x: PX + 16, x0: PX + 16, h: P.h + 8, vx: BAL.arc.vx, range: BAL.arc.range + (st.reach - 16) * BAL.arc.perReach, vh: 0, dmg: atk.dmg, dead: false });
       else G.pshots.push({ kind: "bolt", side: P.side, x: PX + 16, h: P.h + 11, vx: BAL.bolt.vx, vh: 0, dmg: atk.dmg, pierce: perk().pierce || 0, dead: false });
     }
     P.atk = Math.max(0, P.atk - dt);
@@ -659,10 +664,7 @@
     // the Ranger's marbles: first enemy or crate on that side gets hit
     for (const m of G.pshots) {
       m.x += m.vx * dt;
-      if (m.kind === "arc") {
-        m.h += m.vh * dt; m.vh -= BAL.arc.g * dt;
-        if (m.h <= 0) { m.dead = true; burst(m.x, sy(m.side, 1), "#9fb7ff", 5, 30); continue; } // lands
-      }
+      if (m.kind === "arc" && m.x - m.x0 > m.range) { m.dead = true; burst(m.x, sy(m.side, m.h), "#9fb7ff", 5, 30); continue; } // straight marble, out of range
       if (m.kind === "skip") { // skims along the ground, then rolls to a stop
         if (Math.floor(m.x / 18) % 2) burst(m.x, sy(m.side, 1), "#c9b9a0", 1, 15);
         if (m.x - m.x0 > BAL.skip.range) { m.dead = true; continue; }
@@ -672,7 +674,7 @@
       for (const o of G.obs) {
         if (o.dead || o.side !== m.side || !(o.enemy || o.crate)) continue;
         // the arcing marble hits what it actually touches; the straight bolt covers the runner's lane
-        const hitV = m.kind === "arc" ? (o.h0 < m.h + 4 && o.h1 > m.h - 3) : m.kind === "skip" ? (o.h0 < m.h + 6) : (o.h0 < m.h + 10 && o.h1 > m.h - 12);
+        const hitV = m.kind === "arc" ? (o.h0 < m.h + 5 && o.h1 > m.h - 5) : m.kind === "skip" ? (o.h0 < m.h + 6) : (o.h0 < m.h + 10 && o.h1 > m.h - 12);
         if (m.x + 6 > o.x && m.x < o.x + o.w && hitV && !(m.hit && m.hit.includes(o))) {
           if (m.pierce > 0) { m.pierce--; (m.hit = m.hit || []).push(o); } else m.dead = true; // Wizard bolt goes through one
           if (o.crate) breakCrate(o, true);
@@ -936,19 +938,21 @@
   }
 
   const ART = k => SPR.ART[k];
-  function drawWires(side) { // the cord between bulbs of one string
-    ctx.fillStyle = side ? "#2a0f1e" : "#1f2a22";
+  function drawWires(side) { // the cord between the bulbs of one string, sagging a little
     const groups = {};
-    for (const k of G.picks) if (k.side === side && k.group && !k.fly) (groups[k.group] = groups[k.group] || []).push(k);
+    for (const k of G.picks) if (k.side === side && k.group && !k.fly && !k.taken) (groups[k.group] = groups[k.group] || []).push(k);
+    ctx.strokeStyle = side ? "#3a1428" : "#1f2a22"; ctx.lineWidth = 0.7; ctx.lineCap = "round";
     for (const g in groups) {
       const l = groups[g].sort((a, b) => a.idx - b.idx);
-      for (let i = 0; i < l.length - 1; i++) {
-        const a = l[i], b = l[i + 1]; if (b.idx !== a.idx + 1) continue;
-        for (let t = 0; t <= 1; t += 0.1) {
-          const x = a.x + (b.x - a.x) * t + 2, h = a.h + (b.h - a.h) * t + 6 - Math.sin(t * Math.PI) * 3;
-          ctx.fillRect(Math.round(x), Math.round(-h), 1, 1);
-        }
+      if (l.length < 2) continue;
+      ctx.beginPath();
+      const cap = k => [k.x + 2, -k.h - 6]; // the socket on top of the bulb
+      let [x0, y0] = cap(l[0]); ctx.moveTo(x0 - 4, y0 - 1.5); ctx.lineTo(x0, y0);
+      for (let i = 1; i < l.length; i++) {
+        const [x1, y1] = cap(l[i]), sag = Math.min(6, 2 + Math.abs(x1 - x0) * 0.08);
+        ctx.quadraticCurveTo((x0 + x1) / 2, (y0 + y1) / 2 + sag, x1, y1); [x0, y0] = [x1, y1];
       }
+      ctx.lineTo(x0 + 4, y0 - 1.5); ctx.stroke();
     }
   }
   // Enemy frame: attack frames when close to the runner (or firing, for pods),
@@ -1116,7 +1120,7 @@
         state = "attack"; const af = pframes("attack");
         if (ranged()) { // raise (0.08 s), pull back (until the release), release + hold
           const e = RANGED_T - P.atk, n = af.length;
-          key = n >= 3 ? af[e < 0.08 ? 0 : e < RELEASE_T ? 1 : 2] : af[Math.min(n - 1, Math.floor(e / RANGED_T * n))];
+          key = n >= 3 ? af[e < 0.045 ? 0 : e < RELEASE_T ? 1 : 2] : af[Math.min(n - 1, Math.floor(e / RANGED_T * n))];
         } else key = af[Math.min(af.length - 1, Math.floor((1 - P.atk / 0.2) * af.length))];
       } else if (P.crash > 0 && artFrames("crash").length) { // the board snaps under him, he pitches forward
         state = "crash"; const cf = artFrames("crash"); key = cf[Math.min(cf.length - 1, Math.floor((1 - P.crash / 0.4) * cf.length))];
@@ -1487,7 +1491,7 @@
       else if (what === "board") drawPick({ kind: "skate", x: cx - 8, h: 8 });
       else if (what === "revive") { ctx.save(); ctx.translate(cx, -16); ctx.scale(2, 2); heart(-4.5, -4, true, "#5fd0c8"); ctx.restore(); }
       else { // crates
-        const tier = what === "crate10" ? 10 : 3, w = tier >= 10 ? 13 : 10;
+        const tier = 3, w = 13;
         drawOb({ type: what === "dark" ? "crate_dark" : "crate", x: Math.round(cx - w / 2), t, w, h0: 0, h1: w, tier, heart: what === "heart", crate: true });
         if (what === "heart") { ctx.save(); ctx.translate(cx, -w / 2); glow("#ff3d57", 0, -1, 9, 0.5 + Math.sin(t * 6) * 0.2); heart(-4.5, -4, true); ctx.restore(); }
       }
@@ -1533,5 +1537,5 @@
   SPR.ready = SPR.loadOverrides();
   requestAnimationFrame(loop);
   window.GAME = G;
-  G._P = P; G._TYPES = TYPES; G._hurt = hurt; G._meleeHits = meleeHits;
+  G._P = P; G._TYPES = TYPES; G._hurt = hurt; G._meleeHits = meleeHits; G._addLightArc = addLightArc;
 })();

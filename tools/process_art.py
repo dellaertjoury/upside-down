@@ -264,6 +264,8 @@ def handle(key, get, path):
         write(key, im, w, h, DARK); manifest[key] = [w, h]  # every game sprite gets the dark outline
     elif key == "pickup_dice":
         manifest[key] = True  # the flat Dice Crate is drawn by tools/make_dice_crate.py
+    elif key in ("hud_light", "ui_light"):
+        manifest[key] = True  # made from the bulb sprites by tools/make_light_icons.py (the sheet's bulb hangs upside down)
     elif key in ("hud_shield", "ui_icon_shield"):   # the Fighter's block icon in the HUD
         fit_box("hud_shield", get(), 12, 12); manifest["hud_shield"] = True
     elif key in ("pickup_skate", "skate_board"):
@@ -286,6 +288,10 @@ def handle(key, get, path):
     elif key in NINE: nine_slice(key, get())
     elif key in UI_EXACT: fit_box(key, get(), *UI_EXACT[key], stretch=True); manifest[key] = True
     elif key in UI_FIT: fit_box(key, get(), *UI_FIT[key]); manifest[key] = True
+    elif key in ("ui_up_revive", "ui_up_skate"):  # shop icons, also used for the HUD heart and the board pickup
+        im = get(); fit_box(key, im, 32, 32); manifest[key] = True
+        if key == "ui_up_revive": fit_box("hud_revive", im, 9, 9); manifest["hud_revive"] = True
+        else: fit_box("pickup_skate", im, 18, 10, line=DARK); manifest["pickup_skate"] = True
     elif ICON32.match(key): fit_box(key, get(), 32, 32); manifest[key] = True
     else: return False
     return True
@@ -369,6 +375,7 @@ ITEM_SHEETS = {  # sheet name -> keys in reading order (left to right, top to bo
     "pickups": ["crate", "crate_dark", "pickup_dice", "pickup_skate", "skate_board"],
     "bulbs": ["bulb_red", "bulb_green", "bulb_blue", "bulb_yellow", "bulb_orange", "bulb_pink", "bulb_gold"],
     "hud": ["hud_heart_full", "hud_heart_empty", "hud_light", "hud_revive", "hud_warning", "hud_dread_frame", "hud_dread_fill"],
+    "skate_wind": ["ui_up_skate", "ui_up_revive"],  # the newer skateboard + Second wind icons
     "upgrade_icons": ["ui_up_" + k for k in ("heart", "reach", "battery", "magnet", "greed", "skate", "djump", "revive")],
     "class_icons": ["ui_class_fighter", "ui_class_ranger", "ui_class_rogue", "ui_class_wizard", "ui_lock", "ui_d20"],
     "stat_icons": ["ui_stat_" + k for k in ("str", "dex", "con", "int", "wis", "cha")],
@@ -376,7 +383,7 @@ ITEM_SHEETS = {  # sheet name -> keys in reading order (left to right, top to bo
     "medals": ["ui_medal_1", "ui_medal_2", "ui_medal_3"],
     "ui_frames": ["ui_button", "ui_button_primary", "ui_row", "ui_panel", "ui_sheet", "ui_box"],
 }
-SHEET_ALIASES = {"ui_sheet_classes": "class_icons_sheet", "ui_sheet_controls": "touch_buttons_sheet", "ui_sheet_hud": "hud_sheet",
+SHEET_ALIASES = {"ui_sheet_skate_wind": "skate_wind_sheet", "ui_sheet_classes": "class_icons_sheet", "ui_sheet_controls": "touch_buttons_sheet", "ui_sheet_hud": "hud_sheet",
     "ui_sheet_medals": "medals_sheet", "ui_sheet_menu": "ui_frames_sheet", "ui_sheet_stats": "stat_icons_sheet",
     "ui_sheet_upgrades": "upgrade_icons_sheet", "lightbulbs_sheet": "bulbs_sheet", "pickups_sheet_crates_skateboard": "pickups_sheet",
     "ui_sheet_cars": "cars_sheet", "enemies_sheet_bat": "crow_sheet", "enemies_sheet_dog": "hound_sheet", "enemies_sheet_walker": "stalker_sheet",

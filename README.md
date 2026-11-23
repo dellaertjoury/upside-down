@@ -144,7 +144,7 @@ the menu.
 | Class | Attack | Perk | Weakness |
 |---|---|---|---|
 | Fighter | Bat: kills in 1 hit | **Trash-can lid** absorbs one hit, recharges in 18 s | Has to get close |
-| Ranger | Marble lobbed in an arc to about half the screen | **Roll + attack** = low skipping shot for ground enemies; light magnet ×1.5 | Arc misses low targets unless you skip-shoot |
+| Ranger | Marble shot straight ahead, about half the screen | **Roll + attack** = low skipping shot for ground enemies; light magnet ×1.5 | Flies at chest height: low targets need the skip shot |
 | Wizard *(locked)* | Firework straight across the whole screen, pierces 1 enemy | Dread fills **25% slower** | Half damage: 2 hits per enemy (stalker 4) |
 | Rogue *(locked)* | Fast jabs, 1 in 4 crits for double damage | Heat climbs **50% faster** | Short reach |
 
