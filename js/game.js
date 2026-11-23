@@ -35,7 +35,7 @@
 
   // Run speed: starts gentle and builds up slowly (game px per second)
   const SPEED_START = 70, SPEED_GAIN = 1.2, SPEED_MAX = 320;
-  const GRAV = 980, FLIP_T = 0.26, STAND_H = 15, ROLL_H = 9;
+  const GRAV = 980, FLIP_T = 0.26, STAND_H = 18, ROLL_H = 9;
   const CLUB_X = 10;       // Hellfire Club building: left edge at run start
 
   const cv = document.getElementById("game");
@@ -52,9 +52,9 @@
   // h0..h1 = vertical extent measured AWAY from the floor surface.
   const TYPES = {
     // normal world
-    // heights: bats/crows fly at head height (ROLL under: a roll is 9 tall, standing 15), hounds run on the
+    // heights: bats/crows fly at head height (ROLL under: a roll is 9 tall, standing 18), hounds run on the
     // ground (JUMP over), walkers are twice your height and can't be cleared: ATTACK them (or flip away)
-    crow:      { side: 0, w: 12, h0: 12, h1: 20, enemy: true, vx: -45, after: 250 },
+    crow:      { side: 0, w: 12, h0: 15, h1: 23, enemy: true, vx: -45, after: 250 },
     // upside down
     stump:     { side: 1, w: 12, h0: 0,  h1: 12 },
     tendril:   { side: 1, w: 14, h0: 12, h1: 107, after: 500 },
@@ -63,14 +63,14 @@
     pod:       { side: 1, w: 12, h0: 0,  h1: 12, enemy: true, shooter: true, after: 600 },
     stalker:   { side: 1, w: 16, h0: 0,  h1: 120, enemy: true, hp: 2, vx: -25, after: 1500 }, // drawn 44 tall; the hitbox goes above any jump
     // light crates: smash with a hit to spill Christmas lights
-    crate:      { side: 0, w: 14, h0: 0, h1: 14, crate: true },
-    crate_dark: { side: 1, w: 14, h0: 0, h1: 14, crate: true },
+    crate:      { side: 0, w: 10, h0: 0, h1: 10, crate: true }, // knee-high next to the kid; 11 px = 5 lights, 13 px = 10
+    crate_dark: { side: 1, w: 10, h0: 0, h1: 10, crate: true },
   };
   // Christmas-light colours (the run currency). Gold is rare and worth 5.
   const BULBS = [["red", "#ff3d57"], ["green", "#5fd068"], ["blue", "#4da3ff"], ["yellow", "#ffd866"], ["orange", "#ff9a3d"], ["pink", "#ff6bd0"]];
   const POOL = [
     ["crow", "crawler", "stalker"],               // hounds and walkers cross over to the street later in a run
-    ["stump", "tendril", "crawler", "wisp", "pod", "stalker"],
+    ["tendril", "crawler", "wisp", "pod", "stalker"],
   ];
 
   // d20 fate roll at the start of every run
@@ -229,10 +229,10 @@
       addLightArc(side, o.x + Math.max(0, hi - 4), pick([2, 3]), top);
     } else if (what === "crate") {
       if (G.crateT <= 0) G.crateT = rand(BAL.crateEvery[0], BAL.crateEvery[1]);
-      const cw = 16, cx = o.x + Math.max(2, Math.min(w - cw - 2, hi + 6));
+      const cw = 13, cx = o.x + Math.max(2, Math.min(w - cw - 2, hi + 6));
       addOb(side ? "crate_dark" : "crate", cx);
       const c = G.obs[G.obs.length - 1];
-      c.tier = pick([3, 5, 5, 10]); if (c.tier >= 5) { c.w = c.tier >= 10 ? 18 : 16; }
+      c.tier = pick([3, 5, 5, 10]); if (c.tier >= 5) { c.w = c.tier >= 10 ? 13 : 11; }
       c.h0 = surface(o, cx - o.x, cx - o.x + c.w); c.h1 = c.h0 + c.w; c.onRoof = true;
     } else if (what === "dice") {
       G.diceT = rand(BAL.dice.every[0], BAL.dice.every[1]);
@@ -290,7 +290,7 @@
       let r2 = Math.random() * BAL.crateTiers.reduce((a, t) => a + t[1] * (1 - p) + t[2] * p, 0);
       for (const t of BAL.crateTiers) { r2 -= t[1] * (1 - p) + t[2] * p; if (r2 <= 0) { c.tier = t[0]; break; } }
       c.tier = c.heart ? 5 : (c.tier || 3);
-      if (c.tier >= 5) { c.w = c.tier >= 10 ? 18 : 16; c.h1 = c.w; } // bigger crate, bigger haul
+      if (c.tier >= 5) { c.w = c.tier >= 10 ? 13 : 11; c.h1 = c.w; } // bigger crate, bigger haul
     } else addLightArc(Math.random() < BAL.lightsDown ? 1 : 0, X, pick([2, 3]));
     if (G.dist > 400) addOb(typeFor(1 - s, d), X + 50, 1 - s);
     return gap;
@@ -324,7 +324,7 @@
     const top = P.side === 0;
     P.die = { x: PX + 6, y: sy(P.side, P.h) + (top ? -9 : 9), vy: top ? -170 : -40, vx: -38, rot: 0, spin: -11, mir: top ? 1 : -1 };
     if (artFrames("die").length >= 5) { // painted death: knocked forward, hits the ground, slides to a stop
-      P.die = { slide: true, h: P.h, vh: 90, t: 0, side: P.side }; G.overT = 2.0;
+      P.die = { slide: true, h: P.h, vh: 90, t: 0, side: P.side, x: 0, vx: 70 + G.speed * 0.15 }; G.overT = 2.0; // slides forward on screen
     }
     P.skate = 0; P.roll = 0; P.atk = 0; P.flip = 0;
     G.shake = 8; burst(PX + 6, sy(P.side, P.h + 9), "#ff3d57", 22, 90);
@@ -542,7 +542,10 @@
     if (G.mode === "dying") {
       G.speed = Math.max(0, G.speed - 400 * dt); G.overT -= dt;
       const d = P.die;
-      if (d && d.slide) { d.t += dt; d.vh -= GRAV * 0.6 * dt; d.h = Math.max(0, d.h + d.vh * dt); if (d.h === 0) d.vh = 0; }
+      if (d && d.slide) {
+        d.t += dt; d.vh -= GRAV * 0.6 * dt; d.h = Math.max(0, d.h + d.vh * dt); if (d.h === 0) d.vh = 0;
+        d.x += d.vx * dt; d.vx = Math.max(0, d.vx - (d.h > 0 ? 20 : 75) * dt); // belly slide: friction on the ground
+      }
       else if (d) { d.vy += 560 * dt; d.y += d.vy * dt; d.x += d.vx * dt; d.rot += d.spin * dt; d.spin *= 1 - 0.6 * dt; }
       if (G.overT <= 0) { G.mode = "over"; G.onOver && G.onOver(G.result); }
     } else if (playing) {
@@ -684,6 +687,14 @@
       if (k.fly) { // spilling out of a crate
         k.x += k.vx * dt; k.h += k.vh * dt; k.vh -= 520 * dt;
         if (k.h < 5) { k.h = 5; k.vh = Math.abs(k.vh) * 0.35; k.vx *= 0.5; if (k.vh < 25) k.fly = false; }
+      }
+      const slid = G.mode === "dying" && P.die && P.die.slide ? P.die : null;
+      if (slid && !k.taken && k.side === slid.side && k.kind !== "skate" && Math.abs(k.x - (PX + 8 + slid.x)) < 10 && Math.abs(k.h - (slid.h + 4)) < 10) {
+        k.taken = true; // still grabbing lights while sliding to a stop: they go straight into the bank
+        const val = k.kind === "dice" ? 0 : (k.gold ? 5 : 1) + (k.side ? st.sporeBonus : 0), r = G.result;
+        if (k.kind === "dice") { SAVE.state.dice = (SAVE.state.dice || 0) + 1; G.dice++; if (r) r.dice++; SFX.dice(); }
+        else { SAVE.state.shards += val; G.shards += val; if (r) { r.shards += val; r.earned += val; } (k.gold ? SFX.gold : SFX.light)(); pop("+" + val, k.col, k.x, sy(k.side, k.h + 10)); }
+        SAVE.save(); burst(k.x, sy(k.side, k.h), k.col, 6, 40); continue;
       }
       if (k.taken || !playing) continue;
       if (k.kind === "skate" && !k.told && k.x < W - 20) { // point it out the first time it rolls into view
@@ -843,8 +854,8 @@
   function drawOb(o) {
     const x = Math.round(o.x), t = o.t, img = SPR.ART[o.type];
     if (img && o.crate) { // crate art grows with the tier
-      const sz = SPR.SIZE[o.type] || [16, 16, -1, 0], k = o.w / 14;
-      if (o.tier >= 10) { ctx.globalAlpha = 0.35 + Math.sin(t * 6) * 0.15; R("#ffd866", x - 3, -o.w - 3, o.w + 6, o.w + 3); ctx.globalAlpha = 1; }
+      const sz = SPR.SIZE[o.type] || [16, 16, -1, 0], k = o.w / 14; // art is drawn for a 14 px crate
+      if (o.tier >= 10) glow("#ffd866", x + o.w / 2, -o.w / 2, o.w, 0.45 + Math.sin(t * 6) * 0.15);
       ctx.drawImage(img, x + sz[2] * k, Math.round(-sz[1] * k + sz[3]), sz[0] * k, sz[1] * k);
       return;
     }
@@ -898,7 +909,7 @@
       case "pod": draw(ctx, enemyKey(o, "pod", "idle", o.t < 0.3 ? ["pod2"] : ["pod1"]), x, 0); break;
       case "crate": case "crate_dark": { // 14 px = 3 lights, 16 px = 5, 18 px (gold glow) = 10
         const dk = o.type === "crate_dark", s = o.w, sl = dk ? "#2f1a26" : "#7a5228";
-        if (o.tier >= 10) { ctx.globalAlpha = 0.35 + Math.sin(t * 6) * 0.15; R("#ffd866", x - 3, -s - 3, s + 6, s + 3); ctx.globalAlpha = 1; }
+        if (o.tier >= 10) glow("#ffd866", x + s / 2, -s / 2, s, 0.45 + Math.sin(t * 6) * 0.15);
         const cimg = ART(o.type);
         if (cimg) { // painted crate (14 / 16 / 18 px wide by tier), a heart on heart crates
           const cw = s + 4, ch = cw * cimg.height / cimg.width;
@@ -984,16 +995,29 @@
     R("#1a1124", x - 1, y - 1, 12, 12); R("#8a5a30", x, y, 10, 10); R("#6b4222", x, y + 4, 10, 1); R("#a8743a", x, y, 10, 1);
     R("#1a1124", x + 2, y + 2, 6, 6); R("#ff3d57", x + 3, y + 2, 4, 6); R("#ff3d57", x + 2, y + 3, 6, 4); R("#ffd0dc", x + 4, y + 4, 2, 2);
   }
+  // Soft round glow (cached radial gradient per colour), centred on cx, cy.
+  const GLOWS = {};
+  function glow(col, cx, cy, r, a) {
+    let g = GLOWS[col];
+    if (!g) {
+      g = GLOWS[col] = document.createElement("canvas"); g.width = g.height = 64;
+      const c = g.getContext("2d"), gr = c.createRadialGradient(32, 32, 0, 32, 32, 32);
+      gr.addColorStop(0, col); gr.addColorStop(0.35, col + "aa"); gr.addColorStop(1, col + "00");
+      c.fillStyle = gr; c.fillRect(0, 0, 64, 64);
+    }
+    const pa = ctx.globalAlpha; ctx.globalAlpha = pa * Math.max(0, Math.min(1, a));
+    ctx.drawImage(g, cx - r, cy - r, r * 2, r * 2); ctx.globalAlpha = pa;
+  }
   function drawPick(k) {
     if (k.kind === "dice") {
       const x = Math.round(k.x), y = -Math.round(k.h) - 6 + Math.round(Math.sin(G.t * 4) * 1.5), img = ART("pickup_dice");
-      ctx.globalAlpha = 0.3 + Math.sin(G.t * 6) * 0.15; R("#ff3d57", x - 3, y - 3, 16, 16); ctx.globalAlpha = 1;
+      glow("#ff3d57", x + 5, y + 5, 11, 0.45 + Math.sin(G.t * 6) * 0.2);
       if (img) ctx.drawImage(img, x - 1, y - 1, 12, 12); else drawDiceCrate(x, y);
       return;
     }
     if (k.kind === "skate") {
       const x = Math.round(k.x), y = -Math.round(k.h) - 4 + Math.round(Math.sin(G.t * 5) * 2), img = ART("pickup_skate");
-      ctx.globalAlpha = 0.35 + Math.sin(G.t * 8) * 0.15; R(BULBS[Math.floor(G.t * 8) % 6][1], x - 4, y - 5, 22, 12); ctx.globalAlpha = 1;
+      glow(BULBS[Math.floor(G.t * 8) % 6][1], x + 7, y + 1, 13, 0.5 + Math.sin(G.t * 8) * 0.2);
       if (img) ctx.drawImage(img, x - 2, y - 4, 18, 10); else drawBoard(x - 1, y);
       return;
     }
@@ -1001,7 +1025,7 @@
     const tw = 0.75 + Math.sin(G.t * 5 + k.ph) * 0.25;
     const img = ART("bulb_" + k.name);
     // glow
-    ctx.globalAlpha = 0.28 * tw; R(k.col, x - 2, y - 2, 9, 11); ctx.globalAlpha = 1;
+    glow(k.col, x + 2, y + 3, k.gold ? 9 : 7, (k.gold ? 0.6 : 0.45) * tw);
     if (img) { ctx.drawImage(img, x - 1, y - 2, 6, 9); return; }
     R("#3b3446", x + 1, y - 2, 3, 2);                  // socket
     R("#1a1124", x, y, 5, 6); R(k.col, x + 1, y, 3, 5); R(k.col, x + 2, y + 5, 1, 1);
@@ -1126,7 +1150,7 @@
     if (d.slide) { // frames play once: hit, falling, landing, sliding, lying still
       const f = artFrames("die"), times = [0, 0.2, 0.38, 0.56, 0.76, 0.98, 1.22];
       let i = 0; while (i < f.length - 1 && d.t >= times[i + 1]) i++;
-      local(d.side); draw(ctx, f[i], PX, -Math.round(d.h)); ctx.restore();
+      local(d.side); draw(ctx, f[i], PX + Math.round(d.x || 0), -Math.round(d.h)); ctx.restore();
       return;
     }
     if (d.y > H + 30) return;
@@ -1244,7 +1268,7 @@
         drawOb(o); ctx.filter = "none";
         if (o.heart) { // heart crate: a beating heart on the front, always upright
           ctx.save(); ctx.translate(o.x + o.w / 2, -o.w / 2); if (side) ctx.scale(1, -1);
-          ctx.globalAlpha = 0.3 + Math.sin(G.t * 6) * 0.15; R("#ff3d57", -6, -6, 12, 11); ctx.globalAlpha = 1;
+          glow("#ff3d57", 0, -1, 9, 0.5 + Math.sin(G.t * 6) * 0.2);
           heart(-4.5, -4, true); ctx.restore();
         }
         ctx.restore();
@@ -1376,7 +1400,7 @@
   // Draws one manual entry (hero, enemy or item) into a small canvas with the
   // same drawing code as the game: 48 x 40 game px, feet on the floor at y 36.
   const PV_W = 48, PV_H = 40, PV_FLOOR = 34;
-  const PV_ENEMY = { crow: ["crow", "fly", 12], crawler: ["hound", "run", 0], wisp: ["flyer", "fly", 12], pod: ["pod", "idle", 0], stalker: ["stalker", "walk", 0] };
+  const PV_ENEMY = { crow: ["crow", "fly", 15], crawler: ["hound", "run", 0], wisp: ["flyer", "fly", 12], pod: ["pod", "idle", 0], stalker: ["stalker", "walk", 0] };
   G.preview = function (canvas, id, t) {
     const c2 = canvas.getContext("2d"), main = ctx, gt = G.t, [kind, what] = id.split(":");
     const k = canvas.width / PV_W, dark = canvas.dataset.side === "1";
@@ -1427,9 +1451,9 @@
         else if (what === "board") drawPick({ kind: "skate", x: cx - 8, h: 8 });
         else if (what === "revive") { c2.save(); c2.translate(cx, -16); c2.scale(2, 2); heart(-4.5, -4, true, "#5fd0c8"); c2.restore(); }
         else { // crates
-          const tier = what === "crate10" ? 10 : 3, w = tier >= 10 ? 18 : 14;
+          const tier = what === "crate10" ? 10 : 3, w = tier >= 10 ? 13 : 10;
           drawOb({ type: what === "dark" ? "crate_dark" : "crate", x: Math.round(cx - w / 2), t, w, h0: 0, h1: w, tier, heart: what === "heart", crate: true });
-          if (what === "heart") { c2.save(); c2.translate(cx, -w / 2); c2.globalAlpha = 0.3 + Math.sin(t * 6) * 0.15; R("#ff3d57", -6, -6, 12, 11); c2.globalAlpha = 1; heart(-4.5, -4, true); c2.restore(); }
+          if (what === "heart") { c2.save(); c2.translate(cx, -w / 2); glow("#ff3d57", 0, -1, 9, 0.5 + Math.sin(t * 6) * 0.2); heart(-4.5, -4, true); c2.restore(); }
         }
       }
     } finally { ctx = main; G.t = gt; }

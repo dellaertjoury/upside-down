@@ -50,12 +50,16 @@ Music and sound effects (on/off and volume), language (English, Nederlands,
 Français, Deutsch; add more in `js/i18n.js`), full screen, when to show the
 touch buttons, and the controls above. Everything is saved in the browser.
 
-**Player manual** (Settings → Open manual): tabs for heroes, monsters, items
+**Player manual** (main menu, or Settings → Open manual during a run): tabs for heroes, monsters, items
 and upgrades, each with a picture and what it does. Heroes and monsters play
 their idle bounce, drawn live with the game's own drawing code
 (`GAME.preview`), so new art shows up there by itself.
 
 ## Character sheet (D&D style)
+
+Opens next to the Hellfire Club, in the same style as the main menu, with two
+tabs: **Hero** (name, class, abilities) and **Upgrades** (the item shop and
+the permanent upgrades).
 
 No dice rolls for stats: everyone starts with every ability at 10, plus the
 class bonus. Only the Fighter (bat, STR +2, CON +1) is playable for now;
@@ -112,7 +116,7 @@ the menu.
   them. Hounds run on the ground: **jump over** them. Walkers are twice your
   height and can't be cleared: **attack** them (2 hits) or flip away. Hounds
   and walkers also cross over to the street later in a run (120 m / 350 m).
-- **Obstacles:** stumps you jump, hanging vines you roll under. Hounds
+- **Obstacles:** hanging vines you roll under. Hounds
   sometimes lunge forward (still on the ground). Spore pods shoot along the ground every few seconds: jump them, flip away,
   or hit the shot back.
 - **The Upside Down: Heat and the haul.** Everything you earn down there
@@ -170,7 +174,7 @@ All of these numbers live in the `BAL` block at the top of `js/game.js`.
 
 ## Items (bought before a run)
 
-One of each at a time, in the shop above the upgrades. An item stays until
+One of each at a time, in the Upgrades tab of the character sheet. An item stays until
 you use it.
 
 | Item | Cost | What it does |
@@ -196,7 +200,8 @@ Tune costs and effects in `js/save.js` (`UPGRADES`, `runStats`).
 
 ## Online leaderboard
 
-The leaderboard picks a backend automatically:
+The board lists the 20 best runs (two columns of ten), not just one per
+player. It picks a backend automatically:
 
 1. **Claude artifact.** When the game is published as a Claude artifact, scores
    go into that artifact's shared database. Friends open the shared link while

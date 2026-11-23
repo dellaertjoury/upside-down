@@ -23,7 +23,7 @@
         <div class="menu-grid">
           <button class="btn primary" data-go="play" data-i18n="menu.play"></button>
           <button class="btn" data-go="sheet" data-i18n="menu.sheet"></button>
-          <button class="btn" data-go="upgrades" data-i18n="menu.upgrades"></button>
+          <button class="btn" data-go="manual" data-i18n="menu.manual"></button>
           <button class="btn" data-go="leaderboard" data-i18n="menu.leaderboard"></button>
           <button class="btn" data-go="settings" data-i18n="menu.settings"></button>
           <button class="btn" data-go="report" data-i18n="menu.report"></button>
@@ -36,42 +36,37 @@
       </div>
     </section>
 
-    <!-- CHARACTER SHEET -->
-    <section class="panel hidden sheet-panel" id="p-sheet">
-      <div class="sheet">
+    <!-- CHARACTER SHEET (hub layout: the club scene on the left, the sheet on the right) + upgrades shop -->
+    <section class="panel hidden hub" id="p-sheet">
+      <div class="hub-card sheet-card">
         <header class="ph"><h2 data-i18n="sheet.title"></h2><span class="bank"><i class="bulb"></i> <span data-i18n="lights"></span> <b class="bank-n">0</b></span></header>
-        <div class="sheet-grid">
-          <div class="sheet-left">
-            <canvas id="preview" width="12" height="16"></canvas>
-            <label class="field"><span data-i18n="sheet.name"></span> <input id="cname" maxlength="12" autocomplete="off" spellcheck="false" data-i18n-attr="placeholder:sheet.placeholder"></label>
-            <div class="field"><span data-i18n="sheet.class"></span> <div class="classes" id="classes"></div></div>
-            <div class="field"><span data-i18n="sheet.hair"></span> <div class="swatches" id="hair"></div></div>
-            <div class="field"><span data-i18n="sheet.jacket"></span> <div class="swatches" id="jacket"></div></div>
+        <div class="tabs sheet-tabs" role="tablist">
+          <button class="btn tiny tab on" role="tab" data-stab="hero" data-i18n="sheet.tabHero"></button>
+          <button class="btn tiny tab" role="tab" data-stab="upgrades" data-i18n="up.title"></button>
+        </div>
+        <div class="stab" data-stab-page="hero">
+          <div class="hero-top">
+            <label class="field name-f"><span data-i18n="sheet.name"></span> <input id="cname" maxlength="12" autocomplete="off" spellcheck="false" data-i18n-attr="placeholder:sheet.placeholder"></label>
+            <div class="field cls-f"><span data-i18n="sheet.class"></span> <div class="classes" id="classes"></div></div>
           </div>
-          <div class="sheet-right">
-            <table class="abil-t">
-              <thead><tr><th data-i18n="ab.ability"></th><th data-i18n="ab.score"></th><th></th><th data-i18n="ab.grows"></th><th data-i18n="ab.bonus"></th></tr></thead>
-              <tbody id="abil"></tbody>
-            </table>
-            <p class="rollbar muted" data-i18n="sheet.growNote"></p>
-            <dl class="derived" id="derived"></dl>
-          </div>
+          <table class="abil-t">
+            <thead><tr><th data-i18n="ab.ability"></th><th data-i18n="ab.score"></th><th></th><th data-i18n="ab.grows"></th><th data-i18n="ab.bonus"></th></tr></thead>
+            <tbody id="abil"></tbody>
+          </table>
+          <dl class="derived" id="derived"></dl>
+          <p class="note" data-i18n="sheet.growNote"></p>
+        </div>
+        <div class="stab" data-stab-page="upgrades" hidden>
+          <h3 class="shop-h" data-i18n="items.title"></h3>
+          <div class="list items" id="item-list"></div>
+          <h3 class="shop-h" data-i18n="up.perm"></h3>
+          <div class="list" id="up-list"></div>
         </div>
         <div class="menu-grid">
           <button class="btn primary" data-go="play" data-i18n="sheet.saveRun"></button>
-          <button class="btn" data-go="menu" data-i18n="sheet.saveBack"></button>
+          <button class="btn back" data-go="menu" data-i18n="sheet.saveBack"></button>
         </div>
       </div>
-    </section>
-
-    <!-- UPGRADES -->
-    <section class="panel hidden" id="p-upgrades">
-      <header class="ph"><h2 data-i18n="up.title"></h2><span class="bank"><i class="bulb"></i> <span data-i18n="lights"></span> <b class="bank-n">0</b></span></header>
-      <h3 class="shop-h" data-i18n="items.title"></h3>
-      <div class="list items" id="item-list"></div>
-      <h3 class="shop-h" data-i18n="up.perm"></h3>
-      <div class="list" id="up-list"></div>
-      <button class="btn back" data-go="menu" data-i18n="back"></button>
     </section>
 
     <!-- LEADERBOARD -->
@@ -131,7 +126,7 @@
     <!-- PLAYER MANUAL (from Settings) -->
     <section class="panel hidden sheet-panel" id="p-manual">
       <div class="sheet manual">
-        <header class="ph"><h2 data-i18n="man.title"></h2><button class="btn back" data-go="settings" data-i18n="back"></button></header>
+        <header class="ph"><h2 data-i18n="man.title"></h2><button class="btn back" id="man-back" data-go="menu" data-i18n="back"></button></header>
         <div class="tabs man-tabs" role="tablist">
           <button class="btn tiny tab on" role="tab" data-mtab="heroes" data-i18n="man.heroes"></button>
           <button class="btn tiny tab" role="tab" data-mtab="enemies" data-i18n="man.enemies"></button>
@@ -199,7 +194,7 @@
       <p class="muted" id="over-lb"></p>
       <div class="menu-grid">
         <button class="btn primary" data-go="play" data-i18n="over.again"></button>
-        <button class="btn" data-go="upgrades" data-i18n="menu.upgrades"></button>
+        <button class="btn" data-go="sheet" data-stab="upgrades" data-i18n="menu.upgrades"></button>
         <button class="btn" data-go="report" data-i18n="menu.report"></button>
         <button class="btn" data-go="menu" data-i18n="pause.quit"></button>
       </div>

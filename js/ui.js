@@ -2,7 +2,7 @@
 // leaderboard, settings (sound, language, display, keybinds), pause, game over.
 (function () {
   const $ = s => document.querySelector(s);
-  const panels = ["menu", "sheet", "upgrades", "leaderboard", "settings", "manual", "pause", "over", "report"];
+  const panels = ["menu", "sheet", "leaderboard", "settings", "manual", "pause", "over", "report"];
   const st = SAVE.state, S = INPUT.S;
   const sign = n => (n >= 0 ? "+" : "") + n;
   const esc = v => String(v).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
@@ -35,14 +35,15 @@
   applyLook();
 
   let current = null;
+  let manualFrom = "menu", sheetTab = "hero";
   function show(name) {
+    if (name === "manual" && current !== "manual") { manualFrom = current === "settings" ? "settings" : "menu"; $("#man-back").dataset.go = manualFrom; }
     current = name;
     GAME.subMenu = GAME.mode === "pause" && name !== "pause";
     panels.forEach(p => $("#p-" + p).classList.toggle("hidden", p !== name));
     $("#touch").classList.add("hide");
     if (name === "menu") refreshMenu();
-    if (name === "sheet") { renderSheet(); fitSettings(); }
-    if (name === "upgrades") renderUpgrades();
+    if (name === "sheet") { renderSheet(); renderUpgrades(); setSheetTab(sheetTab); }
     if (name === "leaderboard") renderBoard();
     if (name === "settings") { bindTab = INPUT.padName_ ? "pad" : "key"; renderSettings(); fitSettings(); }
     if (name === "manual") { renderManual(); fitSettings(); }
@@ -80,6 +81,7 @@
     const b = e.target.closest("[data-go]"); if (!b) return;
     SFX.click();
     const go = b.dataset.go;
+    if (go === "sheet") sheetTab = b.dataset.stab || "hero";
     if (go === "report") return openReport(current);
     if (go === "play") return startRun();
     if (go === "resume") { hideAll(); GAME.resume(); return; }
@@ -135,7 +137,7 @@
     const hubOpen = current === "menu" || current === "over";
     if (current === "over" && e.code === "Space" && (st.dice > 0 || rolling)) { e.preventDefault(); rollDice(); return; } // open Dice Crates first
     if (hubOpen && e.code === "Space" && (GAME.mode === "attract" || GAME.mode === "over")) { e.preventDefault(); startRun(); }
-    if (e.code === "Escape" && current && !["menu", "pause", "over"].includes(current)) { e.preventDefault(); show(current === "manual" ? "settings" : GAME.mode === "pause" ? "pause" : "menu"); }
+    if (e.code === "Escape" && current && !["menu", "pause", "over"].includes(current)) { e.preventDefault(); show(current === "manual" ? manualFrom : GAME.mode === "pause" ? "pause" : "menu"); }
   });
 
   // ---- character sheet ----
@@ -148,13 +150,19 @@
       return `<button class="btn tiny cls${s.cls === c.id ? " on" : ""}" data-cls="${c.id}" ${c.locked ? "disabled" : ""} title="${esc(t("cls." + c.id + ".d"))}">
         ${icon ? `<img class="cls-ic" src="${icon.src}" alt="">` : ""}${c.locked && SPR.ART.ui_lock ? `<img class="lock-ic" src="${SPR.ART.ui_lock.src}" alt="">` : ""}<span>${esc(t("cls." + c.id))}<small>${c.locked ? esc(t("sheet.soon")) : bonus}</small></span></button>`;
     }).join("");
-    ["hair", "jacket"].forEach(k => {
-      $("#" + k).innerHTML = SAVE.LOOKS[k].map(o =>
-        `<button class="sw${s[k] === o.id ? " on" : ""}" data-look="${k}" data-id="${o.id}" style="background:${o.c[0]}" aria-label="${k} ${o.id}"></button>`).join("");
-    });
     renderAbil();
-    drawPreview();
   }
+  function setSheetTab(tab) {
+    sheetTab = tab;
+    document.querySelectorAll("[data-stab]").forEach(b => b.classList.toggle("on", b.dataset.stab === tab));
+    document.querySelectorAll("[data-stab-page]").forEach(p => p.hidden = p.dataset.stabPage !== tab);
+    if (tab === "hero") renderAbil(); else renderUpgrades();
+    fitSettings();
+  }
+  document.querySelectorAll("#p-sheet [data-stab]").forEach(b => {
+    const go = () => { if (sheetTab !== b.dataset.stab) { SFX.click(); setSheetTab(b.dataset.stab); } };
+    b.addEventListener("click", go); b.addEventListener("focus", go); // arrowing across the tabs flips the page
+  });
   function renderAbil() {
     const s = sheet();
     $("#abil").innerHTML = SAVE.ABIL.map(a => {
@@ -178,18 +186,8 @@
       [t("d.dread"), r.battery.toFixed(1) + " s"],
       [t("d.magnet"), r.magnet + " px"], [t("d.bonus"), t("d.bonusVal", { n: r.bonusDiv })],
     ];
-    $("#derived").innerHTML = rows.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("");
+    $("#derived").innerHTML = rows.map(([k, v]) => `<div class="dv"><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join("");
   }
-  function drawPreview() {
-    const c = $("#preview"), art = SPR.ART[GAME.pk("idle")] || SPR.ART[GAME.pk("idle1")] || SPR.ART[GAME.pk("run1")];
-    const src = art || SPR.S.run2;
-    c.width = src.width; c.height = src.height;
-    c.style.aspectRatio = src.width + "/" + src.height;
-    const x = c.getContext("2d"); x.imageSmoothingEnabled = false;
-    x.drawImage(src, 0, 0);
-    document.querySelectorAll("#hair, #jacket").forEach(el => el.parentElement.hidden = !!art);
-  }
-
   $("#cname").addEventListener("input", e => { sheet().name = LB.clean(e.target.value) === "PLAYER" ? "" : LB.clean(e.target.value); SAVE.save(); });
   $("#p-sheet").addEventListener("click", e => {
     const c = e.target.closest("[data-cls]");
@@ -252,11 +250,11 @@
   }
   $("#item-list").addEventListener("click", e => {
     const b = e.target.closest("[data-item]"); if (!b) return;
-    if (SAVE.buyItem(b.dataset.item)) { SFX.buy(); renderUpgrades(); }
+    if (SAVE.buyItem(b.dataset.item)) { SFX.buy(); renderUpgrades();  const f = $(`[data-item="${b.dataset.item}"]`); f && (f.disabled ? $("#p-sheet [data-stab=upgrades]") : f).focus({ preventScroll: true }); }
   });
   $("#up-list").addEventListener("click", e => {
     const b = e.target.closest("[data-buy]"); if (!b) return;
-    if (SAVE.buy(b.dataset.buy)) { SFX.buy(); renderUpgrades(); }
+    if (SAVE.buy(b.dataset.buy)) { SFX.buy(); renderUpgrades();  const f = $(`[data-buy="${b.dataset.buy}"]`); f && (f.disabled ? $("#p-sheet [data-stab=upgrades]") : f).focus({ preventScroll: true }); }
   });
 
   // ---- leaderboard ----
@@ -264,10 +262,10 @@
     const list = $("#lb-list");
     list.innerHTML = `<li class="muted">${esc(t("lb.loading"))}</li>`;
     try {
-      const rows = await LB.top(25);
+      const rows = await LB.top(20);
       $("#lb-mode").textContent = t("lb." + LB.mode);
       if (!rows.length) { list.innerHTML = `<li class="muted">${esc(t("lb.empty"))}</li>`; return; }
-      list.innerHTML = "";
+      list.innerHTML = ""; list.classList.toggle("two", rows.length > 10);
       rows.forEach((r, i) => {
         const li = document.createElement("li");
         if (r.me) li.className = "me";
@@ -299,7 +297,7 @@
   }
   // short screens: scale the settings panel down until it fits (never up)
   function fitSettings() {
-    const el = current === "settings" ? $("#p-settings .settings") : current === "manual" ? $("#p-manual .manual") : current === "sheet" ? $("#p-sheet .sheet") : current === "report" ? $("#p-report .rep-wrap") : null; if (!el) return;
+    const el = current === "settings" ? $("#p-settings .settings") : current === "manual" ? $("#p-manual .manual") : current === "sheet" ? $("#p-sheet .sheet-card") : current === "report" ? $("#p-report .rep-wrap") : null; if (!el) return;
     el.style.zoom = "";
     const frame = el.closest(".frame") || document.body;
     const avail = Math.min(frame.clientHeight || innerHeight, innerHeight) * 0.97, need = el.getBoundingClientRect().height;
@@ -313,7 +311,7 @@
   const MAN = {
     heroes: () => SAVE.CLASSES.map(c => ({ pv: "hero:" + c.id, name: t("cls." + c.id), d: t("cls." + c.id + ".d"),
       tag: c.locked ? ["lock", t("man.locked")] : ["", t("man.playable")], locked: c.locked })),
-    enemies: () => [["crow", 0], ["crawler", 2], ["wisp", 1], ["pod", 1], ["stalker", 2], ["stump", 1], ["tendril", 1], ["watcher", 1]].map(([id, side]) => ({
+    enemies: () => [["crow", 0], ["crawler", 2], ["wisp", 1], ["pod", 1], ["stalker", 2], ["tendril", 1], ["watcher", 1]].map(([id, side]) => ({
       pv: "en:" + id, side: side === 1 ? 1 : 0, name: t("man." + id), d: t("man." + id + ".d"),
       tag: side === 0 ? ["", t("man.town")] : side === 1 ? ["ud", t("man.ud")] : ["", t("man.both")] })),
     items: () => [["bulb"], ["gold"], ["crate"], ["crate10"], ["heart"], ["dark", 1], ["dice"], ["board"], ["revive"]].map(([id, side]) => {
@@ -494,7 +492,7 @@
     if (cmd === "back") {
       if (current === "report") return closeReport();
       if (current === "pause") { hideAll(); GAME.resume(); }
-      else if (current !== "menu") { const back = panel.querySelector('[data-go="menu"], [data-go="settings"].back'); if (back) back.click(); }
+      else if (current !== "menu") { const back = panel.querySelector('.btn.back, [data-go="menu"]'); if (back) back.click(); }
     }
   };
 

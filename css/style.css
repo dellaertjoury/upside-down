@@ -152,7 +152,6 @@ body.has-ui-light .bulb{background:var(--ui-light) center/contain no-repeat;widt
 .lock-ic{width:16px;height:16px;image-rendering:pixelated;margin-left:auto}
 .medal{width:20px;height:20px;image-rendering:pixelated;vertical-align:middle}
 body.has-ui-sheet .sheet{border:24px solid transparent;border-image:var(--ui-sheet) 24 fill / 24px stretch;padding:6px;background:none}
-body.has-ui-row .board li{border:12px solid transparent;border-image:var(--ui-row) 12 fill / 12px stretch;background:none!important;padding:0 4px}
 
 /* border glow when a Christmas light is collected (fades over a second) */
 .frame::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:4;opacity:0;
@@ -336,3 +335,58 @@ body.has-ui-panel .rep-wrap{border:24px solid transparent;border-image:var(--ui-
 .man-row.locked canvas{opacity:.75}
 @media (max-width:700px){.man-list{grid-template-columns:minmax(0,1fr)}}
 .man-row h3 .tag.cost{color:var(--gold)}
+
+/* ---- character sheet v2: hub layout (club scene left, menu-style card right), upgrades as a tab ---- */
+#p-sheet.hub{justify-content:center}
+.sheet-card{align-items:stretch;gap:clamp(6px,1vw,12px);text-align:left}
+.sheet-card .ph{width:100%;align-items:center}
+.sheet-card .ph h2{font-size:clamp(14px,2vw,26px)}
+.sheet-card .tabs{margin:0}
+.sheet-card .stab{display:flex;flex-direction:column;gap:clamp(6px,.9vw,10px)}
+.sheet-card .stab[hidden]{display:none}
+.hero-top{display:grid;grid-template-columns:minmax(0,1fr);gap:8px}
+.hero-top .field{flex-direction:row;align-items:center;gap:12px;color:var(--ink)}
+.hero-top .field>span{min-width:6.5em;white-space:nowrap}
+.hero-top .name-f input{flex:1;min-width:0;font-size:clamp(11px,1.2vw,15px);padding:6px 8px}
+.sheet-card .classes{flex:1;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.sheet-card .cls{flex-direction:column;align-items:center;gap:3px;padding:4px 2px;text-align:center;font-size:clamp(8px,.85vw,11px)}
+.sheet-card .cls span{align-items:center;gap:2px}
+.sheet-card .cls small{font-size:clamp(7px,.7vw,9px);color:var(--ink);opacity:.8}
+.sheet-card .cls-ic{width:26px;height:26px}
+.sheet-card .cls .lock-ic{position:absolute;margin:0;top:4px;right:4px;width:12px;height:12px}
+.sheet-card .cls{position:relative}
+.sheet-card .cls:disabled{opacity:.55}
+.sheet-card .abil-t{font-size:clamp(9px,.95vw,12px);border-spacing:0 3px}
+.sheet-card .abil-t th,.sheet-card .abil-t td{padding:5px 8px;background:#1d1230}
+.sheet-card .abil-t thead th{background:none;color:var(--ink);opacity:.75}
+.sheet-card .abil-t tbody th{color:var(--ink)}
+.sheet-card .derived{grid-template-columns:repeat(3,max-content minmax(0,1fr));gap:6px 12px;font-size:clamp(8px,.85vw,11px);margin:0}
+.sheet-card .derived dt{color:var(--ink);opacity:.8}
+.sheet-card .note{margin:0;font-size:clamp(8px,.8vw,10px);line-height:1.6;color:var(--ink);opacity:.7}
+.sheet-card .shop-h{width:100%;margin:2px 0 0}
+.sheet-card .list,#p-sheet .list:not(.items){width:100%;max-height:none;overflow:visible;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;padding:0}
+.sheet-card .row{padding:4px 6px;gap:8px}
+.sheet-card .row.has-ic{grid-template-columns:30px minmax(0,1fr) auto}
+.sheet-card .uic{width:30px;height:30px}
+.sheet-card .row h3{font-size:clamp(9px,.95vw,12px);margin-bottom:3px}
+.sheet-card .row p{font-size:clamp(7px,.75vw,10px);line-height:1.45;color:var(--ink);opacity:.8}
+.sheet-card .row .btn.tiny{font-size:clamp(8px,.85vw,11px);padding:2px 4px;white-space:nowrap}
+.sheet-card .menu-grid{align-self:center}
+@media (max-width:860px){.sheet-card .list{grid-template-columns:minmax(0,1fr)}.sheet-card .derived{grid-template-columns:repeat(2,max-content minmax(0,1fr))}}
+body.has-ui-box .sheet-card .row{border-width:8px;border-image-width:8px;padding:0 2px}
+body.has-ui-button .sheet-card .cls{border-width:8px;border-image-width:8px}
+.derived .dv{display:contents}
+.sheet-card .derived{grid-template-columns:repeat(3,minmax(0,1fr));gap:4px}
+.sheet-card .derived .dv{display:flex;justify-content:space-between;gap:8px;background:#1d1230;padding:5px 8px}
+.sheet-card .derived dd{color:var(--gold)}
+body.has-ui-panel .sheet-card{padding-top:clamp(18px,3vw,34px)}
+@media (max-width:860px){.sheet-card .derived{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* leaderboard: up to 20 runs, two columns of ten, plain rows */
+#p-leaderboard .ph{width:min(96%,1100px)}
+.board{max-height:none;overflow:visible}
+.board.two{width:min(96%,1100px);display:grid;grid-template-rows:repeat(10,auto);grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);column-gap:clamp(12px,2vw,28px);row-gap:4px}
+.board li{background:#160d22cc;box-shadow:inset 3px 0 0 #3a2550;padding:7px 12px;font-size:clamp(10px,1.2vw,14px);align-items:center}
+.board li:nth-child(odd){background:#1d1230dd}
+.board li.me{box-shadow:inset 3px 0 0 var(--gold)}
+@media (max-width:760px){.board.two{grid-template-rows:none;grid-auto-flow:row;grid-template-columns:minmax(0,1fr)}}

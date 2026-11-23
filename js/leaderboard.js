@@ -46,9 +46,13 @@
       const ref = db.doc("scores/" + LB.me);
       const cur = await withTimeout(ref.get());
       const prev = cur.exists ? cur.data() : null;
-      if (prev && prev.best >= score && prev.name === name) return { saved: false, best: prev.best };
-      const best = Math.max(score, prev ? prev.best || 0 : 0);
-      await withTimeout(ref.set({ name, best, ts: Date.now() }));
+      // keep each player's 10 best runs (not just the best), so the board can list runs
+      const run = { name, score, ts: Date.now() };
+      const runs = (prev && Array.isArray(prev.runs) ? prev.runs : prev && prev.best ? [{ name: prev.name, score: prev.best, ts: prev.ts || 0 }] : [])
+        .concat(run).sort((a, b) => b.score - a.score).slice(0, 10);
+      const best = runs[0].score;
+      if (!runs.includes(run)) return { saved: false, best }; // not one of this player's 10 best
+      await withTimeout(ref.set({ name, best, ts: Date.now(), runs }));
       return { saved: true, best };
     }
     if (LB.mode === "supabase") {
@@ -63,14 +67,17 @@
     await LB.ready;
     if (LB.mode === "claude") {
       const snap = await withTimeout(db.collection("scores").orderBy("best", "desc").limit(n).get());
-      return snap.docs.map(d => { const v = d.data() || {}; return { name: clean(v.name), score: Math.floor(Number(v.best) || 0), me: d.id === LB.me }; });
+      const out = [];
+      snap.docs.forEach(d => {
+        const v = d.data() || {}, runs = Array.isArray(v.runs) && v.runs.length ? v.runs : [{ name: v.name, score: v.best }];
+        runs.forEach(r => out.push({ name: clean(r.name || v.name), score: Math.floor(Number(r.score) || 0), me: d.id === LB.me }));
+      });
+      return out.sort((a, b) => b.score - a.score).slice(0, n);
     }
     if (LB.mode === "supabase") {
-      const r = await withTimeout(supa("scores?select=name,score&order=score.desc&limit=200"));
+      const r = await withTimeout(supa("scores?select=name,score&order=score.desc&limit=" + n));
       if (!r.ok) throw new Error("supabase " + r.status);
-      const rows = await r.json(), seen = new Set(), out = [];
-      for (const row of rows) { const nm = clean(row.name); if (seen.has(nm)) continue; seen.add(nm); out.push({ name: nm, score: Math.floor(row.score) }); if (out.length >= n) break; }
-      return out;
+      return (await r.json()).map(row => ({ name: clean(row.name), score: Math.floor(row.score) })); // every run, not one per name
     }
     return localList().slice(0, n);
   };

@@ -6,7 +6,7 @@
     en: {
       "lang.name": "English",
       "tag": "Hellfire Club · tonight's campaign starts at the door",
-      "menu.play": "Start run", "menu.sheet": "Character sheet", "menu.upgrades": "Upgrades",
+      "menu.play": "Start run", "menu.sheet": "Character sheet", "menu.upgrades": "Upgrades", "menu.manual": "Player manual", "sheet.tabHero": "Hero",
       "menu.leaderboard": "Leaderboard", "menu.settings": "Settings",
       "lights": "Lights", "best": "Best",
       "keys.hint": "{jump} jump · {roll} roll · {attack} hit · {flip} flip · {board} board · {pause} pause · F8 report a bug",
@@ -84,7 +84,7 @@
     nl: {
       "lang.name": "Nederlands",
       "tag": "Hellfire Club · de campagne van vanavond begint aan de deur",
-      "menu.play": "Start run", "menu.sheet": "Personagekaart", "menu.upgrades": "Upgrades",
+      "menu.play": "Start run", "menu.sheet": "Personagekaart", "menu.upgrades": "Upgrades", "menu.manual": "Handleiding", "sheet.tabHero": "Held",
       "menu.leaderboard": "Ranglijst", "menu.settings": "Instellingen",
       "lights": "Lichtjes", "best": "Record",
       "keys.hint": "{jump} springen · {roll} rollen · {attack} slaan · {flip} omdraaien · {board} board · {pause} pauze · F8 bug melden",
@@ -161,7 +161,7 @@
     },    fr: {
       "lang.name": "Français",
       "tag": "Hellfire Club · la campagne de ce soir commence à la porte",
-      "menu.play": "Lancer une partie", "menu.sheet": "Fiche de personnage", "menu.upgrades": "Améliorations",
+      "menu.play": "Lancer une partie", "menu.sheet": "Fiche de personnage", "menu.upgrades": "Améliorations", "menu.manual": "Manuel du joueur", "sheet.tabHero": "Héros",
       "menu.leaderboard": "Classement", "menu.settings": "Options",
       "lights": "Lumières", "best": "Record",
       "keys.hint": "{jump} sauter · {roll} rouler · {attack} frapper · {flip} basculer · {board} skate · {pause} pause · F8 signaler un bug",
@@ -234,7 +234,7 @@
     de: {
       "lang.name": "Deutsch",
       "tag": "Hellfire Club · die Kampagne heute Abend beginnt an der Tür",
-      "menu.play": "Lauf starten", "menu.sheet": "Charakterbogen", "menu.upgrades": "Upgrades",
+      "menu.play": "Lauf starten", "menu.sheet": "Charakterbogen", "menu.upgrades": "Upgrades", "menu.manual": "Spielhandbuch", "sheet.tabHero": "Held",
       "menu.leaderboard": "Bestenliste", "menu.settings": "Einstellungen",
       "lights": "Lichter", "best": "Rekord",
       "keys.hint": "{jump} springen · {roll} rollen · {attack} schlagen · {flip} wechseln · {board} Board · {pause} Pause · F8 Fehler melden",
