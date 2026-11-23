@@ -412,7 +412,7 @@
   }
 
   // The completed d20, rolled on the game-over screen: multiplies the run's score.
-  const D20_MULT = r => r === 20 ? 3 : r >= 15 ? 2 : r >= 10 ? 1.5 : r >= 2 ? 1.25 : 1;
+  const D20_MULT = r => r === 1 ? 1 : r / 10; // the roll is the multiplier: 6 = x0.6, 14 = x1.4, 20 = x2; a 1 (critical failure) changes nothing
   G.D20_MULT = D20_MULT;
   G.rollD20 = function () {
     const r = G.result; if (!r || !r.d20 || r.rolled) return null;

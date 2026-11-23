@@ -100,13 +100,8 @@ Find all six in one run (one die per run) and the game-over screen asks you to
 roll it (Space / A) before anything else. The roll multiplies the run's score,
 and the leaderboard gets the multiplied score:
 
-| Roll | Multiplier |
-|---|---|
-| 1 | ×1 (fumble) |
-| 2–9 | ×1.25 |
-| 10–14 | ×1.5 |
-| 15–19 | ×2 |
-| Natural 20 | ×3 |
+The roll **is** the multiplier, divided by ten: 6 = ×0.6 (it can cost you!),
+14 = ×1.4, 20 = ×2. A 1 is a critical failure: the score stays the same.
 
 (The old Dice Crates are gone; any unopened ones in a save were paid out as
 15 lights each.)

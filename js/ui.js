@@ -204,7 +204,7 @@
     $("#over-nav").hidden = pending;          // roll first, then play again
     $("#dice-roll").hidden = !pending; $("#dice-roll").disabled = rolling;
     if (!r || !r.rolled) { $("#dice-res").innerHTML = ""; return; }
-    const R = r.rolled, lab = R.roll === 20 ? "nat20" : R.roll === 1 ? "nat1" : R.mult >= 2 ? "great" : R.mult >= 1.5 ? "good" : "ok";
+    const R = r.rolled, lab = R.roll === 20 ? "nat20" : R.roll === 1 ? "nat1" : R.roll >= 15 ? "great" : R.roll >= 10 ? "good" : "bad";
     $("#dice-res").innerHTML = `<b>${esc(t("d20.t." + lab))}</b>${esc(t("d20.mult", { m: R.mult, a: R.base, b: r.score }))}`;
   }
   function rollDice() {
@@ -219,7 +219,7 @@
       d.firstChild.textContent = res.roll;
       d.className = "d20" + (res.roll === 20 ? " nat20" : res.roll === 1 ? " nat1" : "");
       rolling = false; renderOverStats(overRes); renderDice(); fitSettings();
-      (res.mult >= 2 ? SFX.gold : SFX.buy)();
+      (res.mult >= 1.5 ? SFX.gold : res.mult >= 1 ? SFX.buy : SFX.hurt)();
       postScore(overRes);
       const again = $('#p-over [data-go="play"]'); again && again.focus({ preventScroll: true });
     }, 80);
