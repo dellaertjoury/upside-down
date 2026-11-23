@@ -82,8 +82,13 @@ its ability by 2, so the sheet levels up as you buy upgrades:
 No plates or frames: everything sits straight on the scene with a dark outline.
 
 - **Top left:** hearts.
-- **Top right:** score, best and lights, with the d20 to the right of them (it
-  fills wedge by wedge; no counter text).
+- **Top right, one right-aligned column:** score, best, lights (the tangled-lights
+  icon), then the d20 block (it fills wedge by wedge; no counter text). In the
+  Upside Down the **stash** sits under it: the points (and lights) you've earned
+  down there and not banked yet, and below that the **Greed** pips with the
+  multiplier. One pip fills every few seconds you stay down (the next one fills
+  up as you go), a hit empties them (they flash red), and they turn gold at the
+  maximum.
 - **Bottom left:** one slot per ability you have this run, stacking up from the
   corner: the Fighter's lid (recharge bar), the skateboard (its key; a timer bar
   while riding) and Second wind. Used or recharging slots are greyed out.
@@ -91,7 +96,7 @@ No plates or frames: everything sits straight on the scene with a dark outline.
   the left edge while you're in the Upside Down and pulls back in Hawkins. Green,
   then orange (40%), then red (75%), when a blinking heart under your feet shows
   what it will cost. When the tip reaches your feet you're thrown out and lose a
-  heart. In the Upside Down the Heat and the haul sit on the right of the street.
+  heart.
   The vine is drawn in code for now (`drawVine`); vine art can replace it later.
 
 ## The d20 (score multiplier)
@@ -144,10 +149,10 @@ the menu.
   the peak gets harder up to 1000 m.
 - **Obstacles:** hanging vines you roll under. Hounds
   sometimes lunge forward (still on the ground). Bats also fly in the Upside Down.
-- **The Upside Down: Heat and the haul.** Everything you earn down there
-  (distance, kills, lights) goes into a **haul**, multiplied by **Heat**:
+- **The Upside Down: Greed and the stash.** Everything you earn down there
+  (distance, kills, lights) goes into a **haul**, multiplied by **Greed**:
   x1.5 when you arrive, +0.5 every 2 seconds you stay, up to x4 (more with
-  Dark greed). Most loose lights spawn down there. Getting hit cools the Heat
+  Dark greed). Most loose lights spawn down there. Getting hit empties the Greed
   back to x1.5.
   - **Flip back up yourself** to bank the haul. Flip with the Toxicity over 75%
     for a **close call: +25%**.
@@ -171,14 +176,14 @@ the menu.
 | Fighter | Bat: kills in 1 hit | **Trash-can lid** absorbs one hit, recharges in 18 s | Has to get close |
 | Ranger | Marble shot straight ahead, about half the screen | **Roll + attack** = low skipping shot for ground enemies; light magnet ×1.5 | Flies at chest height: low targets need the skip shot |
 | Wizard *(locked)* | Firework straight across the whole screen, pierces 1 enemy | Toxicity fills **25% slower** | Half damage: 2 hits per enemy (stalker 4) |
-| Rogue *(locked)* | Fast jabs, 1 in 4 crits for double damage | Heat climbs **50% faster** | Short reach |
+| Rogue *(locked)* | Fast jabs, 1 in 4 crits for double damage | Greed climbs **50% faster** | Short reach |
 
 ## Score
 
 The high score is one number made of three parts, shown after each run:
 
 - **Distance:** 1 point per metre (×2 in the Upside Down).
-- **Combat:** points per kill: bats 10, hounds 15, walkers (stalkers) 25. In the Upside Down × Heat (banked).
+- **Combat:** points per kill: bats 10, hounds 15, walkers (stalkers) 25. In the Upside Down × Greed (banked).
 - **Lights:** 5 points per light collected.
 
 ## Christmas lights (the currency)
@@ -217,7 +222,7 @@ The game pauses by itself when you switch tabs or windows.
 | Longer bat | 3 | +6 px melee reach |
 | Flashlight battery | 4 | +2 s in the Upside Down |
 | Light magnet | 3 | Bigger pickup radius |
-| Dark greed | 3 | +0.5 maximum Heat, +1 per Upside Down light |
+| Dark greed | 3 | +0.5 maximum Greed, +1 per Upside Down light |
 | Better board | 3 | Skateboard rides last 6 / 8 / 10 s instead of 4 |
 | Double jump | 1 | Jump again in mid-air |
 

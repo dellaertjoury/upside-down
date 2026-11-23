@@ -1413,6 +1413,30 @@
     R(col, len, ty - 2 - pu, 4 + pu, 5 + pu * 2); R(col, len + 4 + pu, ty, 1, 1); R(c[2], len + 1, ty - 1, 2, 2);
     if (f > 0.75 && P.side) heart(PX + 7, mid - 4, Math.floor(G.t * 6) % 2 === 0, null); // what it costs when it arrives
   }
+  // The stash: what you've earned down here and not banked yet, and the Greed multiplier on it.
+  // Greed climbs one pip every few seconds you stay down; a hit empties it. Flip up to bank the stash.
+  function drawStash(rx, y) {
+    const hp = Math.round(G.haul.dist + G.haul.combat + G.haul.lights), st = G.stats, H_ = BAL.heat;
+    const steps = Math.round((st.heatMax - H_.start) / H_.step) + 1, lvl = Math.round((G.heat - H_.start) / H_.step) + 1;
+    if (G._gl !== lvl) { if (G._gl != null) G._gp = lvl > G._gl ? 0.5 : -0.5; G._gl = lvl; }
+    const pulse = G._gp || 0; if (pulse) G._gp = pulse > 0 ? Math.max(0, pulse - 1 / 60) : Math.min(0, pulse + 1 / 60);
+    const hot = lvl >= steps, col = pulse < 0 ? "#ff3d57" : hot ? "#ffd866" : lvl > steps / 2 ? "#ffb35a" : "#ff9fb4";
+    // line 1: the stash, with the lights waiting in it
+    textO("+" + hp, rx, y, "#5fd0c8", "right", 8);
+    if (G.haul.n) { const x = rx - (String(hp).length + 1) * 8 - 6, li = ART("ui_lights_string");
+      textO("+" + G.haul.n, x, y + 2, "#f3e9dc", "right", 6);
+      if (li) ctx.drawImage(li, x - String(G.haul.n).length * 6 - 15, y - 1, 13, 9); }
+    // line 2: Greed pips (filled = reached, the next one fills up) and the multiplier
+    const pw = 5, gap = 2, px0 = rx - steps * (pw + gap) + gap, py = y + 12, nxt = (G.udT % H_.every) / H_.every;
+    for (let i = 0; i < steps; i++) {
+      const x = px0 + i * (pw + gap); R("#1a1124", x - 1, py - 1, pw + 2, 6);
+      R(i < lvl ? col : "#3a2550", x, py, pw, 4);
+      if (i === lvl && !hot) { ctx.globalAlpha = 0.55; R(col, x, py, Math.round(pw * nxt), 4); ctx.globalAlpha = 1; }
+      if (i < lvl) R("rgba(255,255,255,.45)", x, py, pw, 1);
+    }
+    if (pulse > 0) glow(col, px0 + (lvl - 1) * (pw + gap) + 2, py + 2, 8, pulse);
+    textO("x" + G.heat.toFixed(1), px0 - 4, py - 1, col, "right", 6);
+  }
   function drawHud() {
     if (G.mode === "attract" || !G.stats) return;
     const st = G.stats, pk_ = perk();
@@ -1420,16 +1444,16 @@
     const mh = G.maxHearts || st.hearts;
     for (let i = 0; i < mh; i++) heart(5 + i * 11, 5, i < G.hearts);
 
-    // ---- top right: score, best and lights; the d20 block to the right of them ----
-    const done = G.dice >= BAL.dice.pieces, dx = W - 11, sx = W - 22;
-    textO(String(Math.floor(G.score)).padStart(6, "0"), sx, 5, "#ffd866", "right", 10);
-    textO(T_("hud.hi") + " " + String(Math.max(SAVE.state.best, Math.floor(G.score))).padStart(6, "0"), sx, 18, "#c9bcd8", "right", 6);
-    textO(String(G.shards), sx, 28, "#f3e9dc", "right", 6);
-    const li = ART("ui_lights_string") || ART("hud_light"), lw = li === ART("ui_lights_string") ? 18 : 7, lh = li === ART("ui_lights_string") ? 13 : 10;
-    if (li) ctx.drawImage(li, sx - String(G.shards).length * 6 - lw + 2, 30 - lh / 2, lw, lh); // the tangled lights, as on the sheet
-    if (done) glow("#ffd866", dx, 12, 11, 0.4 + Math.sin(G.t * 4) * 0.15);
-    drawD20(dx, 12, 7, G.dice);
-
+    // ---- top right, one right-aligned column: score, best, lights, d20 and (down there) the stash ----
+    const RX = W - 5, done = G.dice >= BAL.dice.pieces;
+    textO(String(Math.floor(G.score)).padStart(6, "0"), RX, 5, "#ffd866", "right", 10);
+    textO(T_("hud.hi") + " " + String(Math.max(SAVE.state.best, Math.floor(G.score))).padStart(6, "0"), RX, 18, "#c9bcd8", "right", 6);
+    textO(String(G.shards), RX, 28, "#f3e9dc", "right", 6);
+    const li = ART("ui_lights_string") || ART("hud_light"), big = li === ART("ui_lights_string"), lw = big ? 18 : 7, lh = big ? 13 : 10;
+    if (li) ctx.drawImage(li, RX - String(G.shards).length * 6 - lw + 2, 30 - lh / 2, lw, lh); // the tangled lights, as on the sheet
+    if (done) glow("#ffd866", RX - 6, 45, 10, 0.4 + Math.sin(G.t * 4) * 0.15);
+    drawD20(RX - 6, 45, 6, G.dice);
+    if (P.side) drawStash(RX, 56);
     // ---- bottom left: abilities, stacking up from the corner ----
     const slots = [];
     if (pk_.shield) slots.push(() => [ART("hud_shield"), G.shieldT <= 0, G.shieldT > 0 ? 1 - G.shieldT / pk_.shield : null, "#c9d1dc"]);
@@ -1438,14 +1462,9 @@
     if (st.revive) slots.push(() => [ART("ui_item_revive") || ART("hud_revive"), !!G.reviveLeft]);
     slots.forEach((fn, i) => { const [img, on, bar, col, key] = fn(); slot(4, H - 18 - i * 17, img, on, bar, col, key); });
 
-    // ---- the street between the worlds: the Toxicity vine, plus Heat / haul on the right ----
+    // ---- the street between the worlds: the Toxicity vine ----
     drawVine(Math.min(1, G.dread / st.battery));
     const by = FT + 5;
-    if (P.side) {
-      const hp = Math.round(G.haul.dist + G.haul.combat + G.haul.lights);
-      textO(T_("hud.heat") + " x" + G.heat.toFixed(1), W - 70, by, G.heat >= 3 ? "#ffd866" : "#ff9fb4", "right", 6);
-      textO("+" + hp + (G.haul.n ? " •" + G.haul.n : ""), W - 6, by, "#5fd0c8", "right", 6);
-    }
     if (P.flipLock > 0) textO(T_("hud.locked"), W - 6, by, "#ff3d57", "right", 6);
     drawFate();
   }
