@@ -97,10 +97,16 @@ def load(path, crop=True):
     box = a.getbbox() or (0, 0, im.width, im.height)
     return im.crop(box)
 
+def harden(img, cut=110):
+    """Crisp pixel edges: no soft halo or half-transparent fringe."""
+    r, g, b, a = img.split(); return Image.merge("RGBA", (r, g, b, a.point(lambda v: 255 if v >= cut else 0)))
+
 def outline(img, color, px=2):
+    """A crisp, fully opaque dark edge around the sprite (on its hardened shape)."""
+    img = harden(img)
     pad = Image.new("RGBA", (img.width + px * 2, img.height + px * 2), (0, 0, 0, 0)); pad.paste(img, (px, px))
-    a = pad.split()[3].point(lambda v: 255 if v > 90 else 0).filter(ImageFilter.MaxFilter(px * 2 + 1))
-    edge = Image.new("RGBA", pad.size, color); edge.putalpha(a.point(lambda v: 200 if v else 0))
+    a = pad.split()[3].filter(ImageFilter.MaxFilter(px * 2 + 1))
+    edge = Image.new("RGBA", pad.size, color); edge.putalpha(a)
     edge.alpha_composite(pad)
     return edge.crop((px, px, px + img.width, px + img.height))
 
@@ -246,10 +252,10 @@ SET_H = {"set_house": 52, "set_houses": 50, "set_school": 62, "set_police": 58, 
          "prop_bench": 10, "prop_bike": 12, "prop_trashcan": 12, "prop_busstop": 30, "prop_welcome": 26,
          "prop_fence": 10, "prop_pumpkins": 8, "prop_pole": 62}
 def scenery(key, im):
-    w, h = by_h(im, SET_H[key.replace("_dark", "")]); write(key, im, w, h, DARK if key.startswith("prop_") else None); manifest[key] = [w, h]
+    w, h = by_h(im, SET_H[key.replace("_dark", "")]); write(key, im, w, h, DARK); manifest[key] = [w, h]  # every asset but the Watcher gets the crisp dark edge
 
 def club(key, im):
-    w, h = by_h(im, 96); write(key, im, w, h); manifest[key] = [w, h, q(-w / 2), 0]  # door centred
+    w, h = by_h(im, 96); write(key, im, w, h, DARK); manifest[key] = [w, h, q(-w / 2), 0]  # door centred
 
 def opaque(key, path, h, crop_black=False):
     im = Image.open(path).convert("RGB")
@@ -579,14 +585,15 @@ for full, f in files:
             for i, f in enumerate(row[:6]):
                 k = f"vine_{c}_body{i + 1}" if i < 2 else f"vine_{c}_tip{i - 1}"
                 g = np.array(f); g[g[:, :, 3] < 170, 3] = 0; f = Image.fromarray(g); f = f.crop(f.getbbox())  # no soft glow: the game draws none
-                w, h = q(f.width * s), q(f.height * s); write(k, f, w, h); manifest[k] = [w, h]; done.append(k)
+                w, h = q(f.width * s), q(f.height * s); write(k, f, w, h, DARK); manifest[k] = [w, h]; done.append(k)
         continue
-    if key == "toxic_tear_sheet":  # 6 frames of the street tearing open; frame 1 is only the slab
-        fr = [f for row in slice_sheet(path, 0.1) for f in row]
-        if len(fr) != 6: print(f"  note: tear: {len(fr)} frames, expected 6")
-        s = 16 / fr[0].height   # the slab is as tall as the street between the worlds
-        for i, f in enumerate(fr[:6]):
-            k = f"tear{i + 1}"; w, h = q(f.width * s), q(f.height * s); write(k, f, w, h); manifest[k] = [w, h]; done.append(k)
+    if key == "toxic_tear_sheet":  # the tentacles bursting out of the street, 8 frames (older sheets: 6 with a slab)
+        fr = [f for row in slice_sheet(path, 0.1, expect=[8]) for f in row]
+        fr = [harden(f) for f in fr]; fr = [f.crop(f.getbbox()) for f in fr]   # drop the soft haze around them
+        for k in [k for k in manifest if re.match(r"^tear\d+$", k)]: manifest.pop(k)
+        s = 40 / max(f.height for f in fr)   # the tallest burst rises 40 px out of the street
+        for i, f in enumerate(fr):
+            k = f"tear{i + 1}"; w, h = q(f.width * s), q(f.height * s); write(k, f, w, h, DARK); manifest[k] = [w, h]; done.append(k)
         continue
     if key == "ui_medals":  # gold, silver, bronze in one image: split on the gaps
         im = load(path); a = np.array(im)[:, :, 3] > 40; cols = a.any(axis=0)

@@ -1422,11 +1422,12 @@
     if (f > 0.75 && P.side) heart(PX + 7, (FT + FB) / 2 - 4, Math.floor(G.t * 4) % 2 === 0, null); // what it costs when it arrives
     return true;
   }
-  function drawTear() {
+  function drawTear() { // tentacles burst out of the street where the vine reached you
     if (!(G.tearT > 0)) return;
-    const n = Math.min(6, 1 + Math.floor((0.66 - G.tearT) / 0.11)), k = "tear" + n, img = ART(k);
-    if (!img) return;
-    const [w, h] = SPR.SIZE[k]; ctx.drawImage(img, DP(PX + 8 - w / 2), FB - h, w, h);
+    let n = 0; while (ART("tear" + (n + 1))) n++;
+    if (!n) return;
+    const i = Math.min(n, 1 + Math.floor((0.66 - G.tearT) / (0.66 / n))), k = "tear" + i, [w, h] = SPR.SIZE[k];
+    ctx.drawImage(ART(k), DP(PX + 8 - w / 2), DP((FT + FB) / 2 + 4 - h), w, h);
   }
   function drawVine(f) {
     if (drawVineArt(f)) return;

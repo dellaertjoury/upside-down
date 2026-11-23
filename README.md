@@ -315,7 +315,8 @@ js/input.js         keyboard + controller bindings
 js/game.js          the game: physics, spawning, collisions, rendering
 js/ui.js            hub, character sheet and other menus
 assets/             game art + manifest.json
-tools/process_art.py  turns raw ChatGPT images into game sprites
+tools/process_art.py  turns raw ChatGPT images into game sprites (crisp dark edge on all but the Watcher)
+tools/crisp_outline.py  gives existing sprites in assets/ the same crisp dark edge (safe to rerun)
 ```
 
 ## Adding classes later
