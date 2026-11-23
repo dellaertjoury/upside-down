@@ -52,7 +52,7 @@ touch buttons, and the controls above. Everything is saved in the browser.
 **Loader:** the game shows a loading screen with a progress bar until every
 sprite, the font and the UI art are in, then shows everything at once.
 
-**Player manual** (main menu, or Settings → Open manual during a run): tabs for heroes, monsters, items
+**Player manual** (main menu): tabs for heroes, monsters, items
 and upgrades, each with a picture and what it does. Heroes and monsters play
 their idle bounce, drawn live with the game's own drawing code
 (`GAME.preview`), so new art shows up there by itself.
@@ -64,8 +64,8 @@ tabs: **Hero** (name, class, abilities) and **Upgrades** (the item shop and
 the permanent upgrades).
 
 No dice rolls for stats: everyone starts with every ability at 10, plus the
-class bonus. Only the Fighter (bat, STR +2, CON +1) is playable for now;
-Ranger, Rogue and Wizard are locked until their art is done. Each upgrade level raises
+class bonus. Playable: the Fighter (bat, STR +2, CON +1) and the Ranger
+(slingshot, DEX +2, WIS +1). Rogue and Wizard are locked until their art is done. Each upgrade level raises
 its ability by 2, so the sheet levels up as you buy upgrades:
 
 | Ability | Grows with |
@@ -144,7 +144,7 @@ the menu.
 | Class | Attack | Perk | Weakness |
 |---|---|---|---|
 | Fighter | Bat: kills in 1 hit | **Trash-can lid** absorbs one hit, recharges in 18 s | Has to get close |
-| Ranger *(locked)* | Marble lobbed in an arc to about half the screen | **Roll + attack** = low skipping shot for ground enemies; light magnet ×1.5 | Arc misses low targets unless you skip-shoot |
+| Ranger | Marble lobbed in an arc to about half the screen | **Roll + attack** = low skipping shot for ground enemies; light magnet ×1.5 | Arc misses low targets unless you skip-shoot |
 | Wizard *(locked)* | Firework straight across the whole screen, pierces 1 enemy | Dread fills **25% slower** | Half damage: 2 hits per enemy (stalker 4) |
 | Rogue *(locked)* | Fast jabs, 1 in 4 crits for double damage | Heat climbs **50% faster** | Short reach |
 

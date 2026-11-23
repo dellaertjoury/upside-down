@@ -45,7 +45,6 @@
     if (name === "menu") refreshMenu();
     if (name === "sheet") { renderSheet(); renderUpgrades(); setSheetTab(sheetTab); }
     if (name === "leaderboard") renderBoard();
-    if (name !== "manual" && window.GAME) GAME.showcase = null;
     if (name === "settings") { bindTab = INPUT.padName_ ? "pad" : "key"; renderSettings(); fitSettings(); }
     if (name === "manual") { renderManual(); fitSettings(); }
     document.querySelectorAll(".bank-n").forEach(n => n.textContent = st.shards);
@@ -311,8 +310,8 @@
 
   // ---- player manual: heroes, monsters, items and upgrades, each with a picture ----
   // Heroes and monsters bounce in their idle animation (drawn by GAME.preview).
-  // Player manual (hub layout): a grid of picture tiles on the right; the selected one is shown
-  // big in the street scene on the left, in place of the hero (GAME.showcase), with its text below the grid.
+  // Player manual (hub layout): a grid of picture tiles; the selected one is shown big below the
+  // grid, next to its text.
   let manTab = "heroes", manRAF = 0, manSel = 0, manEntries = [];
   const MAN = {
     heroes: () => SAVE.CLASSES.map(c => ({ pv: "hero:" + c.id, name: t("cls." + c.id), d: t("cls." + c.id + ".d"),
@@ -333,7 +332,9 @@
     manSel = i; const e = manEntries[i]; if (!e) return;
     document.querySelectorAll("#man-list .man-tile").forEach((b, j) => b.classList.toggle("on", j === i));
     $("#man-name").innerHTML = esc(e.name) + tagHtml(e); $("#man-desc").textContent = e.d;
-    GAME.showcase = { id: e.show || e.pv, side: e.side || 0, t0: performance.now() / 1000 };
+    const big = $("#man-big"), ic = $("#man-big-ic"); // the selected entry, big, next to its text
+    if (e.pv) { big.hidden = false; ic.hidden = true; big.dataset.pv = e.pv; big.dataset.side = e.side || 0; }
+    else { big.hidden = true; ic.hidden = !e.icon; if (e.icon) ic.src = e.icon.src; }
   }
   function renderManual() {
     document.querySelectorAll("[data-mtab]").forEach(b => b.classList.toggle("on", b.dataset.mtab === manTab));
@@ -350,8 +351,9 @@
     cancelAnimationFrame(manRAF);
     const cvs = Array.from(document.querySelectorAll("#man-list canvas")), t0 = performance.now();
     const tick = now => {
-      if (current !== "manual") { GAME.showcase = null; return; }
+      if (current !== "manual") return;
       for (const c of cvs) GAME.preview(c, c.dataset.pv, Math.max(0, now - t0) / 1000);
+      const big = $("#man-big"); if (!big.hidden && big.dataset.pv) GAME.preview(big, big.dataset.pv, Math.max(0, now - t0) / 1000);
       manRAF = requestAnimationFrame(tick);
     };
     manRAF = requestAnimationFrame(tick);

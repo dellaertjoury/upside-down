@@ -1318,7 +1318,7 @@
       }
       ctx.restore();
     }
-    if (G.mode === "attract" && G.showcase) drawShowcase(); else drawPlayer();
+    drawPlayer();
     drawFloor();
     if (P.die) drawDeath();
     for (const o of G.obs) if (o.wall && o.x > W - 4 && Math.floor(G.t * 8) % 2) {
@@ -1438,7 +1438,7 @@
   const PV_W = 48, PV_H = 40, PV_FLOOR = 34;
   const PV_ENEMY = { crow: ["crow", "fly", 15], crawler: ["hound", "run", 0], wisp: ["flyer", "fly", 12], pod: ["pod", "idle", 0], stalker: ["stalker", "walk", 0] };
   // One manual entry (hero, monster or item) with its feet / base at (cx, 0) in the current ctx.
-  // scene = drawn big in the street (GAME.showcase) instead of in a small manual tile.
+  // scene = the hero bounces on the spot instead of running.
   function drawEntry(kind, what, t, cx, scene) {
     if (kind === "hero") {
       // running along the street, with a swing / shot every 2.6 s
@@ -1488,24 +1488,6 @@
         if (what === "heart") { ctx.save(); ctx.translate(cx, -w / 2); glow("#ff3d57", 0, -1, 9, 0.5 + Math.sin(t * 6) * 0.2); heart(-4.5, -4, true); ctx.restore(); }
       }
     }
-  }
-  // Player manual: the selected entry, drawn twice as big where the hero stands (Upside Down entries
-  // on the Upside Down side), so the art can be seen in detail next to the menu.
-  function drawShowcase() {
-    const sc = G.showcase, [kind, what] = sc.id.split(":"), t = performance.now() / 1000 - sc.t0;
-    if (what === "watcher") { // it looms upright in the Upside Down sky
-      ctx.save(); ctx.translate(PX + 6, FB + 100); ctx.scale(1.8, 1.8); drawEntry(kind, what, t, 0, true); ctx.restore(); return;
-    }
-    local(sc.side);
-    ctx.save(); ctx.translate(PX + 6, 0);
-    if (kind === "icon") { // shop items and upgrades: their icon, floating
-      const img = ART(what); if (img) ctx.drawImage(img, -16, -46 + Math.round(Math.sin(t * 2) * 2), 32, 32);
-    } else {
-      const k = kind === "it" ? 3 : what === "watcher" ? 1.8 : 2;
-      ctx.scale(k, k);
-      drawEntry(kind, what, t, 0, true);
-    }
-    ctx.restore(); ctx.restore();
   }
   G.preview = function (canvas, id, t) {
     const c2 = canvas.getContext("2d"), main = ctx, gt = G.t, [kind, what] = id.split(":");

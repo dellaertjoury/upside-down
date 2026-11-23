@@ -437,3 +437,8 @@ body.has-ui-panel-gem .hub-card::before{content:"";position:absolute;left:50%;to
 @media (max-width:700px){.panel.hub>.hub-card{align-self:center;width:100%!important}}
 .man-info{text-align:left}
 #p-report.hub{max-width:none;background:linear-gradient(90deg,transparent 0%,transparent 45%,#0e081677 70%)}
+.man-info{display:flex;gap:clamp(10px,1.4vw,18px);align-items:center}
+.man-big{flex:none;width:clamp(110px,11vw,150px)}
+.man-big canvas,.man-big img{width:100%;height:auto;aspect-ratio:48/40;display:block;image-rendering:pixelated;box-shadow:0 0 0 2px #2b1a3d}
+.man-big img{object-fit:contain;padding:10px;box-sizing:border-box;background:radial-gradient(#3a2550,#160d22)}
+.man-big canvas[hidden],.man-big img[hidden]{display:none}

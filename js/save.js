@@ -17,7 +17,7 @@
     //         bolt  = straight across the screen, but half damage (2 hits per enemy)
     { id: "fighter", name: "Fighter", desc: "Swings a dented bat.", bonus: { STR: 2, CON: 1 }, locked: false,
       attack: { type: "melee", dmg: 1, cd: 0.32 }, perk: { shield: 18 } },   // trash-can lid absorbs a hit, recharges in 18 s
-    { id: "ranger",  name: "Ranger",  desc: "Lobs slingshot marbles in an arc.", bonus: { DEX: 2, WIS: 1 }, locked: true, ranged: true,
+    { id: "ranger",  name: "Ranger",  desc: "Lobs slingshot marbles in an arc.", bonus: { DEX: 2, WIS: 1 }, locked: false, ranged: true,
       attack: { type: "arc", dmg: 1, cd: 0.45 }, perk: { skipShot: true, magnet: 1.5 } }, // roll + attack = low skipping shot
     { id: "rogue",   name: "Rogue",   desc: "Fast jabs, sneaky crits.", bonus: { DEX: 2, CHA: 1 }, locked: true,
       attack: { type: "melee", dmg: 1, cd: 0.24, crit: 0.25 }, perk: { heatGrowth: 1.5 } },
