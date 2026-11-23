@@ -623,12 +623,12 @@
         continue;
       }
       if (o.crate) { // smash with a hit for lights; running into it just kicks it over
-        if (P.atk > 0 && !ranged() && o.x < PX + 9 + st.reach && o.x + o.w > PX + 6 && Math.abs(P.h - o.h0) < 18) { breakCrate(o, true); continue; }
+        if (P.atk > 0 && !ranged() && meleeHits(o.x, o.w, o.h0, o.h1 != null ? o.h1 : o.h0 + o.w)) { breakCrate(o, true); continue; }
         if (!G.crateHint && o.x < PX + 70 && o.x > px1) { G.crateHint = true; pop(T_("pop.crate"), "#ffd866", PX + 70, sy(o.side, 30)); }
         continue;
       }
       // bat hit
-      if (P.atk > 0 && !ranged() && o.enemy && o.x < PX + 9 + st.reach && o.x + o.w > PX + 6 && o.h0 < P.h + 24 && o.h1 > P.h - 2) {
+      if (P.atk > 0 && !ranged() && o.enemy && meleeHits(o.x, o.w, o.h0, o.h1)) {
         if (damage(o, "melee", attackCfg().dmg)) continue;
       }
       if (o.x < px1 && o.x + o.w > px0 && o.h0 < ph1 && o.h1 > ph0) {
@@ -648,7 +648,7 @@
       if (!playing || s.ref || s.dead || s.side !== P.side || P.flip > 0) continue;
       if (P.skate > 0 && s.x < px1 + 4 && s.x + 4 > px0) { s.dead = true; burst(s.x, sy(s.side, s.h), "#ff6bd0", 6, 40); continue; }
       // a bat swing knocks spore shots back
-      if (P.atk > 0 && !ranged() && s.x < PX + 9 + st.reach && s.x + 4 > PX + 6 && s.h < P.h + 24) {
+      if (P.atk > 0 && !ranged() && meleeHits(s.x, 4, s.h, s.h + 4)) {
         s.ref = true; G.parries++; SFX.block(); pop(T_("pop.reflect"), "#5fd0c8"); continue;
       }
       if (s.x < px1 + 2 && s.x + 4 > px0 && s.h < ph1 && s.h + 4 > ph0) { s.dead = true; hurt(); }
@@ -1150,6 +1150,16 @@
   // Melee reach: each swing sweeps a bright white crescent at exactly the bat's reach
   // (grows with STR upgrades), like a slash.
   const REACH_A0 = -1.35, REACH_A1 = 1.0;
+  // The melee hitbox is the swing arc itself: a box is hit when part of it lies in front of
+  // the hero and within the arc's radius of the swing's pivot (same pivot/radius as drawReach).
+  function meleeHits(x, w, h0, h1) {
+    const r = (G.stats || SAVE.runStats()).reach + 3, cx = PX + 8, cy = P.h + (P.roll > 0 ? 6 : 11);
+    if (x + w < PX + 6) return false;                                  // behind the hero
+    const nx = Math.max(x, Math.min(cx, x + w)), ny = Math.max(h0, Math.min(cy, h1));
+    if (ny < cy - Math.sin(REACH_A1) * r - 1) return false;             // below the arc's low tip
+    const dx = nx - cx, dy = ny - cy;
+    return dx * dx + dy * dy <= r * r;
+  }
   function drawReach(h) {
     const reach = (G.stats || SAVE.runStats()).reach, r = reach + 1;
     const cx = PX + 8, cy = -h - (P.roll > 0 ? 6 : 11);
@@ -1503,5 +1513,5 @@
   SPR.ready = SPR.loadOverrides();
   requestAnimationFrame(loop);
   window.GAME = G;
-  G._P = P; G._TYPES = TYPES; G._hurt = hurt;
+  G._P = P; G._TYPES = TYPES; G._hurt = hurt; G._meleeHits = meleeHits;
 })();
