@@ -1625,7 +1625,8 @@
         drawCord(l); l.forEach(drawPick); // a string of three, on its cord
       } else if (what === "board" || what === "revive") { // shop items: their icon, floating over the street
         const img = ART("ui_item_" + what);
-        if (img) ctx.drawImage(img, cx - 12, -30 + Math.round(Math.sin(t * 2) * 1.5), 24, 24);
+        if (img && what === "board") ctx.drawImage(img, cx - 12, -Math.round(24 * 74 / 96), 24, 24); // wheels on the street
+        else if (img) ctx.drawImage(img, cx - 12, -30 + Math.round(Math.sin(t * 2) * 1.5), 24, 24);
       } else if (what === "dice") { drawD20(cx - 9, -16, 7, 4); drawPiece(cx + 9, -18 + Math.sin(t * 3) * 1.5, 4, t); } // a d20 with two wedges missing, and one of them
       else if (what === "board") drawPick({ kind: "skate", x: cx - 8, h: 8 });
       else if (what === "revive") { ctx.save(); ctx.translate(cx, -16); ctx.scale(2, 2); heart(-4.5, -4, true, "#5fd0c8"); ctx.restore(); }
