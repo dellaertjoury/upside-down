@@ -375,7 +375,7 @@
       sc: { dist: 0, combat: 0, lights: 0 }, crateT: rand(8, 12), platT: rand(6, 10), waveT: 0, lastPat: null, nextMile: BAL.milestoneEvery,
       haul: { dist: 0, combat: 0, lights: 0, n: 0 }, dice: 0, diceT: rand(BAL.dice.first[0], BAL.dice.first[1]), udT: 0, heat: 1, banked: 0, bestHaul: 0, shieldT: 0, skateT: rand(8, 12),   // first skateboard early, so you meet it in every run
       obs: [], picks: [], parts: [], shots: [], pshots: [], pops: [], shake: 0, flash: 0,
-      hearts: G.stats.hearts + f.hearts, reviveLeft: G.stats.revive, board: (SAVE.state.items.board || 0) > 0, dread: 0, overT: 0,
+      hearts: G.stats.hearts + f.hearts, reviveLeft: G.stats.revive, board: (SAVE.state.items.board || 0) > 0, hadBoard: (SAVE.state.items.board || 0) > 0, maxHearts: G.stats.hearts + f.hearts, dread: 0, overT: 0,
       fate: { roll: 0, f, t: 99 } });
     G.scroll0 = G.scroll; SCN.reset(); G.crateHint = false;
     SFX.music.setMode("play");
@@ -421,6 +421,19 @@
     r.newBest = r.score > st.best; if (r.newBest) st.best = r.score; SAVE.save();
     return r.rolled;
   };
+  // Toxicity full: always costs a heart (the lid can't block it), on top of being thrown out
+  function toxicHit() {
+    if (G.debug.god || P.dead) return;
+    G.hearts -= 1; G.shake = 7; G.flash = 0.35; G.flashCol = "#7dd34a"; SFX.hurt();
+    burst(PX + 6, FT + 4, "#7dd34a", 18, 80);
+    if (G.hearts <= 0) {
+      if (G.reviveLeft) {
+        G.reviveLeft = false; SAVE.useItem("revive"); G.hearts = 1; SFX.revive(); G.flash = 0.5; G.flashCol = "#5fd0c8";
+        pop(T_("pop.wind"), "#5fd0c8");
+      } else return gameOver();
+    }
+    P.inv = Math.max(P.inv, 1.3);
+  }
   function hurt() {
     if (G.debug.god) { G.flash = 0.1; G.flashCol = "#5fd0c8"; return; }
     if (P.skate > 0) return; // invincible on the skateboard
@@ -613,7 +626,7 @@
     if (G.mode === "play") {
       if (P.side === 1) {
         if (!G.debug.noDread && !(P.skate > 0)) G.dread += dt * G.fate.f.dread * BAL.dreadRate * (perk().dread || 1);
-        if (G.dread >= st.battery) { G.dread = st.battery; startFlip(true); }
+        if (G.dread >= st.battery) { G.dread = st.battery; startFlip(true); toxicHit(); } // full: thrown out AND a heart lost
       } else G.dread = Math.max(0, G.dread - dt * 1.6);
     }
   }
@@ -1355,61 +1368,64 @@
     ctx.globalAlpha = 1;
   }
 
+  // ---- HUD: two plates in the sky corners, the Toxicity meter in the street between the worlds ----
+  function plate(x, y, w, h) {
+    ctx.globalAlpha = 0.78; R("#120a1a", x, y, w, h); ctx.globalAlpha = 1;
+    R("#3a2550", x, y, w, 1); R("#3a2550", x, y + h - 1, w, 1); R("#3a2550", x, y, 1, h); R("#3a2550", x + w - 1, y, 1, h);
+    R("#5a3f7a", x + 1, y + 1, w - 2, 1);
+  }
+  // one ability slot: icon, dimmed when not ready, optional fill bar (0..1) and key badge
+  function slot(x, y, img, on, bar, barCol, key) {
+    R("#1d1230", x, y, 14, 14); R(on ? "#7a5aa8" : "#3a2550", x, y, 14, 1); R(on ? "#7a5aa8" : "#3a2550", x, y + 13, 14, 1);
+    R(on ? "#7a5aa8" : "#3a2550", x, y, 1, 14); R(on ? "#7a5aa8" : "#3a2550", x + 13, y, 1, 14);
+    if (img) { if (!on) { ctx.filter = "grayscale(1) brightness(.5)"; } ctx.drawImage(img, x + 1, y + 1, 12, 12); ctx.filter = "none"; }
+    if (bar != null) { R("#120a1a", x + 1, y + 11, 12, 2); R(barCol || "#5fd0c8", x + 1, y + 11, Math.max(0, Math.round(12 * bar)), 2); }
+    if (key) { const kw = Math.max(10, key.length * 6 + 4); R("#1a1124", x + 16 - kw, y + 7, kw + 1, 9); R("#ffd866", x + 17 - kw, y + 8, kw - 1, 7); ctx.font = "6px 'Press Start 2P', monospace"; ctx.textAlign = "center"; ctx.textBaseline = "top"; ctx.fillStyle = "#1a1124"; ctx.fillText(key, x + 16 - kw / 2, y + 9); }
+  }
   function drawHud() {
-    if (G.mode === "attract") return;
-    const st = G.stats;
-    for (let i = 0; i < st.hearts; i++) heart(6 + i * 11, 6, i < G.hearts);
-    if (P.skate > 0) { // skateboard time left, rainbow bar under the hearts
-      const f = P.skate / st.skate;
-      R("#1a1124", 5, 19, 52, 4); R(BULBS[Math.floor(G.t * 8) % 6][1], 6, 20, Math.round(50 * f), 2);
-    }
-    // left to right: hearts, extra life (Second wind), the Fighter's lid. Each has its own slot.
-    let hx = 6 + st.hearts * 11 + 2;
-    if (G.reviveLeft) { // a small teal heart with a plus
-      if (ART("hud_revive")) ctx.drawImage(ART("hud_revive"), hx, 6, 9, 9);
-      else { heart(hx, 6, true, "#5fd0c8"); R("#ffffff", hx + 4, 8, 1, 3); R("#ffffff", hx + 3, 9, 3, 1); }
-      hx += 13;
-    }
-    if (perk().shield) { // the Fighter's lid: bright when ready, dim while recharging
-      const ok = G.shieldT <= 0;
-      const sh = ART("hud_shield");
-      if (sh) { // your shield icon: full colour when ready, greyed and dim while recharging
-        if (!ok) { ctx.filter = "grayscale(1) brightness(.55)"; ctx.globalAlpha = 0.8; }
-        ctx.drawImage(sh, hx - 1, 5, 11, 11); ctx.filter = "none"; ctx.globalAlpha = 1;
-      } else { R("#1a1124", hx, 6, 9, 9); R(ok ? "#c9d1dc" : "#4c4e5a", hx + 1, 7, 7, 7); R(ok ? "#9a9caa" : "#3b3446", hx + 3, 9, 3, 3); }
-      if (!ok) R("#5fd0c8", hx, 17, Math.round(9 * (1 - G.shieldT / perk().shield)), 1);
-    }
-    if (perk().shield) hx += 13;
-    if (G.board && !(P.skate > 0)) { // the skateboard you bought, with its key
-      drawBoard(hx, 9, 12); text(INPUT.label("board"), hx + 15, 6, "#ffd866");
-    }
-    text(String(Math.floor(G.score)).padStart(6, "0"), W - 6, 6, "#ffd866", "right");
-    text(T_("hud.hi") + " " + String(Math.max(SAVE.state.best, Math.floor(G.score))).padStart(6, "0"), W - 64, 6, "#f3e9dc", "right");
-    if (ART("hud_light")) ctx.drawImage(ART("hud_light"), W - 47, 16, 7, 10);
-    else { R("#3b3446", W - 45, 16, 3, 2); R("#1a1124", W - 46, 18, 5, 7); R(BULBS[Math.floor(G.t * 2) % 6][1], W - 45, 18, 3, 6); }
-    text(String(G.shards), W - 6, 18, "#f3e9dc", "right");
-    if (G.dice > 0) { // d20 pieces this run: the die fills up wedge by wedge
-      const done = G.dice >= BAL.dice.pieces;
-      if (done) glow("#ffd866", W - 43, 34, 10, 0.4 + Math.sin(G.t * 4) * 0.15);
-      drawD20(W - 43, 34, 5, G.dice);
-      text(done ? "d20" : G.dice + "/" + BAL.dice.pieces, W - 6, 30, done ? "#ffd866" : "#ff9fb4", "right");
-    }
+    if (G.mode === "attract" || !G.stats) return;
+    const st = G.stats, pk_ = perk();
+    // ---- top left: hearts, then the abilities you have this run ----
+    const slots = [];
+    if (st.revive) slots.push(() => [ART("ui_item_revive") || ART("hud_revive"), !!G.reviveLeft]);
+    if (pk_.shield) slots.push(() => [ART("hud_shield"), G.shieldT <= 0, G.shieldT > 0 ? 1 - G.shieldT / pk_.shield : null, "#c9d1dc"]);
+    if (G.hadBoard) slots.push(() => P.skate > 0 ? [ART("ui_item_board"), true, P.skate / st.skate, BULBS[Math.floor(G.t * 8) % 6][1]]
+      : [ART("ui_item_board"), !!G.board, null, null, G.board ? INPUT.label("board") : null]);
+    const mh = G.maxHearts || st.hearts;
+    const lw = Math.max(mh * 11 + 5, slots.length * 18 + 5, 30), lh = slots.length ? 37 : 18;
+    plate(3, 3, lw, lh);
+    for (let i = 0; i < mh; i++) heart(6 + i * 11, 6, i < G.hearts);
+    slots.forEach((f, i) => { const [img, on, bar, col, key] = f(); slot(6 + i * 18, 19, img, on, bar, col, key); });
 
-    const bw = 70, f = G.dread / st.battery, DX = Math.round(W / 2 - bw / 2) - 6; // centred, clear of phone buttons
-    ctx.save(); ctx.translate(DX, 0);
-    if (P.side) { // HEAT x2.5   haul +340  12 lights
+    // ---- top right: score (big), best, then d20 pieces and lights ----
+    const rw = 100, rx = W - 3 - rw;
+    plate(rx, 3, rw, 42);
+    text(String(Math.floor(G.score)).padStart(6, "0"), W - 7, 6, "#ffd866", "right", 10);
+    text(T_("hud.hi") + " " + String(Math.max(SAVE.state.best, Math.floor(G.score))).padStart(6, "0"), W - 7, 19, "#a998b8", "right", 6);
+    R("#3a2550", rx + 4, 27, rw - 8, 1);
+    if (ART("hud_light")) ctx.drawImage(ART("hud_light"), W - 40, 31, 7, 10);
+    text(String(G.shards), W - 7, 33, "#f3e9dc", "right");
+    const done = G.dice >= BAL.dice.pieces;
+    if (done) glow("#ffd866", rx + 11, 36, 10, 0.4 + Math.sin(G.t * 4) * 0.15);
+    drawD20(rx + 11, 36, 5, G.dice);
+    text(done ? "d20!" : G.dice + "/" + BAL.dice.pieces, rx + 19, 33, done ? "#ffd866" : G.dice ? "#ff9fb4" : "#6a5a80");
+
+    // ---- the street between the worlds: Toxicity (fills in the Upside Down; full = thrown out and -1 heart) ----
+    const f = Math.min(1, G.dread / st.battery), bx = 128, bw = 144, by = FT + 4;
+    ctx.globalAlpha = 0.72; R("#0b0610", 0, FT + 1, W, FB - FT - 2); ctx.globalAlpha = 1;
+    text(T_("hud.dread"), bx - 4, by, f > 0.75 ? "#ff6b8f" : "#9fe07a", "right", 6);
+    R("#1a1124", bx - 1, by - 1, bw + 2, 8); R("#26331f", bx, by, bw, 6);
+    const col = f < 0.5 ? "#7dd34a" : f < 0.75 ? "#ffd23a" : (Math.floor(G.t * 8) % 2 ? "#ff3d57" : "#ffd0dc");
+    if (f > 0) { R(col, bx, by, Math.round(bw * f), 6); R("rgba(255,255,255,.35)", bx, by, Math.round(bw * f), 1); }
+    for (let i = 1; i < 4; i++) R("#1a1124", bx + Math.round(bw * i / 4), by, 1, 6);   // quarter marks
+    heart(bx + bw + 4, by - 1, f < 1, f > 0.75 ? null : "#6a5a80");                       // what it costs when full
+    text("-1", bx + bw + 15, by, f > 0.75 ? "#ff3d57" : "#6a5a80", "left", 6);
+    if (P.side) { // Upside Down: Heat and the haul waiting to be banked
       const hp = Math.round(G.haul.dist + G.haul.combat + G.haul.lights);
-      text(T_("hud.heat") + " x" + G.heat.toFixed(1), 6, H - 22, G.heat >= 3 ? "#ffd866" : "#ff6b8f");
-      text("+" + hp + (G.haul.n ? "  \u2022" + G.haul.n : ""), bw + 12, H - 22, "#5fd0c8");
-    } else text(T_("hud.dread"), 6, H - 22, "#a998b8");
-    const fr = ART("hud_dread_frame"), fl = ART("hud_dread_fill");
-    if (fr) ctx.drawImage(fr, 3, H - 13, bw + 6, 10);
-    else { R("#1a1124", 5, H - 11, bw + 2, 6); R("#3a2550", 6, H - 10, bw, 4); }
-    if (fl && f > 0) ctx.drawImage(fl, 0, 0, Math.max(1, Math.round(fl.width * f)), fl.height, 6, H - 10, Math.round(bw * f), 4);
-    else R(f > 0.7 ? (Math.floor(G.t * 8) % 2 ? "#ff3d57" : "#ffd0dc") : "#b0305a", 6, H - 10, Math.round(bw * f), 4);
-    if (fl && f > 0.7 && Math.floor(G.t * 8) % 2) R("rgba(255,255,255,.35)", 6, H - 10, Math.round(bw * f), 4);
-    if (P.flipLock > 0) text(T_("hud.locked"), 82, H - 12, "#ff3d57");
-    ctx.restore();
+      text(T_("hud.heat") + " x" + G.heat.toFixed(1), 6, by, G.heat >= 3 ? "#ffd866" : "#ff6b8f", "left", 6);
+      text("+" + hp + (G.haul.n ? " •" + G.haul.n : ""), W - 6, by, "#5fd0c8", "right", 6);
+    }
+    if (P.flipLock > 0) text(T_("hud.locked"), W - 6, by, "#ff3d57", "right", 6);
     drawFate();
   }
 

@@ -77,6 +77,16 @@ its ability by 2, so the sheet levels up as you buy upgrades:
 | WIS | Flashlight battery |
 | CHA | Light magnet |
 
+## HUD
+
+- **Top left:** hearts, then one slot per ability you have this run: Second
+  wind, the Fighter's lid (with its recharge bar) and the skateboard (with its
+  key; a timer bar while riding). Used or recharging slots are greyed out.
+- **Top right:** score, best, d20 pieces (the die fills up) and lights.
+- **In the street between the worlds:** the **Toxicity** meter. It fills in the
+  Upside Down and drains in Hawkins; when it's full you are thrown out and lose
+  a heart. In the Upside Down the Heat (left) and the haul (right) sit next to it.
+
 ## The d20 (score multiplier)
 
 Six **d20 pieces** (red wedges of the die) turn up in every run, one every
@@ -137,11 +147,12 @@ the menu.
   x1.5 when you arrive, +0.5 every 2 seconds you stay, up to x4 (more with
   Dark greed). Most loose lights spawn down there. Getting hit cools the Heat
   back to x1.5.
-  - **Flip back up yourself** to bank the haul. Flip with the Dread over 75%
+  - **Flip back up yourself** to bank the haul. Flip with the Toxicity over 75%
     for a **close call: +25%**.
-  - **Dragged out** when the Dread fills: you keep only half.
+  - **Thrown out** when the Toxicity fills: you lose a heart (the lid can't
+    block it) and keep only half of the haul.
   - **Die down there**: the haul is lost.
-  The Dread fills in about 8 seconds (before upgrades) and drains on the street.
+  The Toxicity fills in about 8 seconds (before upgrades) and drains on the street.
 - **Things to jump on:** every 9–14 seconds a dumpster, car, police car, van,
   pickup or school bus rolls by at real size, sometimes two in a row to hop
   between. Land on it from above (running past its front never hurts); its
@@ -157,7 +168,7 @@ the menu.
 |---|---|---|---|
 | Fighter | Bat: kills in 1 hit | **Trash-can lid** absorbs one hit, recharges in 18 s | Has to get close |
 | Ranger | Marble shot straight ahead, about half the screen | **Roll + attack** = low skipping shot for ground enemies; light magnet ×1.5 | Flies at chest height: low targets need the skip shot |
-| Wizard *(locked)* | Firework straight across the whole screen, pierces 1 enemy | Dread fills **25% slower** | Half damage: 2 hits per enemy (stalker 4) |
+| Wizard *(locked)* | Firework straight across the whole screen, pierces 1 enemy | Toxicity fills **25% slower** | Half damage: 2 hits per enemy (stalker 4) |
 | Rogue *(locked)* | Fast jabs, 1 in 4 crits for double damage | Heat climbs **50% faster** | Short reach |
 
 ## Score
@@ -192,7 +203,7 @@ you use it.
 | Item | Cost | What it does |
 |---|---|---|
 | Second wind | 60 | Survive one fatal hit, used up when it saves you |
-| Skateboard | 30 | Press E (RB) in a run: ride through everything, invincible (no attacking while riding) and faster, for 4 s (more with Better board). Smashes enemies, obstacles and crates; Dread pauses. Jump while riding for a kickflip. The board breaks at the end (crash frames) and the kid rolls off |
+| Skateboard | 30 | Press E (RB) in a run: ride through everything, invincible (no attacking while riding) and faster, for 4 s (more with Better board). Smashes enemies, obstacles and crates; Toxicity pauses. Jump while riding for a kickflip. The board breaks at the end (crash frames) and the kid rolls off |
 
 The game pauses by itself when you switch tabs or windows.
 
@@ -310,9 +321,9 @@ all art in this repo are original; no logos from the show are used.
 Press **F9** in the game (or open the link with `#debug` at the end) for the
 debug panel:
 
-- **Live state:** build version, FPS, speed, distance, side, Dread, what's on
+- **Live state:** build version, FPS, speed, distance, side, Toxicity, what's on
   screen, and the upcoming scenery frames.
-- **Cheats:** show hitboxes, god mode, Dread never fills, no obstacles, slow
+- **Cheats:** show hitboxes, god mode, Toxicity never fills, no obstacles, slow
   motion (0.25×–2×).
 - **Tools:** spawn any obstacle or enemy, spawn lights, jump +1000 m, add 500
   lights, unlock the locked classes, reset your save.
