@@ -541,7 +541,8 @@
     if (current) show(current);
   }
   // ---- loader: everything stays hidden until the art, the font and the UI art are ready ----
-  const ldSet = f => { const pct = Math.round(f * 100); $("#ld-fill").style.width = pct + "%"; $("#ld-pct").textContent = pct + "%"; $("#loader").setAttribute("aria-valuenow", pct); };
+  const ldSet = f => { const pct = Math.round(f * 100), bs = document.querySelectorAll("#ld-bulbs .b"); // the string lights up, bulb by bulb
+    bs.forEach((b, i) => b.classList.toggle("on", i < Math.round(f * bs.length))); $("#ld-pct").textContent = pct + "%"; $("#loader").setAttribute("aria-valuenow", pct); };
   SPR.onProgress = (n, total) => ldSet(0.05 + 0.9 * n / Math.max(1, total));
   const fontReady = document.fonts && document.fonts.load ? document.fonts.load("8px 'Press Start 2P'").catch(() => {}) : Promise.resolve();
   Promise.all([(SPR.ready || Promise.resolve()).then(applyUiArt), fontReady]).then(() => {
